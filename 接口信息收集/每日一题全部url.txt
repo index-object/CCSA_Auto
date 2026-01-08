@@ -1,0 +1,1254 @@
+1.获取最新学习：
+curl 'https://edu.axdxa.cn/prod-api/progress/app/regularStudy/getNewRegularStudyList' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzAzMzU5MzA3Nzc4Iiwicm5TdHIiOiJVMWRYRWtodDVSQVNzNDVMbEQ5dGh5NzQ5RFN5dVVWZyIsImNsaWVudGlkIjoiZTVjZDdlNDg5MWJmOTVkMWQxOTIwNmNlMjRhN2IzMmUiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MDMzNTkzMDc3NzgsInVzZXJOYW1lIjoiMTg2KioqKjM0MTYifQ.W4Qf1PgGUTyYSz7uicrbMh2C1abeg-M7OuN3D-sgkDQ' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/continuous-learning/everyDay' \
+  -H 'sec-ch-ua: "Microsoft Edge";v="143", "Chromium";v="143", "Not A(Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0'
+响应：{
+    "code": 200,
+    "msg": "操作成功",
+    "data": {
+        "regularStudyDayInfo": {
+            "id": "1874659052159205378",
+            "studyName": "每日一学",
+            "studyCover": "https://oss.axdxa.cn/manager/20250425/ee1653ab-9b3b-4516-a6ab-83eab8673d54.png",
+            "studyDescribe": null,
+            "releaseStatus": null,
+            "termStartTime": null,
+            "createBy": null,
+            "createByName": null,
+            "createTime": "2025-01-02 11:28:42",
+            "updateBy": null,
+            "updateByName": null,
+            "updateTime": null,
+            "availableScore": 20,
+            "studyStatus": 1,
+            "obtainedScore": null,
+            "companyId": 1,
+            "companyName": null,
+            "thisDate": "2026-01-06",
+            "holidayRequireExams": true,
+            "supplementaryClasses": false,
+            "companyYesterdayIsExam": null
+        },
+        "repeatCourseWeekInfo": {
+            "id": "2007828829376057345",
+            "courseName": "每周一课",
+            "year": null,
+            "periodsNum": null,
+            "courseCover": "https://oss.axdxa.cn/manager/20260104/7212e89e-8823-4c4f-b6a1-cf212f22a15c.png",
+            "resourceId": "2007829464590516226",
+            "resourceType": 1,
+            "resourceDuration": 729,
+            "resourceName": "第54期 | 哪些变更，需要正规设计",
+            "resourceCoverUrl": "https://oss.axdxa.cn/manager/20260104/dc50cc82-3ea0-404c-a148-ff0a33eff3da.png",
+            "resourceDraftUrl": "",
+            "resourceUrl": null,
+            "courseContent": "1.深入剖析变更管理中“正规设计介入”的三种法定情形与实操边界。\n2.提出可落地的判断原则，并指导企业建立内部判定标准与争议解决机制。",
+            "studyStartTime": "2026-01-05 00:00:00",
+            "studyEndTime": "2026-01-11 23:59:59",
+            "enableStatus": null,
+            "releaseStatus": null,
+            "remark": null,
+            "createBy": null,
+            "createByName": null,
+            "createTime": null,
+            "updateBy": null,
+            "updateByName": null,
+            "updateTime": null,
+            "availableScore": 50,
+            "studyStatus": 1,
+            "obtainedScore": null,
+            "studySchedule": null,
+            "totalDuration": null,
+            "studyDuration": null,
+            "studyProgressTime": null,
+            "resourceDescription": null,
+            "sentences": null,
+            "isOpenShadowing": null,
+            "results": null,
+            "isCollection": 0,
+            "collectNum": null,
+            "shareNum": null,
+            "viewsNum": null,
+            "collectionId": null,
+            "ifCollectionThisWeek": null
+        },
+        "   ": {
+            "id": "2005861385550106626",
+            "examName": "每月一考",
+            "examCover": "https://oss.axdxa.cn/manager/20251230/c98c1348-b04d-48df-828d-a1bd9bd6c310.png",
+            "examDescribe": null,
+            "enableStatus": null,
+            "releaseStatus": null,
+            "remark": null,
+            "startTime": null,
+            "createBy": null,
+            "createByName": null,
+            "createTime": null,
+            "updateBy": null,
+            "updateByName": null,
+            "updateTime": null,
+            "availableScore": 100,
+            "studyStatus": 1,
+            "obtainedScore": null
+        }
+    }
+}
+
+1. 获取学习
+curl 'https://edu.axdxa.cn/prod-api/progress/app/regularStudy/getRegularStudyProfession' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzAzMzU5MzA3Nzc4Iiwicm5TdHIiOiJVMWRYRWtodDVSQVNzNDVMbEQ5dGh5NzQ5RFN5dVVWZyIsImNsaWVudGlkIjoiZTVjZDdlNDg5MWJmOTVkMWQxOTIwNmNlMjRhN2IzMmUiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MDMzNTkzMDc3NzgsInVzZXJOYW1lIjoiMTg2KioqKjM0MTYifQ.W4Qf1PgGUTyYSz7uicrbMh2C1abeg-M7OuN3D-sgkDQ' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/continuous-learning/everyDay' \
+  -H 'sec-ch-ua: "Microsoft Edge";v="143", "Chromium";v="143", "Not A(Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0'
+
+响应：{
+    "code": 200,
+    "msg": "操作成功",
+    "data": {
+        "profession": "1851239400089231362",
+        "targetAudience": "1851239660953968642"
+    }
+}
+2.设置规则
+curl 'https://edu.axdxa.cn/prod-api/progress/app/regularStudyDayRuleSetting/1874659052159205378' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzAzMzU5MzA3Nzc4Iiwicm5TdHIiOiJVMWRYRWtodDVSQVNzNDVMbEQ5dGh5NzQ5RFN5dVVWZyIsImNsaWVudGlkIjoiZTVjZDdlNDg5MWJmOTVkMWQxOTIwNmNlMjRhN2IzMmUiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MDMzNTkzMDc3NzgsInVzZXJOYW1lIjoiMTg2KioqKjM0MTYifQ.W4Qf1PgGUTyYSz7uicrbMh2C1abeg-M7OuN3D-sgkDQ' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/continuous-learning/everyDay' \
+  -H 'sec-ch-ua: "Microsoft Edge";v="143", "Chromium";v="143", "Not A(Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0'
+
+响应{
+    "code": 200,
+    "msg": "操作成功",
+    "data": {
+        "id": "1874659052272451585",
+        "studyDayId": "1874659052159205378",
+        "answeringTime": 30,
+        "cardNum": 22,
+        "notScoringDate": ",1,2,3",
+        "totalScore": 20,
+        "cutScreenNum": 0,
+        "interruptNum": 0,
+        "openFaceDetect": 0,
+        "faultToleranceTime": 1,
+        "snapIntervalTime": 1,
+        "faultToleranceTimeUnit": 1,
+        "snapIntervalTimeUnit": 1,
+        "maxSnapNum": 1
+    }
+}
+
+3.每日一题内容：
+curl 'https://edu.axdxa.cn/prod-api/progress/app/regularStudyQuestionBank/getRegularStudyQuestionInfo?examAssociationId=1874659052159205378&isReExam=0&regularStudyType=1&isRepair=0' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzAzMzU5MzA3Nzc4Iiwicm5TdHIiOiJVMWRYRWtodDVSQVNzNDVMbEQ5dGh5NzQ5RFN5dVVWZyIsImNsaWVudGlkIjoiZTVjZDdlNDg5MWJmOTVkMWQxOTIwNmNlMjRhN2IzMmUiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MDMzNTkzMDc3NzgsInVzZXJOYW1lIjoiMTg2KioqKjM0MTYifQ.W4Qf1PgGUTyYSz7uicrbMh2C1abeg-M7OuN3D-sgkDQ' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/continuous-learning/everyDay' \
+  -H 'sec-ch-ua: "Microsoft Edge";v="143", "Chromium";v="143", "Not A(Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0'
+  响应：{
+    "code": 200,
+    "msg": "操作成功",
+    "data": {
+        "isReExam": 0,
+        "yesterdayIsLearn": 1,
+        "examLimitTime": 30,
+        "questionCount": 10,
+        "questionTotalPoint": 20,
+        "questionList": [
+            {
+                "id": "2004958272024633345",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"氯气\"}, {\"item\": \"B\", \"value\": \"硫化氢\"}, {\"item\": \"C\", \"value\": \"一氧化碳\"}, {\"item\": \"D\", \"value\": \"二氧化硫\"}]",
+                "questionAnswera": "\"C\"",
+                "questionAnswerAnalyse": "结合《首批重点监管的危险化学品安全措施和应急处置原则》（安监总厅管三〔2011〕142号）的规定，氯气在常温常压下为黄绿色、有刺激性气味；硫化氢是无色气体，低浓度时有臭鸡蛋味；一氧化碳是无色、无味、无臭气体；二氧化硫为无色、有刺激性气味的气体。故答案为选项C。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《首批重点监管的危险化学品安全措施和应急处置原则》（安监总厅管三〔2011〕142号），通常情况下，下列哪种气体是无色无味的？（  ）",
+                "resourceNo": "ST2025122800109",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "2003741589360168962,2003747911040323585,1851242849501622273,1851244797718081538",
+                "contentTypeTitles": "化工基础*,非生产人员,化学品,安全生产信息",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 2,
+                "answerPoint": null,
+                "bankId": "2004938345132421122",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "氯气",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "硫化氢",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "一氧化碳",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "二氧化硫",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "1903793594982682625",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"加氢工艺\"}, {\"item\": \"B\", \"value\": \"过氧化工艺\"}, {\"item\": \"C\", \"value\": \"氧化工艺\"}, {\"item\": \"D\", \"value\": \"氮化工艺\"}]",
+                "questionAnswera": "\"D\"",
+                "questionAnswerAnalyse": "根据《国家安全监管总局关于公布首批重点监管的危险化工工艺目录的通知》（安监总管三〔2009〕116号）附件1的规定，首批重点监管的危险化工工艺目录包括加氢工艺、过氧化工艺、氧化工艺。氮化工艺是一种在一定温度下，通过一定介质使氮原子渗入工件表层的化学热处理工艺，不属于重点监管的危险化工工艺。故答案为选项D。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《国家安全监管总局关于公布首批重点监管的危险化工工艺目录的通知》（安监总管三〔2009〕116号），下列哪一项不属于重点监管的危险化工工艺？（  ）",
+                "resourceNo": "ST2025032300010",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239347203252225,1851239509094998017,1851239538761310209,1869660483948810241,1869660663544713218,1851239619979812866,1851239660953968642,1851239574303842305,1868475398407020546,1868833821480964098,1869661689224007682,1869661760694947841,1869661969126690818,1851239641182019586,1868475013919367170,1869662283498164225,1869662355996708866,1851244802302455809,1851242847316389889",
+                "contentTypeTitles": "工艺专业,主要负责人,分管负责人,中层管理人员,专业工程师,班组长,基层员工,特种作业人员,特种设备作业人员,注册安全工程师,注册消防工程师,作业监护人员,相关方人员,HAZOP分析主席,功能安全工程师,安全标准化评审员,内训师,安全操作,操作安全",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 2,
+                "answerPoint": null,
+                "bankId": "2004938345132421122",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "加氢工艺",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "过氧化工艺",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "氧化工艺",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "氮化工艺",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2004958295848280065",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"特级\"}, {\"item\": \"B\", \"value\": \"一级\"}, {\"item\": \"C\", \"value\": \"二级\"}, {\"item\": \"D\", \"value\": \"三级\"}]",
+                "questionAnswera": "\"A\"",
+                "questionAnswerAnalyse": "根据《化工过程安全管理导则》（AQ/T 3034-2022）第4.12.7条的规定，在具有火灾爆炸风险的重大危险源罐区内动火应按特级动火作业管理；液化烃充装及在储存具有火灾爆炸性危险化学品的罐区内进行流程切换、储罐脱水等高风险操作，应制定操作程序确认表，对操作安全条件逐项确认，并配备监护人员。故答案为选项A。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《化工过程安全管理导则》（AQ/T 3034-2022），在具有火灾爆炸风险的重大危险源罐区内动火应按（  ）动火作业管理。",
+                "resourceNo": "ST2025122800472",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,2003741699334819842,1851242848385937410,1851244804806455298",
+                "contentTypeTitles": "安全,所有人员*,作业安全,作业许可",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 2,
+                "answerPoint": null,
+                "bankId": "2004938345132421122",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "特级",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "一级",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "二级",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "三级",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2004958303192506370",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"二氧化硫\"}, {\"item\": \"B\", \"value\": \"硫化氢\"}, {\"item\": \"C\", \"value\": \"二氧化氮\"}, {\"item\": \"D\", \"value\": \"三氧化硫\"}]",
+                "questionAnswera": "\"B\"",
+                "questionAnswerAnalyse": "硫化氢标准状况下是一种易燃的酸性气体，无色，低浓度时有臭鸡蛋气味，浓度极低时有硫磺味，有剧毒。故答案为选项B。",
+                "questionAnswerb": null,
+                "questionTitle": "下列（  ）是有毒气体，在低浓度时具有臭鸡蛋气味。",
+                "resourceNo": "ST2025122800584",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "2003741589360168962,2003747911040323585,1851242849501622273,1851244797718081538",
+                "contentTypeTitles": "化工基础*,非生产人员,化学品,安全生产信息",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 2,
+                "answerPoint": null,
+                "bankId": "2004938345132421122",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "二氧化硫",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "硫化氢",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "二氧化氮",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "三氧化硫",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "1924276319807827969",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"袋式\"}, {\"item\": \"B\", \"value\": \"过滤\"}, {\"item\": \"C\", \"value\": \"旋风\"}, {\"item\": \"D\", \"value\": \"湿式\"}]",
+                "questionAnswera": "\"D\"",
+                "questionAnswerAnalyse": "钾金属粉末是遇湿自燃的金属粉尘。根据《粉尘防爆安全规程》（GB 15577-2018）第6.1.3条的规定，对遇湿自燃的金属粉尘，其收集、堆放与贮存时应采取防水防潮措施。故答案为选项D。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《粉尘防爆安全规程》（GB 15577-2018），某车间产生的钾金属粉末，不能采用（  ）除尘器。",
+                "resourceNo": "ST2025051900046",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239364819329026,1851239509094998017,1851239538761310209,1869660483948810241,1869660663544713218,1851239619979812866,1851239660953968642,1851244803090984962,1851242847865843714",
+                "contentTypeTitles": "设备专业,主要负责人,分管负责人,中层管理人员,专业工程师,班组长,基层员工,设备完好性管理,设备完好性管理.",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 2,
+                "answerPoint": null,
+                "bankId": "2004938345132421122",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "袋式",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "过滤",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "旋风",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "湿式",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "1910747931466731522",
+                "questionType": 2,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"安全附件\"}, {\"item\": \"B\", \"value\": \"防雷设施\"}, {\"item\": \"C\", \"value\": \"防静电设施\"}, {\"item\": \"D\", \"value\": \"消防系统\"}, {\"item\": \"E\", \"value\": \"防汛设施\"}]",
+                "questionAnswera": "\"A,B,C,D,E\"",
+                "questionAnswerAnalyse": "根据《关于进一步加强化学品罐区安全管理的通知》（安监总管三〔2014〕68号）第二条第（四）款的规定，加强化学品罐区设备设施管理。确保储罐安全附件和防雷、防静电、防汛设施及消防系统完好。故答案为选项ABCDE。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《关于进一步加强化学品罐区安全管理的通知》（安监总管三〔2014〕68号），化工企业应加强危险化学品罐区的安全管理工作，定期检查储罐的（  ）并确保其完好。",
+                "resourceNo": "ST2025041200124",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239364819329026,1851239660953968642,1851244803090984962,1851242847865843714",
+                "contentTypeTitles": "设备专业,基层员工,设备完好性管理,设备完好性管理.",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 2,
+                "answerPoint": null,
+                "bankId": "2004938345132421122",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "安全附件",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "防雷设施",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "防静电设施",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "消防系统",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "E",
+                        "value": "防汛设施",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "1922549849278324738",
+                "questionType": 2,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"事故发生单位的基本情况\"}, {\"item\": \"B\", \"value\": \"事故造成的死亡人数（包括下落不明人数）\"}, {\"item\": \"C\", \"value\": \"事故受伤人数（包括急性工业中毒人数）\"}, {\"item\": \"D\", \"value\": \"事故直接经济损失\"}, {\"item\": \"E\", \"value\": \"事故具体情况\"}]",
+                "questionAnswera": "\"A,B,C,D,E\"",
+                "questionAnswerAnalyse": "根据《生产安全事故统计调查制度（2023年）》（应急〔2023〕143号）第（三）款的规定，调查内容主要包括事故发生单位以及涉及单位的基本情况、事故造成的死亡人数（包括下落不明人数，下同）、受伤人数（包括急性工业中毒人数，下同）、直接经济损失、事故具体情况等。故答案为选项ABCDE。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《生产安全事故统计调查制度（2023年）》（应急〔2023〕143号），当生产经营单位发生人身伤亡生产安全事故后，人民政府应组织开展事故调查工作，调查内容应包括（  ）。",
+                "resourceNo": "ST2025051400008",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,1851239509094998017,1851239538761310209,1869660483948810241,1869660663544713218,1851239619979812866,1851239660953968642,1851244807297871874,1851242851212898306",
+                "contentTypeTitles": "安全专业,主要负责人,分管负责人,中层管理人员,专业工程师,班组长,基层员工,事故事件管理,事故事件管理.",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 2,
+                "answerPoint": null,
+                "bankId": "2004938345132421122",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "事故发生单位的基本情况",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "事故造成的死亡人数（包括下落不明人数）",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "事故受伤人数（包括急性工业中毒人数）",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "事故直接经济损失",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "E",
+                        "value": "事故具体情况",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "1922549854403764225",
+                "questionType": 3,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                "questionAnswera": "\"A\"",
+                "questionAnswerAnalyse": "<p>根据《粉尘防爆安全规程》（GB 15577-2018）第7.1.3条的规定，存在粉尘爆炸危险的工艺设备，应采用泄爆、抑爆和隔爆、抗爆中的一种或多种控爆方式，但不能单独采取隔爆。故题干说法正确。</p>",
+                "questionAnswerb": "",
+                "questionTitle": "根据《粉尘防爆安全规程》（GB 15577-2018），存在粉尘爆炸危险的工艺设备不能单独使用隔爆的方式来进行控爆。（  ）",
+                "resourceNo": "ST2025051400066",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,1851239509094998017,1851239538761310209,1869660483948810241,1869660663544713218,1851239619979812866,1851239660953968642,1851244799555186689,1861653311264591874",
+                "contentTypeTitles": "安全专业,主要负责人,分管负责人,中层管理人员,专业工程师,班组长,基层员工,风险管理,安全风险管控",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 2,
+                "answerPoint": null,
+                "bankId": "2004938345132421122",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "正确",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "错误",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "1945099715495071746",
+                "questionType": 3,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                "questionAnswera": "\"B\"",
+                "questionAnswerAnalyse": "<p>根据《个体防护装备配备规范 第1部分：总则》（GB 39800.1-2020）第5.4.6条的规定，在使用个体防护装备前，作业人员应对个体防护装备进行检查（如外观检查、适合性检查等），确保个体防护装备能够正常使用。故题干说法错误。</p>",
+                "questionAnswerb": "",
+                "questionTitle": "根据《个体防护装备配备规范 第1部分：总则》（GB 39800.1-2020），未拆封的防毒面具无需检查可直接使用。（  ）",
+                "resourceNo": "ST2025071500002",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,1851239509094998017,1851239538761310209,1869660483948810241,1869660663544713218,1851239619979812866,1851239660953968642,1851244802302455809,1851242847316389889",
+                "contentTypeTitles": "安全专业,主要负责人,分管负责人,中层管理人员,专业工程师,班组长,基层员工,安全操作,操作安全",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 2,
+                "answerPoint": null,
+                "bankId": "2004938345132421122",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "正确",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "错误",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "1903793597075640322",
+                "questionType": 3,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                "questionAnswera": "\"B\"",
+                "questionAnswerAnalyse": "根据《危险化学品输送管道安全管理规定》第十六条的规定，管道单位应当建立、健全危险化学品管道巡护制度，配备专人进行日常巡护。巡护人员发现危害危险化学品管道安全生产情形的，应当立即报告单位负责人并及时处理。故题干说法错误。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《危险化学品输送管道安全管理规定》，危险化学品管道单位应建立、健全危险化学品管道巡护制度，并配备兼职人员进行日常巡护。（  ）",
+                "resourceNo": "ST2025032300023",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239364819329026,1851239509094998017,1851239538761310209,1869660483948810241,1869660663544713218,1851239619979812866,1851239660953968642,1851239574303842305,1868475398407020546,1868833821480964098,1869661689224007682,1869661760694947841,1869661969126690818,1851239641182019586,1868475013919367170,1869662283498164225,1869662355996708866,1851244797718081538,1851242845588336641",
+                "contentTypeTitles": "设备专业,主要负责人,分管负责人,中层管理人员,专业工程师,班组长,基层员工,特种作业人员,特种设备作业人员,注册安全工程师,注册消防工程师,作业监护人员,相关方人员,HAZOP分析主席,功能安全工程师,安全标准化评审员,内训师,安全生产信息管理,安全生产信息与合规管理",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 2,
+                "answerPoint": null,
+                "bankId": "2004938345132421122",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "正确",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "错误",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            }
+        ]
+    }
+}
+
+5.提交答案
+curl 'https://edu.axdxa.cn/prod-api/progress/app/regularExamRecord' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzAzMzU5MzA3Nzc4Iiwicm5TdHIiOiJVMWRYRWtodDVSQVNzNDVMbEQ5dGh5NzQ5RFN5dVVWZyIsImNsaWVudGlkIjoiZTVjZDdlNDg5MWJmOTVkMWQxOTIwNmNlMjRhN2IzMmUiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MDMzNTkzMDc3NzgsInVzZXJOYW1lIjoiMTg2KioqKjM0MTYifQ.W4Qf1PgGUTyYSz7uicrbMh2C1abeg-M7OuN3D-sgkDQ' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -H 'content-type: application/json;charset=UTF-8' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV' \
+  -H 'origin: https://edu.axdxa.cn' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/continuous-learning/everyDay' \
+  -H 'sec-ch-ua: "Microsoft Edge";v="143", "Chromium";v="143", "Not A(Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0' \
+  --data-raw '{"practiceRegularId":"1874659052159205378",
+  "regularType":2,"useTime":138,"isAgain":0,"examType":1,"isRepair":null,
+  "courseExamAnswerInfoBos":[{"id":"2004958283319894017","questionType":1,"questionPoint":2,"questionAnswer":"A"},
+    {"id":"2004958302735327233","questionType":1,"questionPoint":2,"questionAnswer":"B"},
+    {"id":"2004958266848862210","questionType":1,"questionPoint":2,"questionAnswer":"A"},
+    {"id":"2004958292375396354","questionType":1,"questionPoint":2,"questionAnswer":"B"},
+    {"id":"1945099715742535681","questionType":1,"questionPoint":2,"questionAnswer":"B"},
+    {"id":"2004958279687626753","questionType":3,"questionPoint":2,"questionAnswer":"A"},
+    {"id":"1943567277313093633","questionType":3,"questionPoint":2,"questionAnswer":"A"},
+    {"id":"2004958287778439169","questionType":3,"questionPoint":2,"questionAnswer":"A"},
+    {"id":"1943567277401174017","questionType":2,"questionPoint":2,"questionAnswer":"A,B,C,D,E"},
+    {"id":"1943567276658782209","questionType":2,"questionPoint":2,"questionAnswer":"A,C,D,E"}],
+    "fullPoint":20,"examDuration":30}'
+  响应：{
+    "code": 200,
+    "msg": "操作成功",
+    "data": {
+        "id": "2008518760377507842",
+        "examUserId": "1998321703359307778",
+        "examAssociationId": "1874659052159205378",
+        "examType": 1,
+        "fullPoint": 20,
+        "answerPoint": 14.0,
+        "correctAnswerNum": 7,
+        "wrongQuestionNum": 3,
+        "notDoneNum": 0,
+        "answerDetail": "{\"appResourcesQuestions\":[{\"id\":\"2004958283319894017\",\"questionType\":1,\"myAnswer\":\"A\",\"questionPoint\":2,\"answerPoint\":\"2\",\"encryption\":\"d1726bd800f10e3ff99136045837baa7\"},{\"id\":\"2004958302735327233\",\"questionType\":1,\"myAnswer\":\"B\",\"questionPoint\":2,\"answerPoint\":\"0\",\"encryption\":\"85203c11b2bd5659a2f03cca28569a9d\"},{\"id\":\"2004958266848862210\",\"questionType\":1,\"myAnswer\":\"A\",\"questionPoint\":2,\"answerPoint\":\"2\",\"encryption\":\"db31347e39f698114ef23ef99ef8574c\"},{\"id\":\"2004958292375396354\",\"questionType\":1,\"myAnswer\":\"B\",\"questionPoint\":2,\"answerPoint\":\"2\",\"encryption\":\"5755d5253b4e04dabc25002984af57c3\"},{\"id\":\"1945099715742535681\",\"questionType\":1,\"myAnswer\":\"B\",\"questionPoint\":2,\"answerPoint\":\"2\",\"encryption\":\"01a1b6fca5b1644811a072e120e707b3\"},{\"id\":\"2004958279687626753\",\"questionType\":3,\"myAnswer\":\"A\",\"questionPoint\":2,\"answerPoint\":\"2\",\"encryption\":\"157102bdbc74475ffb206db71a9e5461\"},{\"id\":\"1943567277313093633\",\"questionType\":3,\"myAnswer\":\"A\",\"questionPoint\":2,\"answerPoint\":\"0\",\"encryption\":\"4bd39662bf2709e6fcfdfe3a2fd8ce8e\"},{\"id\":\"2004958287778439169\",\"questionType\":3,\"myAnswer\":\"A\",\"questionPoint\":2,\"answerPoint\":\"2\",\"encryption\":\"bd5aec4118327f7cbbdea88bbc5ad124\"},{\"id\":\"1943567277401174017\",\"questionType\":2,\"myAnswer\":\"A,B,C,D,E\",\"questionPoint\":2,\"answerPoint\":\"2\",\"encryption\":\"e878ad847cebf9306d1a6f198f39012e\"},{\"id\":\"1943567276658782209\",\"questionType\":2,\"myAnswer\":\"A,C,D,E\",\"questionPoint\":2,\"answerPoint\":\"0\",\"encryption\":\"1756c2e97e493a9a7fc61e4664b92854\"}],\"questionCount\":10}",
+        "answerDetailVoList": null,
+        "useTime": 138,
+        "createTime": "2026-01-06 20:37:05",
+        "examDuration": 30,
+        "questionCount": 10,
+        "limitTime": null,
+        "remark": null,
+        "isNew": 1,
+        "isRepair": 0,
+        "reportingDate": "1/6/26, 5:39 PM"
+    }
+}
+6.提交答案后续
+curl 'https://edu.axdxa.cn/prod-api/progress/app/regularExamRecord/getRegularStudyExamInfo/2008518760377507842/1' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzAzMzU5MzA3Nzc4Iiwicm5TdHIiOiJVMWRYRWtodDVSQVNzNDVMbEQ5dGh5NzQ5RFN5dVVWZyIsImNsaWVudGlkIjoiZTVjZDdlNDg5MWJmOTVkMWQxOTIwNmNlMjRhN2IzMmUiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MDMzNTkzMDc3NzgsInVzZXJOYW1lIjoiMTg2KioqKjM0MTYifQ.W4Qf1PgGUTyYSz7uicrbMh2C1abeg-M7OuN3D-sgkDQ' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/continuous-learning/exameDone?regularStudyId=1874659052159205378&regularStudyType=1&origin=everyDay&regularExamRecordVoId=2008518760377507842&enterpriseType=association&companyId=&companyName=' \
+  -H 'sec-ch-ua: "Microsoft Edge";v="143", "Chromium";v="143", "Not A(Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0'
+
+响应：{
+    "code": 200,
+    "msg": "操作成功",
+    "data": {
+        "id": "2008518760377507842",
+        "examUserId": null,
+        "examAssociationId": null,
+        "examType": null,
+        "fullPoint": 20,
+        "answerPoint": 14.0,
+        "correctAnswerNum": 7,
+        "wrongQuestionNum": 3,
+        "notDoneNum": 0,
+        "answerDetail": "{\"questionCount\": 10, \"appResourcesQuestions\": [{\"id\": \"2004958283319894017\", \"myAnswer\": \"A\", \"encryption\": \"d1726bd800f10e3ff99136045837baa7\", \"answerPoint\": \"2\", \"questionType\": 1, \"questionPoint\": 2}, {\"id\": \"2004958302735327233\", \"myAnswer\": \"B\", \"encryption\": \"85203c11b2bd5659a2f03cca28569a9d\", \"answerPoint\": \"0\", \"questionType\": 1, \"questionPoint\": 2}, {\"id\": \"2004958266848862210\", \"myAnswer\": \"A\", \"encryption\": \"db31347e39f698114ef23ef99ef8574c\", \"answerPoint\": \"2\", \"questionType\": 1, \"questionPoint\": 2}, {\"id\": \"2004958292375396354\", \"myAnswer\": \"B\", \"encryption\": \"5755d5253b4e04dabc25002984af57c3\", \"answerPoint\": \"2\", \"questionType\": 1, \"questionPoint\": 2}, {\"id\": \"1945099715742535681\", \"myAnswer\": \"B\", \"encryption\": \"01a1b6fca5b1644811a072e120e707b3\", \"answerPoint\": \"2\", \"questionType\": 1, \"questionPoint\": 2}, {\"id\": \"2004958279687626753\", \"myAnswer\": \"A\", \"encryption\": \"157102bdbc74475ffb206db71a9e5461\", \"answerPoint\": \"2\", \"questionType\": 3, \"questionPoint\": 2}, {\"id\": \"1943567277313093633\", \"myAnswer\": \"A\", \"encryption\": \"4bd39662bf2709e6fcfdfe3a2fd8ce8e\", \"answerPoint\": \"0\", \"questionType\": 3, \"questionPoint\": 2}, {\"id\": \"2004958287778439169\", \"myAnswer\": \"A\", \"encryption\": \"bd5aec4118327f7cbbdea88bbc5ad124\", \"answerPoint\": \"2\", \"questionType\": 3, \"questionPoint\": 2}, {\"id\": \"1943567277401174017\", \"myAnswer\": \"A,B,C,D,E\", \"encryption\": \"e878ad847cebf9306d1a6f198f39012e\", \"answerPoint\": \"2\", \"questionType\": 2, \"questionPoint\": 2}, {\"id\": \"1943567276658782209\", \"myAnswer\": \"A,C,D,E\", \"encryption\": \"1756c2e97e493a9a7fc61e4664b92854\", \"answerPoint\": \"0\", \"questionType\": 2, \"questionPoint\": 2}]}",
+        "answerDetailVoList": {
+            "questionCount": 10,
+            "appResourcesQuestions": [
+                {
+                    "id": "2004958283319894017",
+                    "questionType": 1,
+                    "questionImage": null,
+                    "questionOptions": "[{\"item\": \"A\", \"value\": \"不得少于72学时\"}, {\"item\": \"B\", \"value\": \"不得少于20学时\"}, {\"item\": \"C\", \"value\": \"不得少于48学时\"}, {\"item\": \"D\", \"value\": \"不得少于16学时\"}]",
+                    "questionAnswera": "A",
+                    "questionAnswerAnalyse": "根据《生产经营单位安全培训规定》第十三条的规定，危险化学品生产经营单位新上岗的从业人员安全培训时间不得少于72学时，每年接受再培训的时间不得少于20学时。故答案为选项A。",
+                    "questionAnswerb": null,
+                    "questionTitle": "根据《生产经营单位安全培训规定》，关于新上岗的危险化学品企业从业人员安全培训时间的说法，正确的是（  ）。",
+                    "resourceNo": null,
+                    "resourceType": null,
+                    "companyId": null,
+                    "remark": null,
+                    "contentTypeIds": "1851239329348100098,2003741699334819842,1851242846146179074,1851244798502416386",
+                    "contentTypeTitles": "安全,所有人员*,教育培训管理,教育培训",
+                    "creator": null,
+                    "modifiedBy": null,
+                    "myAnswer": "A",
+                    "questionPoint": 2,
+                    "answerPoint": "2",
+                    "bankId": null,
+                    "questionOptionsVos": [
+                        {
+                            "item": "A",
+                            "value": "不得少于72学时",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "B",
+                            "value": "不得少于20学时",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "C",
+                            "value": "不得少于48学时",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "D",
+                            "value": "不得少于16学时",
+                            "valueUrl": null
+                        }
+                    ],
+                    "questionCaseList": null,
+                    "isCollect": null,
+                    "collectNum": null,
+                    "reshareNum": null,
+                    "encryption": "d1726bd800f10e3ff99136045837baa7"
+                },
+                {
+                    "id": "2004958302735327233",
+                    "questionType": 1,
+                    "questionImage": null,
+                    "questionOptions": "[{\"item\": \"A\", \"value\": \"1\"}, {\"item\": \"B\", \"value\": \"3\"}, {\"item\": \"C\", \"value\": \"5\"}, {\"item\": \"D\", \"value\": \"10\"}]",
+                    "questionAnswera": "A",
+                    "questionAnswerAnalyse": "根据《工作场所有害因素职业接触限值 第1部分：化学有害因素》（GBZ 2.1-2019）表1的规定，氯的最高容许浓度为1mg/m³。故答案为选项A。",
+                    "questionAnswerb": null,
+                    "questionTitle": "根据《工作场所有害因素职业接触限值 第1部分：化学有害因素》（GBZ 2.1-2019），氯的最高容许浓度是（  ）mg/m³。",
+                    "resourceNo": null,
+                    "resourceType": null,
+                    "companyId": null,
+                    "remark": null,
+                    "contentTypeIds": "2003741589360168962,2003747911040323585,1851242849501622273,1851244797718081538",
+                    "contentTypeTitles": "化工基础*,非生产人员,化学品,安全生产信息",
+                    "creator": null,
+                    "modifiedBy": null,
+                    "myAnswer": "B",
+                    "questionPoint": 2,
+                    "answerPoint": "0",
+                    "bankId": null,
+                    "questionOptionsVos": [
+                        {
+                            "item": "A",
+                            "value": "1",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "B",
+                            "value": "3",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "C",
+                            "value": "5",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "D",
+                            "value": "10",
+                            "valueUrl": null
+                        }
+                    ],
+                    "questionCaseList": null,
+                    "isCollect": null,
+                    "collectNum": null,
+                    "reshareNum": null,
+                    "encryption": "85203c11b2bd5659a2f03cca28569a9d"
+                },
+                {
+                    "id": "2004958266848862210",
+                    "questionType": 1,
+                    "questionImage": null,
+                    "questionOptions": "[{\"item\": \"A\", \"value\": \"火焰根部\"}, {\"item\": \"B\", \"value\": \"火焰外围\"}, {\"item\": \"C\", \"value\": \"火焰中部\"}, {\"item\": \"D\", \"value\": \"火焰上部\"}]",
+                    "questionAnswera": "A",
+                    "questionAnswerAnalyse": "手提式干粉灭火器的正确使用方法是：选择上风位置接近火点，将胶管对准火焰根部喷射。故答案为选项A。",
+                    "questionAnswerb": null,
+                    "questionTitle": "使用手提式干粉灭火器灭火时，应选择上风位置接近火点，将胶管对准（  ）进行喷射。",
+                    "resourceNo": null,
+                    "resourceType": null,
+                    "companyId": null,
+                    "remark": null,
+                    "contentTypeIds": "2003741589360168962,2003747911040323585,1851242850604724225,1851244806584840194",
+                    "contentTypeTitles": "化工基础*,非生产人员,应急,应急管理",
+                    "creator": null,
+                    "modifiedBy": null,
+                    "myAnswer": "A",
+                    "questionPoint": 2,
+                    "answerPoint": "2",
+                    "bankId": null,
+                    "questionOptionsVos": [
+                        {
+                            "item": "A",
+                            "value": "火焰根部",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "B",
+                            "value": "火焰外围",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "C",
+                            "value": "火焰中部",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "D",
+                            "value": "火焰上部",
+                            "valueUrl": null
+                        }
+                    ],
+                    "questionCaseList": null,
+                    "isCollect": null,
+                    "collectNum": null,
+                    "reshareNum": null,
+                    "encryption": "db31347e39f698114ef23ef99ef8574c"
+                },
+                {
+                    "id": "2004958292375396354",
+                    "questionType": 1,
+                    "questionImage": null,
+                    "questionOptions": "[{\"item\": \"A\", \"value\": \"受限空间内使用的照明电压不应超过36V\"}, {\"item\": \"B\", \"value\": \"受限空间内使用的照明电压不应超过48V\"}, {\"item\": \"C\", \"value\": \"在潮湿容器、狭小容器内作业电压不应超过12V\"}, {\"item\": \"D\", \"value\": \"动力和照明线路应分路设置\"}]",
+                    "questionAnswera": "B",
+                    "questionAnswerAnalyse": "根据《危险化学品企业特殊作业安全规范》（GB 30871-2022）第4.13条的规定，作业现场照明系统配置要求：\na）作业现场应设置满足作业要求的照明装备；\nb）受限空间内使用的照明电压不应超过36V，并满足安全用电要求；在潮湿容器、狭小容器内作业电压不应超过12V；\nd）动力和照明线路应分路设置。故答案为选项B。",
+                    "questionAnswerb": null,
+                    "questionTitle": "根据《危险化学品企业特殊作业安全规范》（GB 30871-2022），在受限空间内作业，对现场照明配置的管理要求，做法错误的是（  ）。",
+                    "resourceNo": null,
+                    "resourceType": null,
+                    "companyId": null,
+                    "remark": null,
+                    "contentTypeIds": "2003741589360168962,2003747911040323585,1851242848385937410,1851244804806455298",
+                    "contentTypeTitles": "化工基础*,非生产人员,作业安全,作业许可",
+                    "creator": null,
+                    "modifiedBy": null,
+                    "myAnswer": "B",
+                    "questionPoint": 2,
+                    "answerPoint": "2",
+                    "bankId": null,
+                    "questionOptionsVos": [
+                        {
+                            "item": "A",
+                            "value": "受限空间内使用的照明电压不应超过36V",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "B",
+                            "value": "受限空间内使用的照明电压不应超过48V",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "C",
+                            "value": "在潮湿容器、狭小容器内作业电压不应超过12V",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "D",
+                            "value": "动力和照明线路应分路设置",
+                            "valueUrl": null
+                        }
+                    ],
+                    "questionCaseList": null,
+                    "isCollect": null,
+                    "collectNum": null,
+                    "reshareNum": null,
+                    "encryption": "5755d5253b4e04dabc25002984af57c3"
+                },
+                {
+                    "id": "1945099715742535681",
+                    "questionType": 1,
+                    "questionImage": null,
+                    "questionOptions": "[{\"item\": \"A\", \"value\": \"性能检测与参数校准\"}, {\"item\": \"B\", \"value\": \"外观检查和适合性检查\"}, {\"item\": \"C\", \"value\": \"材质成分分析\"}, {\"item\": \"D\", \"value\": \"核实产品检测检验报告\"}]",
+                    "questionAnswera": "B",
+                    "questionAnswerAnalyse": "<p>根据《个体防护装备配备规范 第1部分：总则》（GB 39800.1-2020）第5.4.6条的规定，在使用个体防护装备前，作业人员应对个体防护装备进行检査（如外观检查、适合性检查等），确保个体防护装备能够正常使用。故答案为选项B。</p>",
+                    "questionAnswerb": "",
+                    "questionTitle": "根据《个体防护装备配备规范 第1部分：总则》（GB 39800.1-2020），作业人员使用个体防护装备前应对其进行（  ）。",
+                    "resourceNo": null,
+                    "resourceType": null,
+                    "companyId": null,
+                    "remark": null,
+                    "contentTypeIds": "1851239329348100098,1851239509094998017,1851239538761310209,1869660483948810241,1869660663544713218,1851239619979812866,1851239660953968642,1851244802302455809,1851242847316389889",
+                    "contentTypeTitles": "安全专业,主要负责人,分管负责人,中层管理人员,专业工程师,班组长,基层员工,安全操作,操作安全",
+                    "creator": null,
+                    "modifiedBy": null,
+                    "myAnswer": "B",
+                    "questionPoint": 2,
+                    "answerPoint": "2",
+                    "bankId": null,
+                    "questionOptionsVos": [
+                        {
+                            "item": "A",
+                            "value": "性能检测与参数校准",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "B",
+                            "value": "外观检查和适合性检查",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "C",
+                            "value": "材质成分分析",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "D",
+                            "value": "核实产品检测检验报告",
+                            "valueUrl": null
+                        }
+                    ],
+                    "questionCaseList": null,
+                    "isCollect": null,
+                    "collectNum": null,
+                    "reshareNum": null,
+                    "encryption": "01a1b6fca5b1644811a072e120e707b3"
+                },
+                {
+                    "id": "2004958279687626753",
+                    "questionType": 3,
+                    "questionImage": null,
+                    "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                    "questionAnswera": "A",
+                    "questionAnswerAnalyse": "根据《中华人民共和国安全生产法》第六条的规定，生产经营单位的从业人员有依法获得安全生产保障的权利，并应当依法履行安全生产方面的义务。故题干说法正确。",
+                    "questionAnswerb": null,
+                    "questionTitle": "根据《中华人民共和国安全生产法》，生产经营单位的从业人员有依法获得安全生产保障的权利，并应当依法履行安全生产方面的义务。（  ）",
+                    "resourceNo": null,
+                    "resourceType": null,
+                    "companyId": null,
+                    "remark": null,
+                    "contentTypeIds": "1851239329348100098,2003741699334819842,1851242845051465730,1851244796073914369",
+                    "contentTypeTitles": "安全,所有人员*,责任制,安全责任制",
+                    "creator": null,
+                    "modifiedBy": null,
+                    "myAnswer": "A",
+                    "questionPoint": 2,
+                    "answerPoint": "2",
+                    "bankId": null,
+                    "questionOptionsVos": [
+                        {
+                            "item": "A",
+                            "value": "正确",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "B",
+                            "value": "错误",
+                            "valueUrl": null
+                        }
+                    ],
+                    "questionCaseList": null,
+                    "isCollect": null,
+                    "collectNum": null,
+                    "reshareNum": null,
+                    "encryption": "157102bdbc74475ffb206db71a9e5461"
+                },
+                {
+                    "id": "1943567277313093633",
+                    "questionType": 3,
+                    "questionImage": null,
+                    "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                    "questionAnswera": "B",
+                    "questionAnswerAnalyse": "根据《危险化学品安全管理条例》第十八条的规定，对重复使用的危险化学品包装物、容器，使用单位在重复使用前应当进行检查。故题干说法错误。",
+                    "questionAnswerb": null,
+                    "questionTitle": "根据《危险化学品安全管理条例》，危险化学品使用单位不得重复使用危险化学品的包装物、容器。（  ）",
+                    "resourceNo": null,
+                    "resourceType": null,
+                    "companyId": null,
+                    "remark": null,
+                    "contentTypeIds": "1851239329348100098,1851239509094998017,1851239538761310209,1869660483948810241,1869660663544713218,1851239619979812866,1851239660953968642,1851244796946329602,1851242849501622273",
+                    "contentTypeTitles": "安全专业,主要负责人,分管负责人,中层管理人员,专业工程师,班组长,基层员工,安全生产合规管理,化学品安全与重大危险源管理",
+                    "creator": null,
+                    "modifiedBy": null,
+                    "myAnswer": "A",
+                    "questionPoint": 2,
+                    "answerPoint": "0",
+                    "bankId": null,
+                    "questionOptionsVos": [
+                        {
+                            "item": "A",
+                            "value": "正确",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "B",
+                            "value": "错误",
+                            "valueUrl": null
+                        }
+                    ],
+                    "questionCaseList": null,
+                    "isCollect": null,
+                    "collectNum": null,
+                    "reshareNum": null,
+                    "encryption": "4bd39662bf2709e6fcfdfe3a2fd8ce8e"
+                },
+                {
+                    "id": "2004958287778439169",
+                    "questionType": 3,
+                    "questionImage": null,
+                    "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                    "questionAnswera": "A",
+                    "questionAnswerAnalyse": "根据《中华人民共和国职业病防治法》第二十四条的规定，产生职业病危害的用人单位，应当在醒目位置设置公告栏，公布有关职业病防治的规章制度、操作规程、职业病危害事故应急救援措施和工作场所职业病危害因素检测结果。故题干说法正确。",
+                    "questionAnswerb": null,
+                    "questionTitle": "根据《中华人民共和国职业病防治法》，产生职业病危害的用人单位，应当在醒目位置设置公告栏，公布有关职业病防治的规章制度、操作规程、职业病危害事故应急救援措施和工作场所职业病危害因素检测结果。（  ）",
+                    "resourceNo": null,
+                    "resourceType": null,
+                    "companyId": null,
+                    "remark": null,
+                    "contentTypeIds": "1851239329348100098,2003741699334819842",
+                    "contentTypeTitles": "安全,所有人员*",
+                    "creator": null,
+                    "modifiedBy": null,
+                    "myAnswer": "A",
+                    "questionPoint": 2,
+                    "answerPoint": "2",
+                    "bankId": null,
+                    "questionOptionsVos": [
+                        {
+                            "item": "A",
+                            "value": "正确",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "B",
+                            "value": "错误",
+                            "valueUrl": null
+                        }
+                    ],
+                    "questionCaseList": null,
+                    "isCollect": null,
+                    "collectNum": null,
+                    "reshareNum": null,
+                    "encryption": "bd5aec4118327f7cbbdea88bbc5ad124"
+                },
+                {
+                    "id": "1943567277401174017",
+                    "questionType": 2,
+                    "questionImage": null,
+                    "questionOptions": "[{\"item\": \"A\", \"value\": \"商业中心等人员密集场所\"}, {\"item\": \"B\", \"value\": \"饮用水源、水厂以及水源保护区\"}, {\"item\": \"C\", \"value\": \"河流、湖泊、风景名胜区、自然保护区\"}, {\"item\": \"D\", \"value\": \"军事禁区、军事管理区\"}, {\"item\": \"E\", \"value\": \"铁路线路、道路交通干线\"}]",
+                    "questionAnswera": "A,B,C,D,E",
+                    "questionAnswerAnalyse": "结合《危险化学品安全管理条例》第十九条的规定，危险化学品生产装置，与下列场所、设施、区域的距离应当符合国家有关规定：其中包括商业中心等人员密集场所；饮用水源、水厂以及水源保护区；河流、湖泊、风景名胜区、自然保护区；军事禁区、军事管理区；铁路线路、道路交通干线等。故答案为选项ABCDE。",
+                    "questionAnswerb": null,
+                    "questionTitle": "根据《危险化学品安全管理条例》，危险化学品企业生产装置与下列哪些场所、设施、区域的距离应当符合国家有关规定？（  ）",
+                    "resourceNo": null,
+                    "resourceType": null,
+                    "companyId": null,
+                    "remark": null,
+                    "contentTypeIds": "1851239329348100098,1851239509094998017,1851239538761310209,1869660483948810241,1869660663544713218,1851239619979812866,1851239660953968642,1851244796946329602,1851242849501622273",
+                    "contentTypeTitles": "安全专业,主要负责人,分管负责人,中层管理人员,专业工程师,班组长,基层员工,安全生产合规管理,化学品安全与重大危险源管理",
+                    "creator": null,
+                    "modifiedBy": null,
+                    "myAnswer": "A,B,C,D,E",
+                    "questionPoint": 2,
+                    "answerPoint": "2",
+                    "bankId": null,
+                    "questionOptionsVos": [
+                        {
+                            "item": "A",
+                            "value": "商业中心等人员密集场所",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "B",
+                            "value": "饮用水源、水厂以及水源保护区",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "C",
+                            "value": "河流、湖泊、风景名胜区、自然保护区",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "D",
+                            "value": "军事禁区、军事管理区",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "E",
+                            "value": "铁路线路、道路交通干线",
+                            "valueUrl": null
+                        }
+                    ],
+                    "questionCaseList": null,
+                    "isCollect": null,
+                    "collectNum": null,
+                    "reshareNum": null,
+                    "encryption": "e878ad847cebf9306d1a6f198f39012e"
+                },
+                {
+                    "id": "1943567276658782209",
+                    "questionType": 2,
+                    "questionImage": null,
+                    "questionOptions": "[{\"item\": \"A\", \"value\": \"安全教育\"}, {\"item\": \"B\", \"value\": \"法制教育\"}, {\"item\": \"C\", \"value\": \"岗位技术培训\"}, {\"item\": \"D\", \"value\": \"环保培训\"}, {\"item\": \"E\", \"value\": \"保密培训\"}]",
+                    "questionAnswera": "A,B,C",
+                    "questionAnswerAnalyse": "根据《危险化学品安全管理条例》第四条的规定，危险化学品单位应当建立、健全安全管理规章制度和岗位安全责任制度，对从业人员进行安全教育、法制教育和岗位技术培训。故答案为选项ABC。",
+                    "questionAnswerb": null,
+                    "questionTitle": "根据《危险化学品安全管理条例》，危险化学品单位应当建立、健全安全管理规章制度和岗位安全责任制度，对从业人员进行哪些方面的安全培训？（  ）",
+                    "resourceNo": null,
+                    "resourceType": null,
+                    "companyId": null,
+                    "remark": null,
+                    "contentTypeIds": "1851239329348100098,1851239509094998017,1851239538761310209,1869660483948810241,1869660663544713218,1851239619979812866,1851239660953968642,1851244796946329602,1851242849501622273",
+                    "contentTypeTitles": "安全专业,主要负责人,分管负责人,中层管理人员,专业工程师,班组长,基层员工,安全生产合规管理,化学品安全与重大危险源管理",
+                    "creator": null,
+                    "modifiedBy": null,
+                    "myAnswer": "A,C,D,E",
+                    "questionPoint": 2,
+                    "answerPoint": "0",
+                    "bankId": null,
+                    "questionOptionsVos": [
+                        {
+                            "item": "A",
+                            "value": "安全教育",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "B",
+                            "value": "法制教育",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "C",
+                            "value": "岗位技术培训",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "D",
+                            "value": "环保培训",
+                            "valueUrl": null
+                        },
+                        {
+                            "item": "E",
+                            "value": "保密培训",
+                            "valueUrl": null
+                        }
+                    ],
+                    "questionCaseList": null,
+                    "isCollect": null,
+                    "collectNum": null,
+                    "reshareNum": null,
+                    "encryption": "1756c2e97e493a9a7fc61e4664b92854"
+                }
+            ]
+        },
+        "useTime": 138,
+        "createTime": "2026-01-06 20:37:05",
+        "examDuration": 30,
+        "questionCount": 10,
+        "limitTime": 30,
+        "remark": null,
+        "isNew": 1,
+        "isRepair": null,
+        "reportingDate": null
+    }
+}
+
+
+

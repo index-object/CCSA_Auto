@@ -1,0 +1,1517 @@
+
+
+
+获取试题：
+curl 'https://edu.axdxa.cn/prod-api/progress/app/regularStudyQuestionBank/getRegularStudyQuestionInfo?examAssociationId=2005861385550106626&isReExam=0&regularStudyType=2&isRepair=0' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzEzNzczNzY0NjA5Iiwicm5TdHIiOiJlZ1ozMjZqY3p2eHpJbnhzYUs0TjRuMjZGOHVCWjFQUiIsImNsaWVudGlkIjoiZTVjZDdlNDg5MWJmOTVkMWQxOTIwNmNlMjRhN2IzMmUiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MTM3NzM3NjQ2MDksInVzZXJOYW1lIjoiMTg3KioqKjA1MTgifQ.gQiufojkp6KrNqbrme16LChq7ymFFW8T72iOxdZI8to' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV; p_h5_u=598BFCB1-1FFB-4ED5-97E3-6FCA73353952; selectedStreamLevel=FD; selectedCC=off' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/continuous-learning/everyMonth?authChannel=customer' \
+  -H 'sec-ch-ua: "Microsoft Edge";v="143", "Chromium";v="143", "Not A(Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0'
+响应：
+{
+    "code": 200,
+    "msg": "操作成功",
+    "data": {
+        "isReExam": 0,
+        "yesterdayIsLearn": null,
+        "examLimitTime": 80,
+        "questionCount": 30,
+        "questionTotalPoint": 100,
+        "questionList": [
+            {
+                "id": "2005861925556215810",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"生产许可证\"}, {\"item\": \"B\", \"value\": \"安全标签\"}, {\"item\": \"C\", \"value\": \"检验报告\"}, {\"item\": \"D\", \"value\": \"运输标识\"}]",
+                "questionAnswera": "\"B\"",
+                "questionAnswerAnalyse": "根据《危险化学品安全管理条例》第十五条的规定，危险化学品生产企业应当提供与其生产的危险化学品相符的化学品安全技术说明书，并在危险化学品包装（包括外包装件）上粘贴或者拴挂与包装内危险化学品相符的化学品安全标签。故答案为选项B。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《危险化学品安全管理条例》，危险化学品生产企业应当提供与其生产的危险化学品相符的化学品安全技术说明书，并在包装上粘贴或者拴挂化学品（  ）。",
+                "resourceNo": "ST2025123000015",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,1988513424908087298,1851242849501622273,1851244797718081538",
+                "contentTypeTitles": "安全,专业管理人员,化学品,安全生产信息",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "生产许可证",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "安全标签",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "检验报告",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "运输标识",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861925203894274",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"物理危险\"}, {\"item\": \"B\", \"value\": \"健康危害\"}, {\"item\": \"C\", \"value\": \"经济危害\"}, {\"item\": \"D\", \"value\": \"环境危害\"}]",
+                "questionAnswera": "\"C\"",
+                "questionAnswerAnalyse": "根据《化学品分类和标签规范第1部分：通则》（GB 30000.1-2024）第4.1.1条的规定，化学品危险性包括物理危险、健康危害和环境危害3大类29项。故答案为选项C。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《化学品分类和标签规范第1部分：通则》（GB 30000.1-2024），下列哪项不属于化学品的危险性类别？（  ）",
+                "resourceNo": "ST2025123000010",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,2003741699334819842,1851242849501622273,1851244797718081538",
+                "contentTypeTitles": "安全,所有人员*,化学品,安全生产信息",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "物理危险",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "健康危害",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "经济危害",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "环境危害",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861926256664577",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"2℃\"}, {\"item\": \"B\", \"value\": \"5℃\"}, {\"item\": \"C\", \"value\": \"8℃\"}, {\"item\": \"D\", \"value\": \"10℃\"}]",
+                "questionAnswera": "\"D\"",
+                "questionAnswerAnalyse": "根据《气动控制阀》（GB/T 4213-2024）第4.8.2条的规定，操作压力下的气源，其露点应比控制阀工作环境温度至少低10℃。故答案为选项D。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《气动控制阀》（GB/T 4213-2024），操作压力下的控制阀气源，其露点应比控制阀工作环境温度至少低多少摄氏度？（  ）",
+                "resourceNo": "ST2025123000025",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239400089231362,1988513424908087298,1851242847865843714,1851244803090984962",
+                "contentTypeTitles": "仪表,专业管理人员,设备完整性,设备完好性",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "2℃",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "5℃",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "8℃",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "10℃",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861926399270913",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"10%LEL\"}, {\"item\": \"B\", \"value\": \"25%LEL\"}, {\"item\": \"C\", \"value\": \"50%LEL\"}, {\"item\": \"D\", \"value\": \"100%LEL\"}]",
+                "questionAnswera": "\"B\"",
+                "questionAnswerAnalyse": "根据《石油化工可燃气体和有毒气体检测报警设计标准》（GB/T 50493-2019）第5.5.2条的规定，可燃气体的一级报警设定值应小于或等于25%LEL。故答案为选项B。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《石油化工可燃气体和有毒气体检测报警设计标准》（GB/T 50493-2019），可燃气体的一级报警设定值应不超过多少？（  ）",
+                "resourceNo": "ST2025123000027",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239347203252225,1988513424908087298,1851242847316389889,1851244802302455809",
+                "contentTypeTitles": "工艺,专业管理人员,操作安全,安全操作",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "10%LEL",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "25%LEL",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "50%LEL",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "100%LEL",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861925765931010",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"I级\"}, {\"item\": \"B\", \"value\": \"Ⅱ级\"}, {\"item\": \"C\", \"value\": \"Ⅲ级\"}, {\"item\": \"D\", \"value\": \"IV级\"}]",
+                "questionAnswera": "\"C\"",
+                "questionAnswerAnalyse": "结合《危险化学品企业特殊作业安全规范》（GB 30871-2022）第8.1.2和8.1.3条的规定，存在五级以上风力的阵风等客观危险因素时，应按B类法分级。高度5m＜h≤15m对应B类分级为Ⅲ级。故答案为选项C。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《危险化学品企业特殊作业安全规范》（GB 30871-2022），当高处作业平台的高度为10m，且存在五级以上风力的阵风时，该高处作业的级别应为几级？（  ）",
+                "resourceNo": "ST2025123000018",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,2003741699334819842,1851242848385937410,1851244804806455298",
+                "contentTypeTitles": "安全,所有人员*,作业安全,作业许可",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "I级",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "Ⅱ级",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "Ⅲ级",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "IV级",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861926118252545",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"防护栏杆\"}, {\"item\": \"B\", \"value\": \"电缆桥架\"}, {\"item\": \"C\", \"value\": \"结构梁柱\"}, {\"item\": \"D\", \"value\": \"阀门\"}]",
+                "questionAnswera": "\"C\"",
+                "questionAnswerAnalyse": "根据《石油化工工程高处作业技术规范》（SH/T 3567-2018）第6.2.7条的规定，现场可利用结构梁柱作为锚固点，或者焊接固定符合强度要求的型钢立柱做锚固点，型钢底部与支撑面应四周满焊；不得利用防护栏杆、电缆桥架、避雷线、穿线管、阀门、手柄、法兰等作为锚固点。故答案为选项C。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《石油化工工程高处作业技术规范》（SH/T 3567-2018），员工在进行高处作业时，可将下列哪个位置作为生命绳锚固点？（  ）",
+                "resourceNo": "ST2025123000023",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,2003741699334819842,1851242848385937410,1851244804806455298",
+                "contentTypeTitles": "安全,所有人员*,作业安全,作业许可",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "防护栏杆",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "电缆桥架",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "结构梁柱",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "阀门",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861926046949377",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"每月\"}, {\"item\": \"B\", \"value\": \"每季度\"}, {\"item\": \"C\", \"value\": \"每半年\"}, {\"item\": \"D\", \"value\": \"每年\"}]",
+                "questionAnswera": "\"A\"",
+                "questionAnswerAnalyse": "根据《石油化工工程高处作业技术规范》（SH/T 3567-2018）第5.3.5条的规定，安全带应每月进行一次外观检查，有破损、腐蚀的禁止使用。故答案为选项A。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《石油化工工程高处作业技术规范》（SH/T 3567-2018），安全带应至少多长时间进行一次外观检查？（  ）",
+                "resourceNo": "ST2025123000022",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,1851239660953968642,1851242848385937410,1851244804806455298",
+                "contentTypeTitles": "安全,一线员工,作业安全,作业许可",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "每月",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "每季度",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "每半年",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "每年",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861924851572738",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"检测范围和报警精度\"}, {\"item\": \"B\", \"value\": \"探测器的选择性和使用寿命\"}, {\"item\": \"C\", \"value\": \"释放点的环境和工作条件\"}, {\"item\": \"D\", \"value\": \"检测报警仪的价格和品牌\"}]",
+                "questionAnswera": "\"D\"",
+                "questionAnswerAnalyse": "结合《工作场所有毒气体检测报警装置设置规范》（GBZ/T 223-2009）第6.1.2和6.1.3条的规定，有毒气体检测报警仪的检测范围、检测和报警精度、选择性和使用寿命等应满足检测报警要求；根据有毒气体释放源和释放点的环境、工作条件选择适宜的有毒气体检测报警仪。故答案为选项D。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《工作场所有毒气体检测报警装置设置规范》（GBZ/T 223-2009），在选择有毒气体检测报警仪时，下列哪一项不是需要重点考虑的因素？（  ）",
+                "resourceNo": "ST2025123000005",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239347203252225,1988513424908087298,1851242847316389889,1851244802302455809",
+                "contentTypeTitles": "工艺,专业管理人员,操作安全,安全操作",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "检测范围和报警精度",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "探测器的选择性和使用寿命",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "释放点的环境和工作条件",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "检测报警仪的价格和品牌",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861924713160706",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"存在可燃气体泄漏风险的场所\"}, {\"item\": \"B\", \"value\": \"存在有毒气体泄漏风险的场所\"}, {\"item\": \"C\", \"value\": \"可能导致环境氧气浓度变化，且有人员进入活动的场所\"}, {\"item\": \"D\", \"value\": \"所有涉及气体物料的工艺场所\"}]",
+                "questionAnswera": "\"C\"",
+                "questionAnswerAnalyse": "根据《石油化工可燃气体和有毒气体检测报警设计标准》（GB/T 50493-2019）第4.1.6条的规定，在生产过程中可能导致环境氧气浓度变化，出现欠氧、过氧的有人员进入活动的场所，应设置氧气探测器。故答案为选项C。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《石油化工可燃气体和有毒气体检测报警标准》（GB/T 50493-2019），下列哪种情况下必须设置氧气探测器？（  ）",
+                "resourceNo": "ST2025123000003",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239347203252225,1988513424908087298,1851242847316389889,1851244802302455809",
+                "contentTypeTitles": "工艺,专业管理人员,操作安全,安全操作",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "存在可燃气体泄漏风险的场所",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "存在有毒气体泄漏风险的场所",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "可能导致环境氧气浓度变化，且有人员进入活动的场所",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "所有涉及气体物料的工艺场所",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861924641857537",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"可燃气体探测器\"}, {\"item\": \"B\", \"value\": \"有毒气体探测器\"}, {\"item\": \"C\", \"value\": \"同时设置可燃和有毒气体探测器\"}, {\"item\": \"D\", \"value\": \"氧气探测器\"}]",
+                "questionAnswera": "\"B\"",
+                "questionAnswerAnalyse": "根据《石油化工可燃气体和有毒气体检测报警设计标准》（GB/T 50493-2019）第3.0.1条的规定，既属于可燃气体又属于有毒气体的单组分气体介质，应设有毒气体探测器。故答案为选项B。",
+                "questionAnswerb": null,
+                "questionTitle": "某石油化工装置内存在硫化氢气体泄漏风险，根据《石油化工可燃气体和有毒气体检测报警设计标准》（GB/T 50493-2019），在泄漏重点监测区域应设置哪种类型的气体探测器？（  ）",
+                "resourceNo": "ST2025123000002",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239347203252225,1988513424908087298,1851242847316389889,1851244802302455809",
+                "contentTypeTitles": "工艺,专业管理人员,操作安全,安全操作",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "可燃气体探测器",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "有毒气体探测器",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "同时设置可燃和有毒气体探测器",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "氧气探测器",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861926327967745",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"调节型和开关型\"}, {\"item\": \"B\", \"value\": \"直行程和角行程\"}, {\"item\": \"C\", \"value\": \"气关式和气开式\"}, {\"item\": \"D\", \"value\": \"气动薄膜式和气动活塞式\"}]",
+                "questionAnswera": "\"C\"",
+                "questionAnswerAnalyse": "根据《气动控制阀》（GB/T 4213-2024）第4.3条的规定，按控制阀作用方式可分为：a）气关式；b）气开式。故答案为选项C。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《气动控制阀》（GB/T 4213-2024），气动控制阀按作用方式可分为哪两种？（  ）",
+                "resourceNo": "ST2025123000026",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239400089231362,1988513424908087298,1851242847865843714,1851244803090984962",
+                "contentTypeTitles": "仪表,专业管理人员,设备完整性,设备完好性",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "调节型和开关型",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "直行程和角行程",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "气关式和气开式",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "气动薄膜式和气动活塞式",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861925627518977",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"警示标志\"}, {\"item\": \"B\", \"value\": \"安全标语\"}, {\"item\": \"C\", \"value\": \"操作规程\"}, {\"item\": \"D\", \"value\": \"应急联系方式\"}]",
+                "questionAnswera": "\"A\"",
+                "questionAnswerAnalyse": "根据《危险化学品安全管理条例》第二十条的规定，生产、储存危险化学品的单位，应当在作业场所和安全设施、设备上设置明显的安全警示标志。故答案为选项A。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《危险化学品安全管理条例》，生产、储存危险化学品的单位应当在作业场所和安全设施、设备上设置明显的（  ）。",
+                "resourceNo": "ST2025123000016",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,1988513424908087298,1851242849501622273,1851244797718081538",
+                "contentTypeTitles": "安全,专业管理人员,化学品,安全生产信息",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "警示标志",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "安全标语",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "操作规程",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "应急联系方式",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861924784463874",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"在任何有毒工作场所均应设置固定式检测报警仪\"}, {\"item\": \"B\", \"value\": \"劳动者短时间活动的有毒气体工作场所，宜设置移动式检测报警仪\"}, {\"item\": \"C\", \"value\": \"便携式检测报警仪适用于应急条件下使用\"}, {\"item\": \"D\", \"value\": \"探测器应具备抗中毒损坏的能力\"}]",
+                "questionAnswera": "\"A\"",
+                "questionAnswerAnalyse": "根据《工作场所有毒气体检测报警装置设置规范》（GBZ/T 223-2009）第6.1条的规定，探测器应具有抗中毒损坏的能力；劳动者经常活动的有毒工作场所，宜设置固定式有毒气体检测报警仪；劳动者短时间活动的有毒气体工作场所，宜设置移动式有毒气体检测报警仪；不便安装固定式或移动式检测报警仪，或者劳动者临时性活动的有毒气体工作场所，或发生事故应急条件下，宜配备便携式有毒气体检测报警仪。故答案为选项A。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《工作场所有毒气体检测报警装置设置规范》（GBZ/T 223-2009），关于有毒气体检测报警仪的选用，下列说法错误的是（  ）。",
+                "resourceNo": "ST2025123000004",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239347203252225,1988513424908087298,1851242847316389889,1851244802302455809",
+                "contentTypeTitles": "工艺,专业管理人员,操作安全,安全操作",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "在任何有毒工作场所均应设置固定式检测报警仪",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "劳动者短时间活动的有毒气体工作场所，宜设置移动式检测报警仪",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "便携式检测报警仪适用于应急条件下使用",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "探测器应具备抗中毒损坏的能力",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861925484912641",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"爆炸物\"}, {\"item\": \"B\", \"value\": \"易燃气体\"}, {\"item\": \"C\", \"value\": \"皮肤腐蚀/刺激\"}, {\"item\": \"D\", \"value\": \"加压气体\"}]",
+                "questionAnswera": "\"C\"",
+                "questionAnswerAnalyse": "根据《化学品分类和标签规范第1部分：通则》（GB 30000.1-2024）第4.1.1条的规定，物理危险包括：爆炸物、易燃气体、气溶胶、氧化性气体、加压气体、易燃液体、易燃固体、自反应物质和混合物、自燃液体、自燃固体等。故答案为选项C。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《化学品分类和标签规范第1部分：通则》（GB 30000.1-2024），下列哪项不属于危险性分类中的“物理危险”？（  ）",
+                "resourceNo": "ST2025123000014",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,1988513424908087298,1851242849501622273,1851244797718081538",
+                "contentTypeTitles": "安全,专业管理人员,化学品,安全生产信息",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "爆炸物",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "易燃气体",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "皮肤腐蚀/刺激",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "加压气体",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861926189555713",
+                "questionType": 1,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"临时搭建的脚手架平台\"}, {\"item\": \"B\", \"value\": \"永久性建筑物或构筑物\"}, {\"item\": \"C\", \"value\": \"移动式高空作业车\"}, {\"item\": \"D\", \"value\": \"简易竹制搭建平台\"}]",
+                "questionAnswera": "\"B\"",
+                "questionAnswerAnalyse": "根据《石油化工工程高处作业技术规范》（SH/T 3567-2018）第4.6条的规定，高处作业应优先选用永久性建筑物或构筑物作为高处作业平台，完善其护栏系统和牢固覆盖平台上的孔洞，并增设安全防护措施。故答案为选项B。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《石油化工工程高处作业技术规范》（SH/T 3567-2018），高处作业应优先选用哪种类型的作业平台？（  ）",
+                "resourceNo": "ST2025123000024",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,2003741699334819842,1851242848385937410,1851244804806455298",
+                "contentTypeTitles": "安全,所有人员*,作业安全,作业许可",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "临时搭建的脚手架平台",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "永久性建筑物或构筑物",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "移动式高空作业车",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "简易竹制搭建平台",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861925132591105",
+                "questionType": 2,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"能为探测器供电\"}, {\"item\": \"B\", \"value\": \"能显示气体浓度并发出声光报警\"}, {\"item\": \"C\", \"value\": \"能手动消除报警信号\"}, {\"item\": \"D\", \"value\": \"能区分和识别报警场所位号\"}, {\"item\": \"E\", \"value\": \"能自动切断现场设备电源\"}]",
+                "questionAnswera": "\"A,B,C,D\"",
+                "questionAnswerAnalyse": "根据《石油化工可燃气体和有毒气体检测报警设计标准》（GB/T 50493-2019）第5.4.1条的规定，报警控制单元应具备下列基本功能:\n1.能为可燃气体探测器、有毒气体探测器及其附件供电。\n2.能接收气体探测器的输出信号，显示气体浓度并发出声、光报警。\n3.能手动消除声、光报警信号，再次有报警信号输入时仍能发出报警。\n4.具有相对独立、互不影响的报警功能，能区分和识别报警场所位号。故答案为选项ABCD。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《石油化工可燃气体和有毒气体检测报警设计标准》（GB/T 50493-2019），报警控制单元应具备下列哪些基本功能？（  ）",
+                "resourceNo": "ST2025123000009",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239347203252225,1988513424908087298,1851242847316389889,1851244802302455809",
+                "contentTypeTitles": "工艺,专业管理人员,操作安全,安全操作",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 5,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "能为探测器供电",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "能显示气体浓度并发出声光报警",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "能手动消除报警信号",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "能区分和识别报警场所位号",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "E",
+                        "value": "能自动切断现场设备电源",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861925979840514",
+                "questionType": 2,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"作业人员应正确佩戴符合要求的安全带及安全绳\"}, {\"item\": \"B\", \"value\": \"30m以上高处作业应配备通信联络工具\"}, {\"item\": \"C\", \"value\": \"作业人员可在作业处休息\"}, {\"item\": \"D\", \"value\": \"作业过程应设专人监护\"}, {\"item\": \"E\", \"value\": \"工具、材料可投掷传递\"}]",
+                "questionAnswera": "\"A,B,D\"",
+                "questionAnswerAnalyse": "结合《危险化学品企业特殊作业安全规范》（GB 30871-2022）第8.2.1和8.2.2条的规定，高处作业人员应正确佩戴符合GB 6095要求的安全带及符合GB 24543要求的安全绳，30m以上高处作业应配备通信联络工具。高处作业应设专人监护，作业人员不应在作业处休息，不应投掷工具、材料及其他物品。故答案为选项ABD。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《危险化学品企业特殊作业安全规范》（GB 30871-2022），高处作业时应采取的安全措施有哪些？（  ）",
+                "resourceNo": "ST2025123000021",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,2003741699334819842,1851242848385937410,1851244804806455298",
+                "contentTypeTitles": "安全,所有人员*,作业安全,作业许可",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 5,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "作业人员应正确佩戴符合要求的安全带及安全绳",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "30m以上高处作业应配备通信联络工具",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "作业人员可在作业处休息",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "作业过程应设专人监护",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "E",
+                        "value": "工具、材料可投掷传递",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861926470574082",
+                "questionType": 2,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"制造厂名称或商标\"}, {\"item\": \"B\", \"value\": \"产品型号\"}, {\"item\": \"C\", \"value\": \"公称通径\"}, {\"item\": \"D\", \"value\": \"阀体材料\"}, {\"item\": \"E\", \"value\": \"产品制造编号\"}]",
+                "questionAnswera": "\"A,B,D,E,C\"",
+                "questionAnswerAnalyse": "<p>根据《气动控制阀》（GB/T 4213-2024）第8.1.2条的规定，在气动执行机构适当位置上应固定铭牌，并至少标出：a）制造厂名称或商标；b）产品型号；c）公称通径；d）公称压力；j）阀体材料；l）产品制造编号。故答案为选项ABCDE。</p>",
+                "questionAnswerb": "",
+                "questionTitle": "根据《气动控制阀》（GB/T 4213-2024），在控制阀的铭牌上，下列哪些项目属于必须标出的内容？（  ）",
+                "resourceNo": "ST2025123000028",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239400089231362,1988513424908087298,1851242847865843714,1851244803090984962",
+                "contentTypeTitles": "仪表,专业管理人员,设备完整性,设备完好性",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 5,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "制造厂名称或商标",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "产品型号",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "公称通径",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "阀体材料",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "E",
+                        "value": "产品制造编号",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861925061287937",
+                "questionType": 2,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"气体压缩机动密封\"}, {\"item\": \"B\", \"value\": \"液体采样口\"}, {\"item\": \"C\", \"value\": \"经常操作的阀门组\"}, {\"item\": \"D\", \"value\": \"气体放空口\"}, {\"item\": \"E\", \"value\": \"远离释放源的厂区围墙\"}]",
+                "questionAnswera": "\"A,B,C,D\"",
+                "questionAnswerAnalyse": "根据《石油化工可燃气体和有毒气体检测报警设计标准》（GB/T 50493-2019）第4.1.3条的规定，下列可燃气体和（或）有毒气体释放源周围应布置检测点：气体压缩机和液体泵的动密封；液体采样口和气体采样口；液体（气体）排液（水）口和放空口；经常拆卸的法兰和经常操作的阀门组。故答案为选项ABCD。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《石油化工可燃气体和有毒气体检测报警设计标准》（GB/T 50493-2019），下列哪些位置周围应布置可燃气体或有毒气体检测点？（  ）",
+                "resourceNo": "ST2025123000008",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239347203252225,1988513424908087298,1851242847316389889,1851244802302455809",
+                "contentTypeTitles": "工艺,专业管理人员,操作安全,安全操作",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 5,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "气体压缩机动密封",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "液体采样口",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "经常操作的阀门组",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "气体放空口",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "E",
+                        "value": "远离释放源的厂区围墙",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861925413609474",
+                "questionType": 2,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"信号词\"}, {\"item\": \"B\", \"value\": \"危险说明\"}, {\"item\": \"C\", \"value\": \"产品价格\"}, {\"item\": \"D\", \"value\": \"供应商标识\"}, {\"item\": \"E\", \"value\": \"防范说明\"}]",
+                "questionAnswera": "\"A,B,D,E\"",
+                "questionAnswerAnalyse": "根据《化学品分类和标签规范第1部分：通则》（GB 30000.1-2024）第5.1.3.1条的规定，化学品安全标签上应使用如下信息：a）信号词；b）危险说明；c）防范说明；d）象形图；e）产品标识符；f）供应商标识。故答案为选项ABDE。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《化学品分类和标签规范第1部分：通则》（GB 30000.1-2024），化学品安全标签上必须包含下列哪些要素？（  ）",
+                "resourceNo": "ST2025123000013",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,2003741699334819842,1851242849501622273,1851244797718081538",
+                "contentTypeTitles": "安全,所有人员*,化学品,安全生产信息",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 5,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "信号词",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "危险说明",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "C",
+                        "value": "产品价格",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "D",
+                        "value": "供应商标识",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "E",
+                        "value": "防范说明",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861925908537346",
+                "questionType": 3,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                "questionAnswera": "\"A\"",
+                "questionAnswerAnalyse": "根据《危险化学品企业特殊作业安全规范》（GB 30871-2022）第8.2.8条的规定，在同一坠落方向上，一般不应进行上下交叉作业，如需进行交叉作业，中间应设置安全防护层，坠落高度超过24m的交叉作业，应设双层防护。故题干说法正确。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《危险化学品企业特殊作业安全规范》（GB 30871-2022），在同一坠落方向进行上下交叉作业时，若坠落高度超过24m，应设置双层防护。（  ）",
+                "resourceNo": "ST2025123000020",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,2003741699334819842,1851242848385937410,1851244804806455298",
+                "contentTypeTitles": "安全,所有人员*,作业安全,作业许可",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "正确",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "错误",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861925346500609",
+                "questionType": 3,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                "questionAnswera": "\"A\"",
+                "questionAnswerAnalyse": "根据《化学品分类和标签规范第1部分：通则》（GB 30000.1-2024）第5.1.3.1条的规定，化学品安全标签上应使用信号词，信号词是“危险”和“警告”。“危险”主要用于较为严重的危险类别，而“警告”主要用于较轻的类别。故题干说法正确。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《化学品分类和标签规范第1部分：通则》（GB 30000.1-2024），化学品安全标签上使用的信号词为“危险”和“警告”，其中“危险”主要用于较为严重的危险类别，“警告”主要用于较轻的危险类别。（  ）",
+                "resourceNo": "ST2025123000012",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "2003741589360168962,2003747911040323585,1851242849501622273,1851244797718081538",
+                "contentTypeTitles": "化工基础*,非生产人员,化学品,安全生产信息",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "正确",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "错误",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861925698822145",
+                "questionType": 3,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                "questionAnswera": "\"A\"",
+                "questionAnswerAnalyse": "根据《危险化学品安全管理条例》第十四条的规定，危险化学品生产企业进行生产前，应当依照《安全生产许可证条例》的规定，取得危险化学品安全生产许可证。故题干说法正确。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《危险化学品安全管理条例》，危险化学品生产企业应当依法取得危险化学品安全生产许可证，并依照许可证的规定从事生产活动。（  ）",
+                "resourceNo": "ST2025123000017",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,1988513424908087298,1851242849501622273,1851244797718081538",
+                "contentTypeTitles": "安全,专业管理人员,化学品,安全生产信息",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "正确",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "错误",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861924570554369",
+                "questionType": 3,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                "questionAnswera": "\"A\"",
+                "questionAnswerAnalyse": "根据《化工和危险化学品生产经营单位重大生产安全事故隐患判定标准（试行）》（安监总管三〔2017〕121号）第十二条的规定，涉及可燃和有毒有害气体泄漏的场所未按国家标准设置检测报警装置，爆炸危险场所未按国家标准安装使用防爆电气设备，应当判定为重大事故隐患。故题干说法正确。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《化工和危险化学品生产经营单位重大生产安全事故隐患判定标准（试行）》（安监总管三〔2017〕121号），当涉及可燃和有毒有害气体泄漏的场所未按国家标准设置检测报警装置时，应当被判定为重大事故隐患。（  ）",
+                "resourceNo": "ST2025123000001",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239347203252225,1988513424908087298,1851242847316389889,1851244802302455809",
+                "contentTypeTitles": "工艺,专业管理人员,操作安全,安全操作",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "正确",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "错误",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861926617374722",
+                "questionType": 3,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                "questionAnswera": "\"A\"",
+                "questionAnswerAnalyse": "根据《工业过程控制阀第1部分：控制阀术语和总则》（GB/T 17213.1-2015）第3.1条的规定，控制阀是过程控制系统中由动力操纵，调节流体流量的装置。它由执行机构和阀组成。执行机构能按照控制系统发出的信号，改变阀内截流件的位置。故题干说法正确。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《工业过程控制阀第1部分：控制阀术语和总则》（GB/T 17213.1-2015），控制阀是由执行机构和阀体组成的，通过执行机构改变阀内截流件位置以实现调节流体流量功能的装置。（  ）",
+                "resourceNo": "ST2025123000030",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239400089231362,1988513424908087298,1851242847865843714,1851244803090984962",
+                "contentTypeTitles": "仪表,专业管理人员,设备完整性,设备完好性",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "正确",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "错误",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861925275197441",
+                "questionType": 3,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                "questionAnswera": "\"A\"",
+                "questionAnswerAnalyse": "根据《化学品分类和标签规范第1部分：通则》（GB 30000.1-2024）第6.1.6条的规定，应注明化学品安全技术说明书的最初编制日期，并放在显著位置。修订的化学品安全技术说明书，应注明最初编制日期以及版本编号、修订日期（指最后修订的日期）等其他说明。故题干说法正确。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《化学品分类和标签规范第1部分：通则》（GB 30000.1-2024），化学品安全技术说明书上应注明最初的编制日期和修订日期，并置于显著位置。（  ）",
+                "resourceNo": "ST2025123000011",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,1988513424908087298,1851242849501622273,1851244797718081538",
+                "contentTypeTitles": "安全,专业管理人员,化学品,安全生产信息",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "正确",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "错误",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861926546071553",
+                "questionType": 3,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                "questionAnswera": "\"B\"",
+                "questionAnswerAnalyse": "根据《气动控制阀》（GB/T 4213-2024）第5.16条的规定，控制阀的气动执行机构和阀的外表应涂漆或其他涂料，阀体材质为不锈钢或铜时外表可不涂漆。故题干说法错误。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《气动控制阀》（GB/T 4213-2024），控制阀的气动执行机构和阀体外表面必须涂刷油漆或其他涂料。（  ）",
+                "resourceNo": "ST2025123000029",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239400089231362,1988513424908087298,1851242847865843714,1851244803090984962",
+                "contentTypeTitles": "仪表,专业管理人员,设备完整性,设备完好性",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "正确",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "错误",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861924922875906",
+                "questionType": 3,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                "questionAnswera": "\"B\"",
+                "questionAnswerAnalyse": "根据《石油化工可燃气体和有毒气体检测报警设计标准》（GB/T 50493-2019）第6.1.2条的规定，检测比空气重的可燃气体或有毒气体时，探测器的安装高度宜距地坪（或楼地板）0.3m～0.6m。故题干说法错误。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《石油化工可燃气体和有毒气体检测报警设计标准》（GB/T 50493-2019），检测比空气重的可燃气体时，探测器安装高度宜为距地面2m以上。（  ）",
+                "resourceNo": "ST2025123000006",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239347203252225,1988513424908087298,1851242847316389889,1851244802302455809",
+                "contentTypeTitles": "工艺,专业管理人员,操作安全,安全操作",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "正确",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "错误",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861925837234178",
+                "questionType": 3,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                "questionAnswera": "\"B\"",
+                "questionAnswerAnalyse": "根据《危险化学品企业特殊作业安全规范》（GB 30871-2022）第8.2.11条的规定，安全作业票的有效期最长为7天。当作业中断，再次作业前，应重新对环境条件和安全措施进行确认。故题干说法错误。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《危险化学品企业特殊作业安全规范》（GB 30871-2022），高处作业安全作业票的有效期最长为15天。（  ）",
+                "resourceNo": "ST2025123000019",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239329348100098,2003741699334819842,1851242848385937410,1851244804806455298",
+                "contentTypeTitles": "安全,所有人员*,作业安全,作业许可",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "正确",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "错误",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            },
+            {
+                "id": "2005861924994179074",
+                "questionType": 3,
+                "questionImage": null,
+                "questionOptions": "[{\"item\": \"A\", \"value\": \"正确\"}, {\"item\": \"B\", \"value\": \"错误\"}]",
+                "questionAnswera": "\"B\"",
+                "questionAnswerAnalyse": "根据《石油化工可燃气体和有毒气体检测报警设计标准》（GB/T 50493-2019）第3.0.8条的规定，可燃气体和有毒气体检测报警系统应独立于其他系统单独设置。故题干说法错误。",
+                "questionAnswerb": null,
+                "questionTitle": "根据《石油化工可燃气体和有毒气体检测报警设计标准》（GB/T 50493-2019），可燃气体和有毒气体检测报警系统可与火灾报警系统合并设置。（  ）",
+                "resourceNo": "ST2025123000007",
+                "resourceType": null,
+                "companyId": null,
+                "remark": null,
+                "contentTypeIds": "1851239347203252225,1988513424908087298,1851242847316389889,1851244802302455809",
+                "contentTypeTitles": "工艺,专业管理人员,操作安全,安全操作",
+                "creator": null,
+                "modifiedBy": null,
+                "myAnswer": null,
+                "questionPoint": 3,
+                "answerPoint": null,
+                "bankId": "2005861879846690818",
+                "questionOptionsVos": [
+                    {
+                        "item": "A",
+                        "value": "正确",
+                        "valueUrl": null
+                    },
+                    {
+                        "item": "B",
+                        "value": "错误",
+                        "valueUrl": null
+                    }
+                ],
+                "questionCaseList": null,
+                "isCollect": null,
+                "collectNum": null,
+                "reshareNum": null,
+                "encryption": null
+            }
+        ]
+    }
+}
+
+提交答案：
+curl 'https://edu.axdxa.cn/prod-api/progress/app/regularExamRecord' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzAzMzU5MzA3Nzc4Iiwicm5TdHIiOiI1aWVqM0x3ejFoWkNOdXRJd3p0cXVjUDZwNnFlOWJKNyIsImNsaWVudGlkIjoiZTVjZDdlNDg5MWJmOTVkMWQxOTIwNmNlMjRhN2IzMmUiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MDMzNTkzMDc3NzgsInVzZXJOYW1lIjoiMTg2KioqKjM0MTYifQ.x2ZkI_Qgcr1GC5Tl8ZduNS2Z7r-8kC0S058B4-nj4l8' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -H 'content-type: application/json;charset=UTF-8' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV; p_h5_u=598BFCB1-1FFB-4ED5-97E3-6FCA73353952; selectedStreamLevel=FD; selectedCC=off' \
+  -H 'origin: https://edu.axdxa.cn' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/continuous-learning/everyMonth' \
+  -H 'sec-ch-ua: "Microsoft Edge";v="143", "Chromium";v="143", "Not A(Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0' \
+  --data-raw '{
+    "practiceRegularId":"2005861385550106626",
+    "regularType":2,
+    "useTime":345,
+    "isAgain":0,
+    "examType":2,
+    "isRepair":null,
+    "courseExamAnswerInfoBos":[
+        {"id":"2005861924851572738","questionType":1,"questionPoint":3,"questionAnswer":"D"},
+        {"id":"2005861926046949377","questionType":1,"questionPoint":3,"questionAnswer":"A"},
+        {"id":"2005861926256664577","questionType":1,"questionPoint":3,"questionAnswer":"D"},
+        {"id":"2005861925556215810","questionType":1,"questionPoint":3,"questionAnswer":"B"},
+        {"id":"2005861925203894274","questionType":1,"questionPoint":3,"questionAnswer":"C"},
+        {"id":"2005861926327967745","questionType":1,"questionPoint":3,"questionAnswer":"C"},
+        {"id":"2005861926189555713","questionType":1,"questionPoint":3,"questionAnswer":"B"},
+        {"id":"2005861926399270913","questionType":1,"questionPoint":3,"questionAnswer":"B"},
+        {"id":"2005861924641857537","questionType":1,"questionPoint":3,"questionAnswer":"B"},
+        {"id":"2005861925765931010","questionType":1,"questionPoint":3,"questionAnswer":"C"},
+        {"id":"2005861925484912641","questionType":1,"questionPoint":3,"questionAnswer":"C"},
+        {"id":"2005861925627518977","questionType":1,"questionPoint":3,"questionAnswer":"A"},
+        {"id":"2005861926118252545","questionType":1,"questionPoint":3,"questionAnswer":"C"},
+        {"id":"2005861924713160706","questionType":1,"questionPoint":3,"questionAnswer":"C"},
+        {"id":"2005861924784463874","questionType":1,"questionPoint":3,"questionAnswer":"A"},
+        {"id":"2005861926546071553","questionType":3,"questionPoint":3,"questionAnswer":"B"},
+        {"id":"2005861925346500609","questionType":3,"questionPoint":3,"questionAnswer":"A"},
+        {"id":"2005861925698822145","questionType":3,"questionPoint":3,"questionAnswer":"A"},
+        {"id":"2005861924922875906","questionType":3,"questionPoint":3,"questionAnswer":"B"},
+        {"id":"2005861925275197441","questionType":3,"questionPoint":3,"questionAnswer":"A"},
+        {"id":"2005861926617374722","questionType":3,"questionPoint":3,"questionAnswer":"A"},
+        {"id":"2005861925837234178","questionType":3,"questionPoint":3,"questionAnswer":"B"},
+        {"id":"2005861924994179074","questionType":3,"questionPoint":3,"questionAnswer":"B"},
+        {"id":"2005861925908537346","questionType":3,"questionPoint":3,"questionAnswer":"A"},
+        {"id":"2005861924570554369","questionType":3,"questionPoint":3,"questionAnswer":"A"},
+        {"id":"2005861925979840514","questionType":2,"questionPoint":5,"questionAnswer":"A,B,D"},
+        {"id":"2005861925132591105","questionType":2,"questionPoint":5,"questionAnswer":"A,B,C,D"},
+        {"id":"2005861926470574082","questionType":2,"questionPoint":5,"questionAnswer":"A,B,E,D,C"},
+        {"id":"2005861925061287937","questionType":2,"questionPoint":5,"questionAnswer":"A,B,C,D"},
+        {"id":"2005861925413609474","questionType":2,"questionPoint":5,"questionAnswer":"A,B,D,E"}],
+        "fullPoint":100,
+        "examDuration":80}'
+
+响应：{
+    "code": 200,
+    "msg": "操作成功",
+    "data": {
+        "id": "2009222907995295746",
+        "examUserId": "1998321703359307778",
+        "examAssociationId": "2005861385550106626",
+        "examType": 2,
+        "fullPoint": 100,
+        "answerPoint": 100.0,
+        "correctAnswerNum": 30,
+        "wrongQuestionNum": 0,
+        "notDoneNum": 0,
+        "answerDetail": "{\"appResourcesQuestions\":[{\"id\":\"2005861924851572738\",\"questionType\":1,\"myAnswer\":\"D\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"aae0e78c19fd5fa92786444e0fd103d6\"},{\"id\":\"2005861926046949377\",\"questionType\":1,\"myAnswer\":\"A\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"6901881c89ce090240759e20f93094c6\"},{\"id\":\"2005861926256664577\",\"questionType\":1,\"myAnswer\":\"D\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"50b5b58775ba966c9ff6dcc8724ec4d5\"},{\"id\":\"2005861925556215810\",\"questionType\":1,\"myAnswer\":\"B\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"f1a7bb8e33cc9d19dd82ceb9970ad238\"},{\"id\":\"2005861925203894274\",\"questionType\":1,\"myAnswer\":\"C\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"2f3eaa411c151b4d3978387aebb4b3ea\"},{\"id\":\"2005861926327967745\",\"questionType\":1,\"myAnswer\":\"C\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"e3cec1da0365a21417383522c02d7cba\"},{\"id\":\"2005861926189555713\",\"questionType\":1,\"myAnswer\":\"B\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"eeb0da51a90c7ca9308d226f5d9deb66\"},{\"id\":\"2005861926399270913\",\"questionType\":1,\"myAnswer\":\"B\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"4d263c880153ea7aa94808b1e5f7ef90\"},{\"id\":\"2005861924641857537\",\"questionType\":1,\"myAnswer\":\"B\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"89586bffcc44cd2c82820d8a317d0f2e\"},{\"id\":\"2005861925765931010\",\"questionType\":1,\"myAnswer\":\"C\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"6be2a0d12e50e8dec230fac7ed1e1d4a\"},{\"id\":\"2005861925484912641\",\"questionType\":1,\"myAnswer\":\"C\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"bb1e6807ff7298aa6f2c1f0ae3788ce4\"},{\"id\":\"2005861925627518977\",\"questionType\":1,\"myAnswer\":\"A\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"71f269a988dd43b8f9f9f40e901e69de\"},{\"id\":\"2005861926118252545\",\"questionType\":1,\"myAnswer\":\"C\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"cb9874df4630751e3d59f1db4fc4fbf3\"},{\"id\":\"2005861924713160706\",\"questionType\":1,\"myAnswer\":\"C\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"107c8aa7e51116547db2a13482aad31c\"},{\"id\":\"2005861924784463874\",\"questionType\":1,\"myAnswer\":\"A\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"553a37d745668fae4ef4d8622a600eaa\"},{\"id\":\"2005861926546071553\",\"questionType\":3,\"myAnswer\":\"B\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"ca6bbe7595a94ca036a59b3c83b7cc31\"},{\"id\":\"2005861925346500609\",\"questionType\":3,\"myAnswer\":\"A\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"2e79dfc669c58619381f13c01f4554d9\"},{\"id\":\"2005861925698822145\",\"questionType\":3,\"myAnswer\":\"A\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"8e1076fce4e6d3168df23ce2369c6938\"},{\"id\":\"2005861924922875906\",\"questionType\":3,\"myAnswer\":\"B\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"65f4c7db9abfa05c0082efc43a31e323\"},{\"id\":\"2005861925275197441\",\"questionType\":3,\"myAnswer\":\"A\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"1f73b8a3150f6233b0380ff7f414db91\"},{\"id\":\"2005861926617374722\",\"questionType\":3,\"myAnswer\":\"A\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"ef751d01b7eec539504065f01575b336\"},{\"id\":\"2005861925837234178\",\"questionType\":3,\"myAnswer\":\"B\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"ec878798d6ee9a5b53a15e9950dac467\"},{\"id\":\"2005861924994179074\",\"questionType\":3,\"myAnswer\":\"B\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"ff4943118b9bdfbf522a8be70562dbda\"},{\"id\":\"2005861925908537346\",\"questionType\":3,\"myAnswer\":\"A\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"834194db70253d859cd9f72f3c6c4ea5\"},{\"id\":\"2005861924570554369\",\"questionType\":3,\"myAnswer\":\"A\",\"questionPoint\":3,\"answerPoint\":\"3\",\"encryption\":\"eaf1136cdf82b2fb5928811116908ffb\"},{\"id\":\"2005861925979840514\",\"questionType\":2,\"myAnswer\":\"A,B,D\",\"questionPoint\":5,\"answerPoint\":\"5\",\"encryption\":\"09ee8c44a9760fe22d47017a7e365db5\"},{\"id\":\"2005861925132591105\",\"questionType\":2,\"myAnswer\":\"A,B,C,D\",\"questionPoint\":5,\"answerPoint\":\"5\",\"encryption\":\"3c0244e871a3d4a721832d04a329721b\"},{\"id\":\"2005861926470574082\",\"questionType\":2,\"myAnswer\":\"A,B,C,D,E\",\"questionPoint\":5,\"answerPoint\":\"5\",\"encryption\":\"f615b0b67323a839971d444973b6ad34\"},{\"id\":\"2005861925061287937\",\"questionType\":2,\"myAnswer\":\"A,B,C,D\",\"questionPoint\":5,\"answerPoint\":\"5\",\"encryption\":\"20c71f25687f90152e7e9fd12420e960\"},{\"id\":\"2005861925413609474\",\"questionType\":2,\"myAnswer\":\"A,B,D,E\",\"questionPoint\":5,\"answerPoint\":\"5\",\"encryption\":\"c902f2f9599ce29802d1e96b571df410\"}],\"questionCount\":30}",
+        "answerDetailVoList": null,
+        "useTime": 345,
+        "createTime": "2026-01-08 19:11:40",
+        "examDuration": 80,
+        "questionCount": 30,
+        "limitTime": null,
+        "remark": null,
+        "isNew": 1,
+        "isRepair": 0,
+        "reportingDate": "1/8/26, 7:11 PM"
+    }
+}
+错误：{'code': 500, 'msg': '您已完成此考试！', 'data': None}

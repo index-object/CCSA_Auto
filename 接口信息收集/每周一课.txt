@@ -1,0 +1,96 @@
+获取每周一课详细内容：
+curl 'https://edu.axdxa.cn/prod-api/progress/app/regularCourseWeek/2007828829376057345?id=2007828829376057345' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzAzMzU5MzA3Nzc4Iiwicm5TdHIiOiJVMWRYRWtodDVSQVNzNDVMbEQ5dGh5NzQ5RFN5dVVWZyIsImNsaWVudGlkIjoiZTVjZDdlNDg5MWJmOTVkMWQxOTIwNmNlMjRhN2IzMmUiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MDMzNTkzMDc3NzgsInVzZXJOYW1lIjoiMTg2KioqKjM0MTYifQ.W4Qf1PgGUTyYSz7uicrbMh2C1abeg-M7OuN3D-sgkDQ' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/weekClass/home?id=2007828829376057345' \
+  -H 'sec-ch-ua: "Microsoft Edge";v="143", "Chromium";v="143", "Not A(Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0'
+响应：
+{
+    "code": 200,
+    "msg": "操作成功",
+    "data": {
+        "id": "2007828829376057345",
+        "courseName": "每周一课",
+        "year": 2026,
+        "periodsNum": 54,
+        "courseCover": "https://oss.axdxa.cn/manager/20260104/7212e89e-8823-4c4f-b6a1-cf212f22a15c.png",
+        "resourceId": "2007829464590516226",
+        "resourceType": 1,
+        "resourceDuration": 729,
+        "resourceName": "第54期 | 哪些变更，需要正规设计",
+        "resourceCoverUrl": "https://oss.axdxa.cn/manager/20260104/dc50cc82-3ea0-404c-a148-ff0a33eff3da.png",
+        "resourceDraftUrl": "",
+        "resourceUrl": "90b679d6e97d71f0820f752281ed0102",
+        "courseContent": "1.深入剖析变更管理中“正规设计介入”的三种法定情形与实操边界。\n2.提出可落地的判断原则，并指导企业建立内部判定标准与争议解决机制。",
+        "studyStartTime": "2026-01-05 00:00:00",
+        "studyEndTime": "2026-01-11 23:59:59",
+        "enableStatus": 1,
+        "releaseStatus": 2,
+        "remark": null,
+        "createBy": "1930153040408436738",
+        "createByName": null,
+        "createTime": "2026-01-04 22:57:51",
+        "updateBy": "1930153040408436738",
+        "updateByName": null,
+        "updateTime": "2026-01-04 23:02:03",
+        "availableScore": null,
+        "studyStatus": 1,
+        "obtainedScore": null,
+        "studySchedule": 1,
+        "totalDuration": null,
+        "studyDuration": null,
+        "studyProgressTime": 3,
+        "resourceDescription": "<p>\t安全生产就要化危为安。你好，我是中国化学品安全协会王飞，欢迎收看本期每周一课栏目。在日常生产过程中，你可能听到过类似这样一句话“不就是改一条管线、换一个阀门吗？何必要这么兴师动众的走变更审批程序？”。然而，对于那些曾经因变更引发过事故的企业来说，可能就不会这么想了，尤其是因变更导致过严重事故的企业，绝不会认为变更管理是一项可有可无、只为满足合规要求的管理机制，而是会慎之又慎，生怕那些隐匿在变更之中的风险未被发现。</p><p>\t2012年，河北某化工企业发生的一起重大爆炸事故，就与变更管理有关。车间管理人员擅自改造了导热油系统，提高了导热油加热器的出口温度，致使泄漏的导热油更易着火。而此次泄漏的导热油着火后，持续对反应釜加热，造成釜内硝酸胍与硝酸铵加速分解，最终酿成了惨剧。在这里，泄漏的导热油更易着火，就是隐匿在本次变更中的潜在风险。</p><p>\t不过，我们今天探讨的话题不是变更管理有多么重要，而是从一个更加细微的视角去思考，<strong>当你必须实施一个变更时，是否需要设计单位来协助完成？</strong>相信在这个问题的处理上，很多人都存在困扰。今天，我就结合相关的法规要求和个人的实践经验，提供一些可供参考的思路。</p><p>\t关于变更是否需要经过正规设计，应急管理部早在2022年就已通过官网公众留言的方式对此给出了明确的官方答复。具体来说，主要分为以下三种情形：</p><p>\t<strong>第一种情形，当生产装置处于施工安装建设阶段。</strong>如果因为法律法规或标准规范更新而需要修改设计，这属于设计变更的范畴，应由原设计单位负责调整设计，确保现场实际符合最新法规标准的要求。</p><p>\t<strong>第二种情形，当生产装置处于正常生产服役期</strong>，如果因为法规标准变化，需要对现场设施进行合规性改造，且按照有关规定需要将其作为“改建项目”来立项实施时，就必须严格按照建设项目相关管理要求，委托具备相应资质的设计单位来进行设计。关于建设项目的具体管理要求，就不在这里详细赘述，如果你感兴趣可以仔细阅读《危险化学品建设项目安全监督管理办法》《建设项目安全设施“三同时”监督管理暂行办法》《关于进一步加强危险化学品建设项目安全设计管理的通知》（安监总管三〔2013〕76号）及《化工建设项目安全设计管理导则》（AQ/T&nbsp;3033-2022）等文件。</p><p>\t<strong>第三种情形，为满足现行标准或有关规定要求，现场实施的小改造。</strong>这类小改造通常是指影响范围比较小、工作量不大且改造费用不高的变更项目。对于这类变更来说，不一定非要通过正规设计来完成，企业可通过内部“技改技措”项目或变更管理流程来实施，但必须落实好相应安全风险管控措施。</p><p>\t说到这里，可能有人要问了，这类“小改造”到底该怎么界定呢？如果界定不清，岂不是仍然无法判断哪些变更需要正规设计、哪些不需要吗？接下来，我将结合个人实践经验，分享几点判断变更是否需要正规设计的参考原则：</p><p>\t<strong>一是通过风险分析来确定变更是否需要正规设计。</strong>如果一项变更存在导致重大事故（火、爆、泄漏、中毒、过压、结构失稳等）的可能性或后果严重性，比如通过风险分析发现，变更的原始风险属于较大及以上风险级别，且没有足够可靠、可信的独立保护层，无法将风险降低至可接受范围之内时，应由设计单位进行正规设计，增加必要的安全保护层，确保风险可控后再实施变更。</p><p>\t<strong>二是评估变更是否涉及特种设备（压力容器、压力管道、锅炉等）的改造。</strong>比如，要改造现场一条压力管道的受压元件规格、材质或结构布置，按照相关规范要求，此类变更必须由具有相应资质的设计单位进行设计，并由有相应资质的安装单位进行施工。因此，凡涉及这类变更时，就必须经过正规设计，绝不可擅自进行变更。</p><p>\t<strong>三是评估变更是否涉及新原料、新中间产物、新产品。</strong>如果变更涉及到新的原料、新的中间产物或者新的最终产品，即便是规模比较小，也应该由设计单位进行正规设计之后再实施。这里的新原料、新中间产物、新产品是指原工艺设计当中不包括的新的化学品或者新的物质。这类新的物质进入工艺系统或者在工艺系统产生，可能会带入新的未知风险，必须高度警惕，因此进行正规设计非常有必要。</p><p>\t<strong>四是评估变更是否涉及系统全局的变化。</strong>比如，公用工程系统的变更，可能会影响整个工厂的安全稳定运行；对控制系统逻辑或安全仪表系统联锁设置的改变，可能会出现系统性的安全风险，这类变更也应该由设计单位进行正规设计后方可实施。至于其他变更，企业则可以结合自身管理实际，制定相应的管理策略，适当降低管理的复杂性，提高管理效率。</p><p>\t当然，即便建立了这些原则，在实际操作过程中，对于某些变更是否需要正规设计仍有可能出现意见分歧。因此，建议企业在内部变更管理制度当中，建立一套明确的判定标准，以此作为变更是否需要正规设计的判定依据。比如，在实际咨询服务过程中，我指导某企业在变更管理制度修订完善时，增加了以下判定标准：</p><p>1.是否改变物料性质或引入新物料？</p><p>1.&nbsp;是否改变最大允许工作压力、最大允许工作温度等控制参数？</p><p>2.&nbsp;是否改变装置/设备的额定负荷且超过设计弹性？</p><p>3.&nbsp;是否涉及特种设备的改造或移装？</p><p>4.&nbsp;是否改变爆炸区域划分或改变防火分区？</p><p>5.&nbsp;是否影响消防、应急通道或人员疏散？</p><p>6.&nbsp;是否需要进行结构计算或基础改造？</p><p>7.&nbsp;是否影响控制系统或安全仪表系统的功能？</p><p>8.&nbsp;变更原始风险是否为较大及以上风险且没有足够有效的独立保护层？</p><p>\t任何一个变更项目，只要涉及以上9项条款中的任意一条时，就需要由设计单位进行正规设计。如果通过这些判定标准，仍然无法对变更项目是否需要正规设计做出明确判断时，还可以构建一套开放性的管理机制。比如，成立变更控制委员会，委员会成员应包括工艺技术人员、设备技术人员、电仪技术人员、工程管理人员以及安全环保质量管理人员和生产运行专业人员。对于那些在管理流程存在分歧、难以决定是否需要设计方介入的变更项目，就由这个变更控制委员会通过会议进行充分讨论，形成一致性决议后再实施。</p><p>\t通过上述内容，相信你对哪些变更项目需要设计单位参与、哪些变更项目可以内部处理也有了一定了解。但不知道你留意过这样一个问题没有，如何有效区分变更项目和改建项目？如果不能有效区分这两者，可能会导致一些改建项目“抄近路”，被误判成变更项目。这样做虽然从管理程序上简化了，但却为日后带来了麻烦，尤其是一些涉及防火间距、外部安全防护距离的项目，一旦建成再想去整改，就变得异常困难。因此，想要彻底弄明白这个问题，首先就得了解“改建项目”的定义。</p><p>\t在《危险化学品建设项目安全监督管理办法》当中，对“危险化学品改建项目”的定义有两种：</p><p>\t<strong>一是对在役危险化学品生产、储存装置（设施），在原址更新技术、工艺、主要装置（设施）、危险化学品种类的项目。</strong>比如在原有生产工艺上新增一台串联的反应器，或者将可燃液体罐区内一座5000立方米的储罐改为10000立方米，这些都属于改建项目。</p><p>\t<strong>二是对在役伴有危险化学品产生的化学品生产装置（设施），在原址更新技术、工艺、主要装置（设施）的项目。</strong>比如，一套精细化工生产装置，通过对原有的生产工艺进行改造，采取亲核取代反应结合萃取提纯工艺，将溶剂中的三苯胺转化为二苯胺，就属于改建项目。</p><p>\t凡涉及上述两种情形的任何一种，该项目就必须按照《危险化学品建设项目安全监督管理办法》的要求，开展<strong>项目安全条件审查、安全设施设计审查、安全设施竣工验收</strong>。那如果一项改建项目不属于危险化学品改建项目时，又该怎么管呢？在《建设项目安全设施“三同时”监督管理办法》当中也有明确规定，大致分为三个管理阶段，<strong>包括建设项目安全预评价、建设项目安全设施设计审查、建设项目安全设施施工和竣工验收。</strong></p><p>\t总而言之，一项变更，一旦被确定为改建项目，要么执行《危险化学品建设项目安全监督管理办法》当中的要求，要么执行《建设项目安全设施“三同时”监督管理办法》的要求。只有那些明确不属于改建项目的改造，才能纳入变更管理的范畴，也才需要按照前面介绍的方法，去判定是否需要设计单位介入。</p><p>\t现在，我们再来看刚才提到的那个问题，<strong>如何有效区分改建项目和变更项目？</strong></p><p>\t<strong>首先，应根据改建项目的定义来确定所要实施的项目是否属于改建项目。</strong></p><p>\t<strong>其次，当单纯依靠定义难以做出明确判断时，可以通过项目投入的资金预算规模来做辅助判断。</strong><span style=\"background-color: rgb(255, 255, 255); color: rgb(15, 17, 21);\">一般来说，资金预算越大，更可能属于改建项目的范畴，资金预算越小，更可能属于变更管理的范畴。这里没有统一标准，企业可自行设立资金预算规模判定基准线。</span></p><p>\t<strong style=\"background-color: rgb(255, 255, 255); color: rgb(15, 17, 21);\">第三，可通过与当地发改、住建、应急、环保等监管部门进行书面确认</strong><span style=\"background-color: rgb(255, 255, 255); color: rgb(15, 17, 21);\">，以此来进一步确认拟实施项目的管理机制和管理流程，有效界定改建项目与变更项目，确保管理的合规性，避免留下无法整改的新问题。</span></p><p>\t<span style=\"background-color: rgb(255, 255, 255); color: rgb(15, 17, 21);\">以上就是今天分享的所有内容，简单回顾一下：本期课程从一项变更是否需要设计单位进行正规设计切入，进一步探讨了如何有效区分改建项目与变更项目，并介绍了改建项目判定的方法，延伸讲解的这些内容，其目的都是为了管理好每一个变更项目，避免因疏忽而造成项目管理流程走错路，从源头上杜绝那些一旦项目实施完成就难以整改的新问题。</span></p><p><span style=\"background-color: rgb(255, 255, 255); color: rgb(15, 17, 21);\">    最后留一道</span>思考题：假如你所在的企业是一家聚烯烃生产企业，现在准备转产一种新型牌号的聚烯烃产品，你认为是否需要设计单位介入？你可以分不同情况来思考，并阐述你的理由。提示一下，不要试图寻找唯一的标准答案，很多问题并没有唯一解，只有基于实际情况的最合适选择。欢迎你在评论区分享你的见解。</p><p>    以上内容，属于个人观点，可能仍有思考不周的地方，仅供参考，也欢迎留言指正。感谢你的观看，下期再见！</p><p class=\"ql-align-justify\"><span style=\"color: rgb(0, 0, 0);\">撰稿：王   飞</span></p><p class=\"ql-align-justify\"><span style=\"color: rgb(0, 0, 0);\">﻿﻿讲述：王   飞</span></p><p class=\"ql-align-justify\"><span style=\"color: rgb(0, 0, 0);\">PPT：屈英明</span></p><p class=\"ql-align-justify\"><span style=\"color: rgb(0, 0, 0);\">主编：赵红科</span></p>",
+        "sentences": null,
+        "isOpenShadowing": null,
+        "results": null,
+        "isCollection": 0,
+        "collectNum": 138,
+        "shareNum": 1145,
+        "viewsNum": 41284,
+        "collectionId": null,
+        "ifCollectionThisWeek": null
+    }
+}
+每周一课提交：
+curl 'https://edu.axdxa.cn/prod-api/progress/app/studyScheduleEscalation/studyScheduleEscalation' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzAzMzU5MzA3Nzc4Iiwicm5TdHIiOiJVMWRYRWtodDVSQVNzNDVMbEQ5dGh5NzQ5RFN5dVVWZyIsImNsaWVudGlkIjoiZTVjZDdlNDg5MWJmOTVkMWQxOTIwNmNlMjRhN2IzMmUiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MDMzNTkzMDc3NzgsInVzZXJOYW1lIjoiMTg2KioqKjM0MTYifQ.W4Qf1PgGUTyYSz7uicrbMh2C1abeg-M7OuN3D-sgkDQ' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -H 'content-type: application/json;charset=UTF-8' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV' \
+  -H 'origin: https://edu.axdxa.cn' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/weekClass/home?id=2007828829376057345' \
+  -H 'sec-ch-ua: "Microsoft Edge";v="143", "Chromium";v="143", "Not A(Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0' \
+  --data-raw '{
+  "studyProgressTime":729,
+  "studyDuration":1,
+  "studyAssociationId":"2007828829376057345",
+  "studyType":4,
+  "courseResourceRelationId":"2007829464590516226",
+  "studySchedule":100}'
+
+  响应：
+  {"code":200,"msg":"操作成功","data":null}
+
+  

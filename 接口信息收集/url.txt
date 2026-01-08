@@ -1,0 +1,28 @@
+登录
+curl 'https://edu.axdxa.cn/prod-api/auth/pwdLogin' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -H 'content-type: application/json;charset=UTF-8' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV; _nb_ioWEgULi=' \
+  -H 'encrypt-key: JPXO1wh/uJPGXlthkNT6jqBkYJiDsPY4+M7IS8X6he4KqnsVNRrJcStv8Gc0hJba/9PCxDFJhO/Saxy5Z99jJQ==' \
+  -H 'isencrypt: true' \
+  -H 'origin: https://edu.axdxa.cn' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/home' \
+  -H 'sec-ch-ua: "Microsoft Edge";v="143", "Chromium";v="143", "Not A(Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0' \
+  --data-raw '"Qn6Pjg0oKNeIEwlA7nIqzknPwTtZbbtaVnDjkyf7WC0CezmKIPy8R1pdslINbcZFojbNutOjRVncgJqhFaBiTE5urXx73H7qopN9CPI/FOB0SbHX6UdRiijI1bNFtPuojRSdNpbLpsy/nKobsO8Ovn8XmRHfLX1K5A5JMWzacTk="'
+登录响应：
+{'code': 200, 'msg': '操作成功', 'data': {'scope': None, 'openid': None, 'bindMobile': True, 'orderId': None, 'user': None, 'access_token': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzAzMzU5MzA3Nzc4Iiwicm5TdHIiOiI0Vmg4V0dQeVpuSUhhdEd1OXBkb0V4N0EzZnV1ZEhsMiIsImNsaWVudGlkIjoiNDI4YTgzMTBjZDQ0Mjc1N2FlNjk5ZGY1ZDg5NGYwNTEiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MDMzNTkzMDc3NzgsInVzZXJOYW1lIjoiMTg2KioqKjM0MTYifQ.ZBKH9txdboPa8flmktWinLF4VnkvsydZ0wu4OO5jg4k', 'refresh_token': None, 'expire_in': 2591999, 'refresh_expire_in': None, 'client_id': '428a8310cd442757ae699df5d894f051'}}
+
+
+
+
+  
