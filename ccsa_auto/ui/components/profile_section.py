@@ -1,7 +1,6 @@
-"""个人信息区组件模块"""
-from nicegui import ui
+"""个人信息区组件模块 - 基于app.storage.user的会话隔离版本"""
+from nicegui import ui, app
 from ccsa_auto.modules.auth.service import AuthService
-from ccsa_auto.modules.auth.models import auth_state
 
 
 def create_profile_section():
@@ -14,9 +13,11 @@ def create_profile_section():
             with ui.column().classes('flex-1'):
                 ui.label('个人信息').classes('text-xl font-bold mb-4 text-gray-700')
 
-                if auth_state.user_info:
-                    ui.label(f'账号: {auth_state.user_info.get("username")}').classes('text-gray-600 text-sm')
-                    ui.label(f'公司: {auth_state.user_info.get("company_name") or "-"}').classes('text-gray-600 text-sm')
+                # 从app.storage.user获取用户信息
+                user_info = app.storage.user.get('user_info', {})
+                if user_info:
+                    ui.label(f'账号: {user_info.get("username", "未知")}').classes('text-gray-600 text-sm')
+                    ui.label(f'公司: {user_info.get("company_name") or "-"}').classes('text-gray-600 text-sm')
                 else:
                     ui.label('未登录').classes('text-gray-500 text-sm')
             
@@ -30,8 +31,10 @@ def create_profile_section():
                 
                 # 异步加载积分信息
                 async def load_scores_embedded():
-                    if auth_state.external_token:
-                        scores = AuthService.get_scores(auth_state.external_token)
+                    # 从app.storage.user获取外部令牌
+                    external_token = app.storage.user.get('external_token')
+                    if external_token:
+                        scores = AuthService.get_scores(external_token)
                         if scores:
                             total_score_label.text = f'本年总积分: {scores["total_score"]}'
                             monthly_score_label.text = f'当月积分: {scores["monthly_score"]}'

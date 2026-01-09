@@ -1,7 +1,6 @@
-"""登录页面模块"""
-from nicegui import ui
+"""登录页面模块 - 基于app.storage.user的会话隔离版本"""
+from nicegui import ui, app
 from ccsa_auto.modules.auth.service import AuthService
-from ccsa_auto.modules.auth.models import auth_state
 
 
 def create_login_page(navigate_to):
@@ -26,9 +25,19 @@ def create_login_page(navigate_to):
             # 调用认证服务
             success, result, message = AuthService.login(data['username'], data['password'])
             if success:
-                auth_state.set_auth(result['access_token'], result['user'], result.get('external_token'))
-                # 导航到个人中心页面
-                navigate_to('main')
+                # 将用户信息存储到app.storage.user中
+                app.storage.user.update({
+                    'authenticated': True,
+                    'user_info': result['user'],
+                    'access_token': result['access_token'],
+                    'external_token': result.get('external_token'),
+                    'user_id': result['user']['id']
+                })
+                
+                print(f"用户 {result['user']['username']} 登录成功")
+                
+                # 导航到主页面
+                navigate_to()
             else:
                 ui.notify(message, type='error')
         

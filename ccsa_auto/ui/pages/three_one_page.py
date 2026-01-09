@@ -1,7 +1,6 @@
-"""三个一任务完成情况页面模块"""
-from nicegui import ui
+"""三个一任务完成情况页面模块 - 基于app.storage.user的会话隔离版本"""
+from nicegui import ui, app
 from ccsa_auto.modules.auth.service import AuthService
-from ccsa_auto.modules.auth.models import auth_state
 
 
 def create_three_one_page():
@@ -39,8 +38,10 @@ def create_three_one_page():
         # 刷新按钮
         def refresh_task_status():
             """刷新任务完成情况"""
-            if auth_state.external_token:
-                task_status = AuthService.get_task_status(auth_state.external_token)
+            # 从app.storage.user获取外部令牌
+            external_token = app.storage.user.get('external_token')
+            if external_token:
+                task_status = AuthService.get_task_status(external_token)
                 if task_status:
                     # 更新每日一题信息
                     daily = task_status.get('daily', {})

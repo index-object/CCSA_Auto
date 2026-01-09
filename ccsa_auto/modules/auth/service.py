@@ -27,13 +27,21 @@ class AuthService:
             # 创建认证模块实例
             auth_module = AuthModule()
             
+            # 创建独立的登录数据副本，避免修改全局配置
+            login_data = RefactoredConfig.LOGIN_DATA.copy()
+            login_data['username'] = username
+            login_data['password'] = password
+            
+            # 临时修改认证模块的登录数据
+            # 由于AuthModule直接使用Config.LOGIN_DATA，我们需要修改Config类
             # 使用锁保护配置修改，防止多个线程同时修改配置
             with _config_lock:
-                # 修改配置为用户提供的账号密码
+                # 保存原始配置
                 original_username = RefactoredConfig.LOGIN_DATA['username']
                 original_password = RefactoredConfig.LOGIN_DATA['password']
                 
                 try:
+                    # 临时修改配置
                     RefactoredConfig.LOGIN_DATA['username'] = username
                     RefactoredConfig.LOGIN_DATA['password'] = password
                     
