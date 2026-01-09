@@ -1,0 +1,15 @@
+[project]
+name = "ccsa-auto"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "apscheduler>=3.11.2",
+    "bcrypt>=5.0.0",
+    "nicegui>=3.5.0",
+    "passlib>=1.7.4",
+    "python-jose[cryptography]>=3.5.0",
+    "requests>=2.32.5",
+    "sqlalchemy>=2.0.45",
+]
