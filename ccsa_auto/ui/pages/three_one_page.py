@@ -18,7 +18,6 @@ def create_three_one_page():
                 # 创建占位符标签
                 daily_name_label = ui.label('任务名称: 加载中...').classes('text-gray-600')
                 daily_status_label = ui.label('完成状态: 加载中...').classes('text-gray-600')
-                daily_score_label = ui.label('可获得积分: 加载中...').classes('text-gray-600')
                 daily_obtained_label = ui.label('已获得积分: 加载中...').classes('text-gray-600')
             
             # 每周一课卡片
@@ -27,7 +26,6 @@ def create_three_one_page():
                 
                 weekly_name_label = ui.label('任务名称: 加载中...').classes('text-gray-600')
                 weekly_status_label = ui.label('完成状态: 加载中...').classes('text-gray-600')
-                weekly_score_label = ui.label('可获得积分: 加载中...').classes('text-gray-600')
                 weekly_obtained_label = ui.label('已获得积分: 加载中...').classes('text-gray-600')
             
             # 每月一考卡片
@@ -36,7 +34,6 @@ def create_three_one_page():
                 
                 monthly_name_label = ui.label('任务名称: 加载中...').classes('text-gray-600')
                 monthly_status_label = ui.label('完成状态: 加载中...').classes('text-gray-600')
-                monthly_score_label = ui.label('可获得积分: 加载中...').classes('text-gray-600')
                 monthly_obtained_label = ui.label('已获得积分: 加载中...').classes('text-gray-600')
         
         # 刷新按钮
@@ -49,21 +46,18 @@ def create_three_one_page():
                     daily = task_status.get('daily', {})
                     daily_name_label.text = f'任务名称: {daily.get("name", "每日一题")}'
                     daily_status_label.text = f'完成状态: {daily.get("status", "未知")}'
-                    daily_score_label.text = f'可获得积分: {daily.get("available_score", 0)}'
                     daily_obtained_label.text = f'已获得积分: {daily.get("obtained_score", 0)}'
                     
                     # 更新每周一课信息
                     weekly = task_status.get('weekly', {})
                     weekly_name_label.text = f'任务名称: {weekly.get("name", "每周一课")}'
                     weekly_status_label.text = f'完成状态: {weekly.get("status", "未知")}'
-                    weekly_score_label.text = f'可获得积分: {weekly.get("available_score", 0)}'
                     weekly_obtained_label.text = f'已获得积分: {weekly.get("obtained_score", 0)}'
                     
                     # 更新每月一考信息
                     monthly = task_status.get('monthly', {})
                     monthly_name_label.text = f'任务名称: {monthly.get("name", "每月一考")}'
                     monthly_status_label.text = f'完成状态: {monthly.get("status", "未知")}'
-                    monthly_score_label.text = f'可获得积分: {monthly.get("available_score", 0)}'
                     monthly_obtained_label.text = f'已获得积分: {monthly.get("obtained_score", 0)}'
                 else:
                     ui.notify('获取任务完成情况失败', type='error')
