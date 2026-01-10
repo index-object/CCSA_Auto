@@ -140,8 +140,19 @@ class AuthService:
         return None
     
     @staticmethod
-    def authenticate_external(username, password):
-        """外部平台认证"""
+    def authenticate_external(username, password, return_error_info=False):
+        """外部平台认证
+        
+        Args:
+            username: 用户名
+            password: 密码
+            return_error_info: 如果为True，返回元组 (success, user_info, external_token, error_info)
+                              如果为False，返回元组 (success, user_info, external_token)，保持向后兼容
+        
+        Returns:
+            如果return_error_info为False: tuple (bool, dict, str) - (成功状态, 用户信息, 访问令牌)
+            如果return_error_info为True: tuple (bool, dict, str, dict) - 第四个元素是错误信息字典
+        """
         try:
             # 创建认证模块实例
             auth_module = AuthModule()
@@ -164,15 +175,21 @@ class AuthService:
                     RefactoredConfig.LOGIN_DATA['username'] = username
                     RefactoredConfig.LOGIN_DATA['password'] = password
                     
-                    # 尝试登录
-                    success = auth_module.login()
+                    # 尝试登录，获取详细错误信息
+                    success, error_info = auth_module.login(return_error_info=True)
                     
                     if success:
                         # 获取用户信息
                         user_info = AuthService.get_user_info(auth_module)
-                        return True, user_info, auth_module.access_token
+                        if return_error_info:
+                            return True, user_info, auth_module.access_token, None
+                        else:
+                            return True, user_info, auth_module.access_token
                     else:
-                        return False, None, None
+                        if return_error_info:
+                            return False, None, None, error_info
+                        else:
+                            return False, None, None
                 finally:
                     # 恢复原始配置
                     RefactoredConfig.LOGIN_DATA['username'] = original_username
@@ -180,7 +197,15 @@ class AuthService:
                 
         except Exception as e:
             print(f"外部平台认证失败: {e}")
-            return False, None, None
+            error_info = {
+                'code': 500,
+                'msg': f'外部平台认证失败: {str(e)}',
+                'data': None
+            }
+            if return_error_info:
+                return False, None, None, error_info
+            else:
+                return False, None, None
     
     @staticmethod
     def get_user_info(auth_module):
@@ -339,10 +364,20 @@ class AuthService:
     @staticmethod
     def user_login(username, password):
         """普通用户登录"""
-        # 外部平台认证
-        auth_success, user_info, external_token = AuthService.authenticate_external(username, password)
+        # 外部平台认证，获取详细错误信息
+        auth_success, user_info, external_token, error_info = AuthService.authenticate_external(
+            username, password, return_error_info=True
+        )
         if not auth_success:
-            return False, None, "外部平台认证失败"
+            # 如果有详细的错误信息，构建更有用的错误消息
+            if error_info:
+                error_msg = error_info.get('msg', '外部平台认证失败')
+                error_code = error_info.get('code', '未知错误码')
+                # 构建包含错误码和错误消息的详细错误信息
+                detailed_msg = f"外部平台认证失败 (错误码: {error_code}): {error_msg}"
+            else:
+                detailed_msg = "外部平台认证失败"
+            return False, None, detailed_msg
         
         # 自动注册或获取用户，传入已获取的user_info避免重复认证
         user = AuthService.auto_register(username, password, user_info)

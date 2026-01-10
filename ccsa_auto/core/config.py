@@ -47,9 +47,33 @@ class Config:
     
     # 任务配置
     TASK_SCHEDULE = {
-        'DAILY': '0 0 * * *',  # 每天0点
-        'WEEKLY': '0 0 * * 0',  # 每周日0点
-        'MONTHLY': '0 0 1 * *'  # 每月1日0点
+        'DAILY': '0 7-11 * * *',      # 每天7点~11点之间随机时间
+        'WEEKLY': '0 8-11 * * 2',     # 每周二8点~11点之间随机时间
+        'MONTHLY': '0 9-15 15 * *'    # 每月15日9点~15点之间随机时间
+    }
+    
+    # 任务详细配置（用于计算next_run_time）
+    TASK_DETAILS = {
+        'DAILY': {
+            'name': '每日一题',
+            'description': '每天自动完成每日一题',
+            'hour_range': (7, 11),    # 执行小时范围：7~11点
+            'minute_range': (0, 59)   # 执行分钟范围：0~59分
+        },
+        'WEEKLY': {
+            'name': '每周一课',
+            'description': '每周自动完成每周一课',
+            'weekday': 2,             # 周二 (0=周一, 1=周二, ..., 6=周日)
+            'hour_range': (8, 11),    # 执行小时范围：8~11点
+            'minute_range': (0, 59)   # 执行分钟范围：0~59分
+        },
+        'MONTHLY': {
+            'name': '每月一考',
+            'description': '每月自动完成每月一考',
+            'day': 15,                # 每月15日
+            'hour_range': (9, 15),    # 执行小时范围：9~15点
+            'minute_range': (0, 59)   # 执行分钟范围：0~59分
+        }
     }
     
     # 日志配置

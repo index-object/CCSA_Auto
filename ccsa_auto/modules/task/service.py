@@ -21,6 +21,28 @@ class TaskService:
     """任务服务"""
     
     @staticmethod
+    def generate_random_time(hour_range, minute_range=(0, 59)):
+        """
+        生成随机时间
+        
+        Args:
+            hour_range: 小时范围元组 (min_hour, max_hour)
+            minute_range: 分钟范围元组 (min_minute, max_minute)，默认0-59
+            
+        Returns:
+            tuple: (hour, minute) 随机生成的小时和分钟
+        """
+        import random
+        min_hour, max_hour = hour_range
+        min_minute, max_minute = minute_range
+        
+        # 生成随机小时和分钟
+        hour = random.randint(min_hour, max_hour)
+        minute = random.randint(min_minute, max_minute)
+        
+        return hour, minute
+    
+    @staticmethod
     def execute_daily_question(access_token, user_id):
         """
         执行每日一题
@@ -480,25 +502,25 @@ class TaskService:
         try:
             logger.info(f"为用户 {user_id} 创建默认任务")
             
-            # 默认任务配置
+            # 从配置中获取默认任务配置
             default_tasks = [
                 {
                     'task_type': 'daily',
-                    'task_name': '每日一题',
-                    'description': '每天自动完成每日一题',
-                    'cron_expression': '0 9 * * *',  # 每天9:00
+                    'task_name': Config.TASK_DETAILS['DAILY']['name'],
+                    'description': Config.TASK_DETAILS['DAILY']['description'],
+                    'cron_expression': Config.TASK_SCHEDULE['DAILY'],
                 },
                 {
                     'task_type': 'weekly',
-                    'task_name': '每周一课',
-                    'description': '每周自动完成每周一课',
-                    'cron_expression': '0 10 * * 0',  # 每周日10:00
+                    'task_name': Config.TASK_DETAILS['WEEKLY']['name'],
+                    'description': Config.TASK_DETAILS['WEEKLY']['description'],
+                    'cron_expression': Config.TASK_SCHEDULE['WEEKLY'],
                 },
                 {
                     'task_type': 'monthly',
-                    'task_name': '每月一考',
-                    'description': '每月自动完成每月一考',
-                    'cron_expression': '0 14 1 * *',  # 每月1号14:00
+                    'task_name': Config.TASK_DETAILS['MONTHLY']['name'],
+                    'description': Config.TASK_DETAILS['MONTHLY']['description'],
+                    'cron_expression': Config.TASK_SCHEDULE['MONTHLY'],
                 }
             ]
             
@@ -515,23 +537,75 @@ class TaskService:
                     logger.info(f"用户 {user_id} 的 {task_config['task_name']} 任务已存在，跳过创建")
                     continue
                 
-                # 计算下次运行时间（明天9:00、下周日10:00、下月1号14:00）
+                # 计算下次运行时间（使用配置中的随机时间范围）
                 now = datetime.utcnow()
                 next_run_time = None
                 
                 if task_config['task_type'] == 'daily':
-                    # 明天9:00
-                    next_run_time = datetime(now.year, now.month, now.day, 9, 0, 0) + timedelta(days=1)
-                elif task_config['task_type'] == 'weekly':
-                    # 下周日10:00
-                    days_until_sunday = (6 - now.weekday()) % 7 or 7  # 0=周一, 6=周日
-                    next_run_time = datetime(now.year, now.month, now.day, 10, 0, 0) + timedelta(days=days_until_sunday)
-                elif task_config['task_type'] == 'monthly':
-                    # 下月1号14:00
-                    if now.month == 12:
-                        next_run_time = datetime(now.year + 1, 1, 1, 14, 0, 0)
+                    # 每天7-11点之间随机时间
+                    hour_range = Config.TASK_DETAILS['DAILY']['hour_range']
+                    minute_range = Config.TASK_DETAILS['DAILY']['minute_range']
+                    
+                    # 生成随机时间
+                    hour, minute = TaskService.generate_random_time(hour_range, minute_range)
+                    
+                    # 计算今天的执行时间
+                    today_execution = datetime(now.year, now.month, now.day, hour, minute, 0)
+                    
+                    # 如果当前时间已经过了今天的执行时间，则使用明天的时间
+                    if now >= today_execution:
+                        next_run_time = today_execution + timedelta(days=1)
                     else:
-                        next_run_time = datetime(now.year, now.month + 1, 1, 14, 0, 0)
+                        next_run_time = today_execution
+                        
+                elif task_config['task_type'] == 'weekly':
+                    # 每周二8-11点之间随机时间
+                    weekday = Config.TASK_DETAILS['WEEKLY']['weekday']  # 2=周二
+                    hour_range = Config.TASK_DETAILS['WEEKLY']['hour_range']
+                    minute_range = Config.TASK_DETAILS['WEEKLY']['minute_range']
+                    
+                    # 生成随机时间
+                    hour, minute = TaskService.generate_random_time(hour_range, minute_range)
+                    
+                    # 计算距离下周二还有多少天
+                    # Python的weekday(): 0=周一, 1=周二, ..., 6=周日
+                    days_until_tuesday = (weekday - now.weekday()) % 7
+                    
+                    # 计算今天的执行时间
+                    today_execution = datetime(now.year, now.month, now.day, hour, minute, 0)
+                    
+                    if days_until_tuesday == 0:
+                        # 如果是今天，检查是否已经过了执行时间
+                        if now >= today_execution:
+                            days_until_tuesday = 7  # 下周的周二
+                    
+                    next_run_time = today_execution + timedelta(days=days_until_tuesday)
+                    
+                elif task_config['task_type'] == 'monthly':
+                    # 每月15日9-15点之间随机时间
+                    day = Config.TASK_DETAILS['MONTHLY']['day']
+                    hour_range = Config.TASK_DETAILS['MONTHLY']['hour_range']
+                    minute_range = Config.TASK_DETAILS['MONTHLY']['minute_range']
+                    
+                    # 生成随机时间
+                    hour, minute = TaskService.generate_random_time(hour_range, minute_range)
+                    
+                    # 计算下个月15日
+                    if now.month == 12:
+                        next_year = now.year + 1
+                        next_month = 1
+                    else:
+                        next_year = now.year
+                        next_month = now.month + 1
+                    
+                    # 创建下个月15日的时间
+                    next_run_time = datetime(next_year, next_month, day, hour, minute, 0)
+                    
+                    # 如果当前日期是15日且还未到执行时间，则使用本月的15日
+                    if now.day == day:
+                        today_execution = datetime(now.year, now.month, day, hour, minute, 0)
+                        if now < today_execution:
+                            next_run_time = today_execution
                 
                 # 创建新任务
                 new_task = Task(
