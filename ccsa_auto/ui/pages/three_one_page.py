@@ -5,42 +5,42 @@ from ccsa_auto.modules.auth.service import AuthService
 
 def create_three_one_page():
     """创建三个一任务完成情况页面"""
-    with ui.card().classes('w-full h-auto p-4 md:p-6 bg-white shadow-lg rounded-xl hover:shadow-xl transition-shadow duration-300'):
-        with ui.row().classes('items-center gap-2 mb-4 md:mb-6 pb-3 md:pb-4 border-b-2 border-gray-100'):
-            ui.icon('task_alt', size='1.2rem md:1.5rem').classes('text-blue-600')
-            ui.label('三个一任务完成情况').classes('text-lg md:text-xl font-bold text-blue-600')
+    with ui.card().classes('w-full h-auto p-5 md:p-6 bg-white shadow-lg rounded-xl hover:shadow-xl transition-shadow duration-300'):
+        with ui.row().classes('items-center gap-3 mb-5 md:mb-6 pb-4 border-b-2 border-gray-100'):
+            ui.icon('task_alt', size='1.5rem md:1.8rem').classes('text-blue-600')
+            ui.label('三个一任务完成情况').classes('text-xl md:text-2xl font-bold text-blue-600')
         
         # 创建三个任务卡片 - 使用网格布局
         with ui.grid(columns=3).classes('w-full gap-4 mb-6'):
             # 每日一题卡片
-            with ui.card().classes('p-3 md:p-5 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl text-center hover:shadow-md transition-shadow duration-300'):
-                ui.icon('today', size='1.8rem md:2.5rem').classes('text-blue-600 mb-2 md:mb-3')
-                ui.label('每日一题').classes('text-base md:text-lg font-bold text-gray-800 mb-1 md:mb-2')
+            with ui.card().classes('p-4 md:p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl text-center hover:shadow-md transition-shadow duration-300'):
+                ui.icon('today', size='2.2rem md:3rem').classes('text-blue-600 mb-3 md:mb-4')
+                ui.label('每日一题').classes('text-lg md:text-xl font-bold text-gray-800 mb-2 md:mb-3')
                 
                 # 创建占位符标签
-                daily_status_label = ui.label('加载中...').classes('text-xs md:text-sm mb-1 md:mb-2')
-                daily_obtained_label = ui.label('0 积分').classes('text-xl md:text-2xl font-bold text-blue-700')
+                daily_status_label = ui.label('加载中...').classes('text-sm md:text-base mb-2 md:mb-3')
+                daily_obtained_label = ui.label('0 积分').classes('text-2xl md:text-3xl font-bold text-blue-700')
                 
                 # 存储标签引用
                 daily_name_label = ui.label('每日一题').classes('hidden')
             
             # 每周一课卡片
-            with ui.card().classes('p-3 md:p-5 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl text-center hover:shadow-md transition-shadow duration-300'):
-                ui.icon('date_range', size='1.8rem md:2.5rem').classes('text-purple-600 mb-2 md:mb-3')
-                ui.label('每周一课').classes('text-base md:text-lg font-bold text-gray-800 mb-1 md:mb-2')
+            with ui.card().classes('p-4 md:p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl text-center hover:shadow-md transition-shadow duration-300'):
+                ui.icon('date_range', size='2.2rem md:3rem').classes('text-purple-600 mb-3 md:mb-4')
+                ui.label('每周一课').classes('text-lg md:text-xl font-bold text-gray-800 mb-2 md:mb-3')
                 
-                weekly_status_label = ui.label('加载中...').classes('text-xs md:text-sm mb-1 md:mb-2')
-                weekly_obtained_label = ui.label('0 积分').classes('text-xl md:text-2xl font-bold text-purple-700')
+                weekly_status_label = ui.label('加载中...').classes('text-sm md:text-base mb-2 md:mb-3')
+                weekly_obtained_label = ui.label('0 积分').classes('text-2xl md:text-3xl font-bold text-purple-700')
                 
                 weekly_name_label = ui.label('每周一课').classes('hidden')
             
             # 每月一考卡片
-            with ui.card().classes('p-3 md:p-5 bg-gradient-to-br from-green-50 to-green-100 rounded-xl text-center hover:shadow-md transition-shadow duration-300'):
-                ui.icon('calendar_month', size='1.8rem md:2.5rem').classes('text-green-600 mb-2 md:mb-3')
-                ui.label('每月一考').classes('text-base md:text-lg font-bold text-gray-800 mb-1 md:mb-2')
+            with ui.card().classes('p-4 md:p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl text-center hover:shadow-md transition-shadow duration-300'):
+                ui.icon('calendar_month', size='2.2rem md:3rem').classes('text-green-600 mb-3 md:mb-4')
+                ui.label('每月一考').classes('text-lg md:text-xl font-bold text-gray-800 mb-2 md:mb-3')
                 
-                monthly_status_label = ui.label('加载中...').classes('text-xs md:text-sm mb-1 md:mb-2')
-                monthly_obtained_label = ui.label('0 积分').classes('text-xl md:text-2xl font-bold text-green-700')
+                monthly_status_label = ui.label('加载中...').classes('text-sm md:text-base mb-2 md:mb-3')
+                monthly_obtained_label = ui.label('0 积分').classes('text-2xl md:text-3xl font-bold text-green-700')
                 
                 monthly_name_label = ui.label('每月一考').classes('hidden')
         
