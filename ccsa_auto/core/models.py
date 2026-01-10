@@ -45,12 +45,17 @@ class Task(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     task_type = Column(String(20), nullable=False)  # daily, weekly, monthly
+    task_name = Column(String(100))  # 任务名称
+    description = Column(Text)  # 任务描述
+    cron_expression = Column(String(50))  # 定时表达式
+    is_active = Column(Boolean, default=True)  # 是否激活
     task_data = Column(Text)  # 任务数据
-    execution_status = Column(String(20), default='pending')  # pending, running, completed
+    execution_status = Column(String(20), default='pending')  # pending, running, completed, failed
     external_status = Column(String(20), default='unknown')  # success, failed, unknown
     result = Column(Text)  # 执行结果
-    scheduled_time = Column(DateTime, default=datetime.utcnow)
-    executed_at = Column(DateTime)
+    scheduled_time = Column(DateTime, default=datetime.utcnow)  # 计划执行时间
+    next_run_time = Column(DateTime)  # 下次运行时间
+    executed_at = Column(DateTime)  # 实际执行时间
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -60,11 +65,16 @@ class Task(Base):
             'id': self.id,
             'user_id': self.user_id,
             'task_type': self.task_type,
+            'task_name': self.task_name,
+            'description': self.description,
+            'cron_expression': self.cron_expression,
+            'is_active': self.is_active,
             'task_data': self.task_data,
             'execution_status': self.execution_status,
             'external_status': self.external_status,
             'result': self.result,
-            'scheduled_time': self.scheduled_time.isoformat(),
+            'scheduled_time': self.scheduled_time.isoformat() if self.scheduled_time else None,
+            'next_run_time': self.next_run_time.isoformat() if self.next_run_time else None,
             'executed_at': self.executed_at.isoformat() if self.executed_at else None,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()

@@ -131,7 +131,7 @@ class AuthService:
                 username=username,
                 password=hash_password(password),
                 external_username=username,
-                external_password=hash_password(password),
+                external_password=password,
                 company_name=user_info.get('company_name', ''),
                 status=0
             )
@@ -139,6 +139,17 @@ class AuthService:
             db.add(new_user)
             db.commit()
             db.refresh(new_user)
+            
+            # 为新用户创建默认任务
+            try:
+                # 局部导入以避免循环导入
+                from ccsa_auto.modules.task.service import TaskService
+                TaskService.create_default_tasks_for_user(new_user.id)
+                print(f"为用户 {new_user.id} 创建默认任务成功")
+            except Exception as e:
+                print(f"为用户 {new_user.id} 创建默认任务失败: {e}")
+                # 任务创建失败不影响用户注册
+            
             return new_user
         finally:
             db.close()

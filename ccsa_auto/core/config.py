@@ -16,13 +16,32 @@ class Config:
         'LOGIN_URL': "https://edu.axdxa.cn/prod-api/auth/pwdLogin",
         'LOGIN_CLIENT_ID': "428a8310cd442757ae699df5d894f051",
         'LOGIN_GRANT_TYPE': "password",
+        'BASE_URL': "https://edu.axdxa.cn/prod-api",
         'HEADERS': {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/plain, */*",
+            "Content-Language": "zh_CN",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0",
+            "ClientId": "428a8310cd442757ae699df5d894f051"
         },
         'API_ENDPOINTS': {
-            'DAILY_URL': "https://edu.axdxa.cn/prod-api/daily/question",
-            'WEEKLY_URL': "https://edu.axdxa.cn/prod-api/weekly/lesson",
-            'MONTHLY_URL': "https://edu.axdxa.cn/prod-api/monthly/exam"
+            # 基础接口
+            'GET_STUDY_LIST': "https://edu.axdxa.cn/prod-api/progress/app/regularStudy/getNewRegularStudyList",
+            'SUBMIT_EXAM': "https://edu.axdxa.cn/prod-api/progress/app/regularExamRecord",
+            'SUBMIT_STUDY_SCHEDULE': "https://edu.axdxa.cn/prod-api/progress/app/studyScheduleEscalation/studyScheduleEscalation",
+            
+            # 每日一题相关
+            'GET_DAILY_QUESTIONS': "https://edu.axdxa.cn/prod-api/progress/app/regularStudyQuestionBank/getRegularStudyQuestionInfo",
+            
+            # 每周一课相关
+            'GET_WEEKLY_LESSON': "https://edu.axdxa.cn/prod-api/progress/app/regularCourseWeek/{lesson_id}",
+            
+            # 每月一考相关
+            'GET_MONTHLY_QUESTIONS': "https://edu.axdxa.cn/prod-api/progress/app/regularStudyQuestionBank/getRegularStudyQuestionInfo",
+            
+            # 用户信息相关
+            'GET_USER_INFO': "https://edu.axdxa.cn/prod-api/system/app/userExtend/v2/getUserInfo",
+            'GET_SCORES': "https://edu.axdxa.cn/prod-api/progress/app/regularStudyRecord/getRegularFractionInfo"
         }
     }
     
