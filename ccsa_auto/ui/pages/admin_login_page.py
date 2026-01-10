@@ -1,7 +1,6 @@
 """管理员登录页面模块"""
 from nicegui import ui, app
 from ccsa_auto.modules.auth.service import AuthService
-from ccsa_auto.ui.styles.global_styles import apply_global_styles
 
 
 def create_admin_login_page(navigate_to):
@@ -11,7 +10,6 @@ def create_admin_login_page(navigate_to):
         navigate_to: 导航函数，用于页面跳转
     """
     # 应用全局样式
-    apply_global_styles()
    # 创建渐变背景容器
     with ui.element('div').classes('w-full min-h-screen bg-gradient-to-br from-slate-50 via-red-50 to-pink-50 flex items-center justify-center p-4'):
         with ui.card().classes('w-full max-w-md p-8 rounded-2xl shadow-2xl card-hover'):
