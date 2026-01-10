@@ -15,11 +15,7 @@ from ccsa_auto.modules.task.scheduler import init_scheduler
 # 导入UI模块
 from ccsa_auto.ui.pages.login_page import create_login_page
 from ccsa_auto.ui.pages.admin_login_page import create_admin_login_page
-from ccsa_auto.ui.pages.profile_page import create_profile_page
-from ccsa_auto.ui.pages.task_page import create_task_page
-from ccsa_auto.ui.pages.announcement_page import create_announcement_page
 from ccsa_auto.ui.pages.admin_page import create_admin_page
-from ccsa_auto.ui.pages.three_one_page import create_three_one_page
 from ccsa_auto.ui.pages.main_page import create_main_page
 
 # 初始化应用
@@ -69,6 +65,7 @@ def admin_login_page():
     """管理员登录页面"""
     def navigate_to_admin(page=None):
         # 登录成功后导航到管理后台
+        # 如果传递了page参数，忽略它，直接跳转到/admin
         ui.navigate.to('/admin')
     
     create_admin_login_page(navigate_to_admin)
@@ -124,38 +121,7 @@ def main_page():
         # 主内容区
         create_main_page(navigate_to)
 
-# 个人中心页面 - 需要认证
-@ui.page('/profile')
-def profile_page():
-    """个人中心页面"""
-    # 检查用户是否已认证
-    if not app.storage.user.get('authenticated', False):
-        ui.navigate.to('/login')
-        return
-    
-    with ui.column().classes('w-full'):
-        # 顶部导航栏 - 参考样式头部布局
-        with ui.card().classes('w-full bg-gradient-to-r from-blue-600 to-blue-900 text-white p-4 rounded-none shadow-lg mb-6 border-0'):
-            with ui.row().classes('w-full justify-between items-center'):
-                # 左侧logo和标题区域
-                with ui.row().classes('items-center gap-4'):
-                    ui.icon('person', size='1.8rem').classes('text-white')
-                    with ui.column().classes('gap-1'):
-                        ui.label('个人中心').classes('text-xl font-bold')
-                        ui.label('用户信息管理').classes('text-xs opacity-90')
-                
-                # 右侧导航和返回按钮
-                with ui.row().classes('items-center gap-4'):
-                    # 导航按钮
-                    ui.button('首页', on_click=lambda: ui.navigate.to('/')).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
-                    ui.button('任务管理', on_click=lambda: ui.navigate.to('/task')).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
-                    ui.button('公告', on_click=lambda: ui.navigate.to('/announcement')).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
-                    
-                    # 退出登录按钮
-                    ui.button('退出登录', on_click=lambda: logout()).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
-        
-        # 个人中心内容
-        create_profile_page()
+
     
     def logout():
         """退出登录"""

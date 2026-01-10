@@ -312,7 +312,7 @@ class AuthService:
             
             # 验证密码
             from ccsa_auto.utils.password import verify_password
-            if not verify_password(password, user.password):
+            if not verify_password(user.password, password):
                 return False, None, "密码错误"
             
             # 检查用户状态

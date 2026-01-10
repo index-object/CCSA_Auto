@@ -27,35 +27,49 @@ def create_admin_login_page(navigate_to):
             # 登录处理
             async def handle_admin_login():
                 """处理管理员登录"""
-                admin_username = admin_username_input.value.strip()
-                admin_password = admin_password_input.value.strip()
-                
-                if not admin_username or not admin_password:
-                    ui.notify('请输入管理员账号和密码', type='warning')
-                    return
-                
-                success, result, message = AuthService.login(admin_username, admin_password)
-                if success:
-                    # 检查是否为管理员
-                    if not result['user'].get('is_admin'):
-                        ui.notify('非管理员账号，请使用普通用户登录', type='error')
+                print("handle_admin_login 函数被调用")
+                try:
+                    admin_username = admin_username_input.value.strip()
+                    admin_password = admin_password_input.value.strip()
+                    
+                    print(f"获取到的用户名: {admin_username}, 密码长度: {len(admin_password)}")
+                    
+                    if not admin_username or not admin_password:
+                        ui.notify('请输入管理员账号和密码', type='warning')
                         return
                     
-                    # 存储管理员信息到会话
-                    app.storage.user.update({
-                        'authenticated': True,
-                        'is_admin': True,
-                        'user_info': result['user'],
-                        'access_token': result['access_token'],
-                        'user_id': result['user']['id'],
-                        'external_token': result.get('external_token')
-                    })
+                    print(f"尝试管理员登录: 用户名={admin_username}")
+                    success, result, message = AuthService.login(admin_username, admin_password)
+                    print(f"登录结果: success={success}, message={message}")
                     
-                    print(f"管理员 {result['user']['username']} 登录成功")
-                    ui.notify('管理员登录成功', type='success')
-                    navigate_to('admin')
-                else:
-                    ui.notify(message, type='error')
+                    if success:
+                        # 检查是否为管理员
+                        if not result['user'].get('is_admin'):
+                            ui.notify('非管理员账号，请使用普通用户登录', type='error')
+                            return
+                        
+                        # 存储管理员信息到会话
+                        app.storage.user.update({
+                            'authenticated': True,
+                            'is_admin': True,
+                            'user_info': result['user'],
+                            'access_token': result['access_token'],
+                            'user_id': result['user']['id'],
+                            'external_token': result.get('external_token')
+                        })
+                        
+                        print(f"管理员 {result['user']['username']} 登录成功，准备跳转到管理界面")
+                        ui.notify('管理员登录成功', type='success')
+                        
+                        # 直接调用导航函数
+                        navigate_to('admin')
+                    else:
+                        ui.notify(message, type='error')
+                except Exception as e:
+                    print(f"管理员登录过程中发生异常: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    ui.notify(f'登录失败: {str(e)}', type='error')
             
             ui.button('管理员登录', on_click=handle_admin_login).classes(
                 'w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:scale-[1.02]'

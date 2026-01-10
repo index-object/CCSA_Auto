@@ -47,13 +47,13 @@ def create_profile_section():
         with ui.row().classes('w-full gap-6'):
             # 本年总积分卡片
             with ui.card().classes('flex-1 p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl text-center hover:shadow-md transition-shadow duration-300'):
-                ui.label('本年总积分').classes('text-lg text-gray-600 mb-3')
+                ui.label('本年积分').classes('text-lg text-gray-600 mb-3')
                 total_score_label = ui.label('加载中...').classes('text-4xl font-bold text-blue-700 mb-2')
-                ui.label('累计学习成果').classes('text-sm text-gray-500')
+                ui.label('本年总分').classes('text-sm text-gray-500')
             
             # 当月积分卡片
             with ui.card().classes('flex-1 p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl text-center hover:shadow-md transition-shadow duration-300'):
-                ui.label('当月积分').classes('text-lg text-gray-600 mb-3')
+                ui.label('本月积分').classes('text-lg text-gray-600 mb-3')
                 monthly_score_label = ui.label('加载中...').classes('text-4xl font-bold text-green-700 mb-2')
                 ui.label('本月已获得').classes('text-sm text-gray-500')
         

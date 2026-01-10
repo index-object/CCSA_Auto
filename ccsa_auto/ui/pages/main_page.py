@@ -18,19 +18,18 @@ def create_main_page(navigate_to):
     username = user_info.get('username', '用户')
     
     # 主内容区域 - 使用响应式网格布局
-    with ui.grid(columns='1fr 2fr').classes('w-full gap-6'):
-        # 左侧区域
-        with ui.column().classes('gap-6'):
+    # 宽屏（lg以上）：两列布局（1:2比例）
+    # 窄屏（md以下）：单列垂直布局
+    with ui.grid().classes('w-full gap-6 grid-cols-1 lg:grid-cols-3'):
+        # 左侧区域 - 在宽屏占1列，在窄屏为全宽
+        with ui.column().classes('gap-6 lg:col-span-1'):
             create_announcement_section()
             create_profile_section()
         
-        # 右侧区域
-        with ui.column().classes('gap-6'):
+        # 右侧区域 - 在宽屏占2列，在窄屏为全宽
+        with ui.column().classes('gap-6 lg:col-span-2'):
             create_three_one_page()
             create_task_section()
-    
-    # 响应式布局：在小屏幕上改为单列布局
-    ui.query('.nicegui-grid').classes('lg:grid-cols-1 md:grid-cols-2')
     
     # 底部区域
     with ui.card().classes('w-full mt-8 text-center text-gray-600 text-sm bg-gray-50 p-4 rounded-lg shadow-sm'):

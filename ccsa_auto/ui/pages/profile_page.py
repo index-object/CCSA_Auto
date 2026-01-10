@@ -29,7 +29,7 @@ def create_profile_page():
                     if auth_state.external_token:
                         scores = AuthService.get_scores(auth_state.external_token)
                         if scores:
-                            ui.label(f'本年总积分: {scores["total_score"]}')
+                            ui.label(f'本年积分: {scores["total_score"]}')
                             ui.label(f'当月积分: {scores["monthly_score"]}')
                         else:
                             ui.label('积分信息加载失败')
