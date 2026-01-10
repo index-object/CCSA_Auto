@@ -11,7 +11,7 @@ class AdminService:
         db = SessionLocal()
         try:
             user = db.query(User).filter_by(id=int(user_id)).first()
-            return user and user.username == 'admin'
+            return user and user.is_admin
         finally:
             db.close()
     

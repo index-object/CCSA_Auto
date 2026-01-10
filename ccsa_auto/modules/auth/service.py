@@ -227,6 +227,10 @@ class AuthService:
             user_info: 可选的用户信息，如果已从外部API获取则传入以避免重复调用
             external_token: 可选的访问令牌，如果已从外部API获取则传入
         """
+        # 检查是否为管理员账号，管理员不通过此函数注册
+        if username == 'admin':
+            return None
+        
         db = SessionLocal()
         try:
             # 检查用户是否已存在
@@ -261,6 +265,7 @@ class AuthService:
                 external_password=password,
                 company_name=user_info.get('company_name', ''),
                 status=0,
+                is_admin=False,  # 普通用户不是管理员
                 external_token=external_token,
                 token_expires_at=datetime.utcnow() + timedelta(hours=24) if external_token else None,
                 last_token_refresh=datetime.utcnow() if external_token else None
@@ -287,6 +292,53 @@ class AuthService:
     @staticmethod
     def login(username, password):
         """用户登录"""
+        # 首先检查是否为管理员登录
+        if username == 'admin':
+            # 管理员使用本地数据库认证
+            return AuthService.admin_login(username, password)
+        else:
+            # 普通用户使用外部平台认证
+            return AuthService.user_login(username, password)
+    
+    @staticmethod
+    def admin_login(username, password):
+        """管理员登录"""
+        db = SessionLocal()
+        try:
+            # 查询管理员用户
+            user = db.query(User).filter_by(username=username, is_admin=True).first()
+            if not user:
+                return False, None, "管理员账号不存在"
+            
+            # 验证密码
+            from ccsa_auto.utils.password import verify_password
+            if not verify_password(password, user.password):
+                return False, None, "密码错误"
+            
+            # 检查用户状态
+            if user.status == 1:
+                return False, None, "账号已被封禁"
+            
+            # 创建访问令牌
+            access_token = create_access_token({"sub": str(user.id)})
+            
+            return True, {
+                'access_token': access_token,
+                'external_token': None,  # 管理员没有外部令牌
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'nickname': user.nickname,
+                    'company_name': user.company_name,
+                    'is_admin': True
+                }
+            }, "管理员登录成功"
+        finally:
+            db.close()
+    
+    @staticmethod
+    def user_login(username, password):
+        """普通用户登录"""
         # 外部平台认证
         auth_success, user_info, external_token = AuthService.authenticate_external(username, password)
         if not auth_success:
@@ -316,7 +368,8 @@ class AuthService:
             'user': {
                 'id': user.id,
                 'username': user_info.get('username', user.username),  # 使用外部API的用户名
-                'company_name': user_info.get('company_name', user.company_name)  # 使用外部API的公司名称
+                'company_name': user_info.get('company_name', user.company_name),  # 使用外部API的公司名称
+                'is_admin': False
             }
         }, "登录成功"
     

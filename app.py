@@ -14,6 +14,7 @@ from ccsa_auto.modules.task.scheduler import init_scheduler
 
 # 导入UI模块
 from ccsa_auto.ui.pages.login_page import create_login_page
+from ccsa_auto.ui.pages.admin_login_page import create_admin_login_page
 from ccsa_auto.ui.pages.profile_page import create_profile_page
 from ccsa_auto.ui.pages.task_page import create_task_page
 from ccsa_auto.ui.pages.announcement_page import create_announcement_page
@@ -27,7 +28,7 @@ init_admin()
 init_scheduler()
 
 # 定义无需认证即可访问的页面路由
-unrestricted_page_routes = {'/login', '/register'}
+unrestricted_page_routes = {'/login', '/admin_login'}
 
 class AuthMiddleware(BaseHTTPMiddleware):
     """认证中间件 - 限制对需要认证的页面的访问
@@ -52,17 +53,27 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
 # 挂载认证中间件
 app.add_middleware(AuthMiddleware)
-# 登录页面 - 无需认证
+# 普通用户登录页面 - 无需认证
 @ui.page('/login')
 def login_page():
-    """登录页面"""
+    """普通用户登录页面"""
     def navigate_to_main():
         # 登录成功后导航到主页面
         ui.navigate.to('/')
     
     create_login_page(navigate_to_main)
 
-# 主页面 - 需要认证
+# 管理员登录页面 - 无需认证
+@ui.page('/admin_login')
+def admin_login_page():
+    """管理员登录页面"""
+    def navigate_to_admin(page=None):
+        # 登录成功后导航到管理后台
+        ui.navigate.to('/admin')
+    
+    create_admin_login_page(navigate_to_admin)
+
+# 主页面 - 需要认证（普通用户）
 @ui.page('/')
 def main_page():
     """主页面"""
@@ -74,12 +85,21 @@ def main_page():
     # 获取用户信息
     user_info = app.storage.user.get('user_info', {})
     
+    # 如果是管理员，重定向到管理后台
+    if user_info.get('is_admin'):
+        ui.navigate.to('/admin')
+        return
+    
     def navigate_to(page):
         """导航函数"""
         if page == 'logout':
             # 退出登录
             app.storage.user.clear()
-            ui.navigate.to('/login')
+            # 根据用户类型跳转到不同的登录页面
+            if user_info.get('is_admin'):
+                ui.navigate.to('/admin_login')
+            else:
+                ui.navigate.to('/login')
         else:
             # 导航到其他页面
             ui.navigate.to(f'/{page}')
@@ -158,7 +178,7 @@ def admin_page():
     
     # 检查是否为管理员
     user_info = app.storage.user.get('user_info', {})
-    if user_info.get('username') != 'admin':
+    if not user_info.get('is_admin'):
         ui.notify('需要管理员权限', type='warning')
         ui.navigate.to('/')
         return
@@ -167,10 +187,15 @@ def admin_page():
         # 顶部导航栏
         with ui.row().classes('w-full justify-between items-center p-4 bg-gray-100'):
             ui.label('管理员后台').classes('text-xl font-bold')
-            ui.button('返回首页', on_click=lambda: ui.navigate.to('/')).classes('bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded text-sm')
+            ui.button('退出登录', on_click=lambda: logout()).classes('bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded text-sm')
         
         # 管理员内容
         create_admin_page()
+    
+    def logout():
+        """退出登录"""
+        app.storage.user.clear()
+        ui.navigate.to('/admin_login')
 
 # 三个一页面 - 需要认证
 @ui.page('/three_one')
