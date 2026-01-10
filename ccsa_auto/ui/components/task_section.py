@@ -6,21 +6,28 @@ from ccsa_auto.core.models import Task
 
 def create_task_section():
     """在主页面中嵌入的任务信息区"""
-    with ui.card().classes('w-full md:w-1/3 h-auto p-6 bg-white shadow-lg rounded-lg task-section'):
-        ui.label('任务管理').classes('text-xl font-bold mb-4 text-gray-700')
-
-        # 任务列表展示
+    with ui.card().classes('w-full h-auto p-6 bg-white shadow-lg rounded-xl hover:shadow-xl transition-shadow duration-300'):
+        with ui.row().classes('items-center gap-2 mb-6 pb-4 border-b-2 border-gray-100'):
+            ui.icon('list_alt', size='1.5rem').classes('text-blue-600')
+            ui.label('任务管理').classes('text-xl font-bold text-blue-600')
+        
+        # 任务数量标签
+        task_count_label = ui.label('当前任务数量: 0').classes('text-lg font-semibold text-gray-800 mb-4')
+        
+        # 任务列表展示 - 使用更美观的表格
         task_table = ui.table(
             columns=[
-                {'name': 'id', 'label': 'ID', 'field': 'id'},
-                {'name': 'task_name', 'label': '任务名称', 'field': 'task_name'},
-                {'name': 'task_type', 'label': '任务类型', 'field': 'task_type'},
-                {'name': 'execution_status', 'label': '执行状态', 'field': 'execution_status'},
-                {'name': 'next_run_time', 'label': '下次执行', 'field': 'next_run_time'}
+                {'name': 'id', 'label': 'ID', 'field': 'id', 'align': 'center', 'sortable': True},
+                {'name': 'task_name', 'label': '任务名称', 'field': 'task_name', 'align': 'left', 'sortable': True},
+                {'name': 'task_type', 'label': '任务类型', 'field': 'task_type', 'align': 'center', 'sortable': True},
+                {'name': 'execution_status', 'label': '执行状态', 'field': 'execution_status', 'align': 'center', 'sortable': True},
+                {'name': 'next_run_time', 'label': '下次执行时间', 'field': 'next_run_time', 'align': 'center', 'sortable': True}
             ],
             rows=[],
-            row_key='id'
-        ).classes('w-full')
+            row_key='id',
+            pagination=5,
+            selection='single'
+        ).classes('w-full rounded-lg border border-gray-200').props('flat bordered')
 
         def refresh_tasks():
             """刷新任务列表（嵌入区）"""
@@ -57,11 +64,32 @@ def create_task_section():
                 task_data = []
                 for task in tasks:
                     next_run = task.next_run_time.strftime('%Y-%m-%d %H:%M') if task.next_run_time else '未设置'
+                    
+                    # 根据任务类型设置显示文本
+                    task_type_display = task.task_type
+                    if task.task_type == 'daily':
+                        task_type_display = '每日任务'
+                    elif task.task_type == 'weekly':
+                        task_type_display = '每周任务'
+                    elif task.task_type == 'monthly':
+                        task_type_display = '每月任务'
+                    
+                    # 根据执行状态设置显示文本
+                    status_display = task.execution_status
+                    if task.execution_status == 'completed':
+                        status_display = '已完成'
+                    elif task.execution_status == 'failed':
+                        status_display = '失败'
+                    elif task.execution_status == 'pending':
+                        status_display = '待执行'
+                    elif task.execution_status == 'running':
+                        status_display = '执行中'
+                    
                     task_data.append({
                         'id': task.id,
                         'task_name': task.task_name or task.task_type,
-                        'task_type': task.task_type,
-                        'execution_status': task.execution_status,
+                        'task_type': task_type_display,
+                        'execution_status': status_display,
                         'next_run_time': next_run
                     })
                 
@@ -76,17 +104,19 @@ def create_task_section():
             finally:
                 db.close()
 
-        # 任务数量标签
-        task_count_label = ui.label('当前任务数量: 0').classes('text-sm text-gray-600 mb-2')
-        
-        # 刷新按钮
-        with ui.row().classes('w-full justify-between items-center mt-4'):
-            ui.button('刷新任务', on_click=refresh_tasks).classes('bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded shadow')
+        # 操作按钮区域
+        with ui.row().classes('w-full justify-between items-center mt-6'):
+            with ui.row().classes('gap-2'):
+                ui.button('刷新任务', on_click=refresh_tasks, icon='refresh').classes('bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-2 px-4 rounded-lg shadow-sm')
+                
+                # 手动执行按钮
+                with ui.input('任务ID', placeholder='输入任务ID').classes('w-32') as task_id_input:
+                    pass
+                ui.button('执行任务', on_click=lambda: execute_task(task_id_input.value), icon='play_arrow').classes('bg-green-50 hover:bg-green-100 text-green-600 font-medium py-2 px-4 rounded-lg shadow-sm')
             
-            # 手动执行按钮（需要任务ID输入）
-            with ui.input('任务ID', placeholder='输入任务ID').classes('w-24') as task_id_input:
-                pass
-            ui.button('执行', on_click=lambda: execute_task(task_id_input.value)).classes('bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded shadow')
+            # 快速操作按钮
+            with ui.row().classes('gap-2'):
+                ui.button('查看全部', icon='visibility').classes('bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-sm')
         
         def execute_task(task_id):
             """手动执行任务"""

@@ -5,35 +5,44 @@ from ccsa_auto.modules.auth.service import AuthService
 
 def create_three_one_page():
     """创建三个一任务完成情况页面"""
-    with ui.card().classes('w-full h-auto p-6 page-card three-one-page'):
-        ui.label('三个一任务完成情况').classes('text-2xl font-bold mb-6')
+    with ui.card().classes('w-full h-auto p-6 bg-white shadow-lg rounded-xl hover:shadow-xl transition-shadow duration-300'):
+        with ui.row().classes('items-center gap-2 mb-6 pb-4 border-b-2 border-gray-100'):
+            ui.icon('task_alt', size='1.5rem').classes('text-blue-600')
+            ui.label('三个一任务完成情况').classes('text-xl font-bold text-blue-600')
         
-        # 创建三个任务卡片
-        with ui.row().classes('w-full gap-6'):
+        # 创建三个任务卡片 - 使用网格布局
+        with ui.grid(columns=3).classes('w-full gap-4 mb-6'):
             # 每日一题卡片
-            with ui.card().classes('flex-1 p-4'):
-                ui.label('每日一题').classes('text-xl font-semibold mb-4')
+            with ui.card().classes('p-5 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl text-center hover:shadow-md transition-shadow duration-300'):
+                ui.icon('today', size='2.5rem').classes('text-blue-600 mb-3')
+                ui.label('每日一题').classes('text-lg font-bold text-gray-800 mb-2')
                 
                 # 创建占位符标签
-                daily_name_label = ui.label('任务名称: 加载中...').classes('text-gray-600')
-                daily_status_label = ui.label('完成状态: 加载中...').classes('text-gray-600')
-                daily_obtained_label = ui.label('已获得积分: 加载中...').classes('text-gray-600')
+                daily_status_label = ui.label('加载中...').classes('text-sm mb-2')
+                daily_obtained_label = ui.label('0 积分').classes('text-2xl font-bold text-blue-700')
+                
+                # 存储标签引用
+                daily_name_label = ui.label('每日一题').classes('hidden')
             
             # 每周一课卡片
-            with ui.card().classes('flex-1 p-4'):
-                ui.label('每周一课').classes('text-xl font-semibold mb-4')
+            with ui.card().classes('p-5 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl text-center hover:shadow-md transition-shadow duration-300'):
+                ui.icon('date_range', size='2.5rem').classes('text-purple-600 mb-3')
+                ui.label('每周一课').classes('text-lg font-bold text-gray-800 mb-2')
                 
-                weekly_name_label = ui.label('任务名称: 加载中...').classes('text-gray-600')
-                weekly_status_label = ui.label('完成状态: 加载中...').classes('text-gray-600')
-                weekly_obtained_label = ui.label('已获得积分: 加载中...').classes('text-gray-600')
+                weekly_status_label = ui.label('加载中...').classes('text-sm mb-2')
+                weekly_obtained_label = ui.label('0 积分').classes('text-2xl font-bold text-purple-700')
+                
+                weekly_name_label = ui.label('每周一课').classes('hidden')
             
             # 每月一考卡片
-            with ui.card().classes('flex-1 p-4'):
-                ui.label('每月一考').classes('text-xl font-semibold mb-4')
+            with ui.card().classes('p-5 bg-gradient-to-br from-green-50 to-green-100 rounded-xl text-center hover:shadow-md transition-shadow duration-300'):
+                ui.icon('calendar_month', size='2.5rem').classes('text-green-600 mb-3')
+                ui.label('每月一考').classes('text-lg font-bold text-gray-800 mb-2')
                 
-                monthly_name_label = ui.label('任务名称: 加载中...').classes('text-gray-600')
-                monthly_status_label = ui.label('完成状态: 加载中...').classes('text-gray-600')
-                monthly_obtained_label = ui.label('已获得积分: 加载中...').classes('text-gray-600')
+                monthly_status_label = ui.label('加载中...').classes('text-sm mb-2')
+                monthly_obtained_label = ui.label('0 积分').classes('text-2xl font-bold text-green-700')
+                
+                monthly_name_label = ui.label('每月一考').classes('hidden')
         
         # 刷新按钮
         def refresh_task_status():
@@ -51,21 +60,37 @@ def create_three_one_page():
             if task_status:
                 # 更新每日一题信息
                 daily = task_status.get('daily', {})
-                daily_name_label.text = f'任务名称: {daily.get("name", "每日一题")}'
-                daily_status_label.text = f'完成状态: {daily.get("status", "未知")}'
-                daily_obtained_label.text = f'已获得积分: {daily.get("obtained_score", 0)}'
+                daily_name_label.text = daily.get("name", "每日一题")
+                daily_status = daily.get("status", "未知")
+                daily_status_label.text = daily_status
+                # 根据状态设置颜色
+                if daily_status == "已完成":
+                    daily_status_label.classes('text-green-600 font-semibold')
+                else:
+                    daily_status_label.classes('text-orange-600 font-semibold')
+                daily_obtained_label.text = f'{daily.get("obtained_score", 0)} 积分'
                 
                 # 更新每周一课信息
                 weekly = task_status.get('weekly', {})
-                weekly_name_label.text = f'任务名称: {weekly.get("name", "每周一课")}'
-                weekly_status_label.text = f'完成状态: {weekly.get("status", "未知")}'
-                weekly_obtained_label.text = f'已获得积分: {weekly.get("obtained_score", 0)}'
+                weekly_name_label.text = weekly.get("name", "每周一课")
+                weekly_status = weekly.get("status", "未知")
+                weekly_status_label.text = weekly_status
+                if weekly_status == "已完成":
+                    weekly_status_label.classes('text-green-600 font-semibold')
+                else:
+                    weekly_status_label.classes('text-orange-600 font-semibold')
+                weekly_obtained_label.text = f'{weekly.get("obtained_score", 0)} 积分'
                 
                 # 更新每月一考信息
                 monthly = task_status.get('monthly', {})
-                monthly_name_label.text = f'任务名称: {monthly.get("name", "每月一考")}'
-                monthly_status_label.text = f'完成状态: {monthly.get("status", "未知")}'
-                monthly_obtained_label.text = f'已获得积分: {monthly.get("obtained_score", 0)}'
+                monthly_name_label.text = monthly.get("name", "每月一考")
+                monthly_status = monthly.get("status", "未知")
+                monthly_status_label.text = monthly_status
+                if monthly_status == "已完成":
+                    monthly_status_label.classes('text-green-600 font-semibold')
+                else:
+                    monthly_status_label.classes('text-orange-600 font-semibold')
+                monthly_obtained_label.text = f'{monthly.get("obtained_score", 0)} 积分'
                 
                 # 如果成功获取，更新存储的外部令牌（可能已被刷新）
                 # 注意：get_task_status_with_retry内部已经更新了数据库中的令牌
@@ -84,7 +109,8 @@ def create_three_one_page():
             else:
                 ui.notify('获取任务完成情况失败: 认证失败或网络错误', type='error')
         
-        ui.button('刷新任务状态', on_click=refresh_task_status).classes('mt-6 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded')
+        with ui.row().classes('w-full justify-end'):
+            ui.button('刷新任务状态', on_click=refresh_task_status, icon='refresh').classes('bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-2 px-4 rounded-lg shadow-sm')
         
         # 初始加载任务状态
         ui.timer(0.1, lambda: refresh_task_status(), once=True)
