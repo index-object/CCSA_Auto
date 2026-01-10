@@ -117,12 +117,7 @@ def main_page():
                 
                 # 右侧导航和退出按钮
                 with ui.row().classes('items-center gap-4'):
-                    # 导航按钮
-                    ui.button('首页', on_click=lambda: ui.navigate.to('/')).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
-                    ui.button('个人中心', on_click=lambda: ui.navigate.to('/profile')).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
-                    ui.button('任务管理', on_click=lambda: ui.navigate.to('/task')).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
-                    ui.button('公告', on_click=lambda: ui.navigate.to('/announcement')).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
-                    
+                      
                     # 退出登录按钮
                     ui.button('退出登录', on_click=lambda: navigate_to('logout'), icon='logout').classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
         
@@ -167,41 +162,6 @@ def profile_page():
         app.storage.user.clear()
         ui.navigate.to('/login')
 
-# 任务管理页面 - 需要认证
-@ui.page('/task')
-def task_page():
-    """任务管理页面"""
-    # 检查用户是否已认证
-    if not app.storage.user.get('authenticated', False):
-        ui.navigate.to('/login')
-        return
-    
-    with ui.column().classes('w-full'):
-        # 顶部导航栏
-        with ui.row().classes('w-full justify-between items-center p-4 bg-gray-100'):
-            ui.label('任务管理').classes('text-xl font-bold')
-            ui.button('返回首页', on_click=lambda: ui.navigate.to('/')).classes('bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded text-sm')
-        
-        # 任务管理内容
-        create_task_page()
-
-# 公告页面 - 需要认证
-@ui.page('/announcement')
-def announcement_page():
-    """公告页面"""
-    # 检查用户是否已认证
-    if not app.storage.user.get('authenticated', False):
-        ui.navigate.to('/login')
-        return
-    
-    with ui.column().classes('w-full'):
-        # 顶部导航栏
-        with ui.row().classes('w-full justify-between items-center p-4 bg-gray-100'):
-            ui.label('公告管理').classes('text-xl font-bold')
-            ui.button('返回首页', on_click=lambda: ui.navigate.to('/')).classes('bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded text-sm')
-        
-        # 公告内容
-        create_announcement_page()
 
 # 管理员页面 - 需要认证且需要管理员权限
 @ui.page('/admin')
@@ -233,23 +193,6 @@ def admin_page():
         app.storage.user.clear()
         ui.navigate.to('/admin_login')
 
-# 三个一页面 - 需要认证
-@ui.page('/three_one')
-def three_one_page():
-    """三个一页面"""
-    # 检查用户是否已认证
-    if not app.storage.user.get('authenticated', False):
-        ui.navigate.to('/login')
-        return
-    
-    with ui.column().classes('w-full'):
-        # 顶部导航栏
-        with ui.row().classes('w-full justify-between items-center p-4 bg-gray-100'):
-            ui.label('三个一学习').classes('text-xl font-bold')
-            ui.button('返回首页', on_click=lambda: ui.navigate.to('/')).classes('bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded text-sm')
-        
-        # 三个一内容
-        create_three_one_page()
 
 # 启动应用
 if __name__ in {'__main__', '__mp_main__'}:

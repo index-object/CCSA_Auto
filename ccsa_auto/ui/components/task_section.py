@@ -14,20 +14,9 @@ def create_task_section():
         # 任务数量标签
         task_count_label = ui.label('当前任务数量: 0').classes('text-lg md:text-xl font-semibold text-gray-800 mb-4 md:mb-5')
         
-        # 任务列表展示 - 使用响应式表格，调整表格内字体大小
-        task_table = ui.table(
-            columns=[
-                {'name': 'id', 'label': 'ID', 'field': 'id', 'align': 'center', 'sortable': True, 'style': 'font-size: 1rem;'},
-                {'name': 'task_name', 'label': '任务名称', 'field': 'task_name', 'align': 'left', 'sortable': True, 'style': 'font-size: 1rem;'},
-                {'name': 'task_type', 'label': '任务类型', 'field': 'task_type', 'align': 'center', 'sortable': True, 'style': 'font-size: 1rem;'},
-                {'name': 'execution_status', 'label': '执行状态', 'field': 'execution_status', 'align': 'center', 'sortable': True, 'style': 'font-size: 1rem;'},
-                {'name': 'next_run_time', 'label': '下次执行时间', 'field': 'next_run_time', 'align': 'center', 'sortable': True, 'style': 'font-size: 1rem;'}
-            ],
-            rows=[],
-            row_key='id',
-            pagination=5,
-            selection='single'
-        ).classes('w-full rounded-lg border border-gray-200').props('flat bordered').style('font-size: 1rem;')
+        # 任务列表容器 - 使用ui.list控件
+        task_list = ui.list().classes('w-full').props('bordered separator')
+        task_list_container = task_list
 
         def refresh_tasks():
             """刷新任务列表（嵌入区）"""
@@ -60,8 +49,13 @@ def create_task_section():
                     if not is_authenticated:
                         ui.notify('用户未登录，显示所有任务（调试模式）', type='warning')
                 
-                # 格式化任务数据
-                task_data = []
+                # 清除现有列表内容
+                task_list.clear()
+                
+                # 显示任务数量
+                task_count_label.text = f'当前任务数量: {len(tasks)}'
+                
+                # 为每个任务创建列表项
                 for task in tasks:
                     next_run = task.next_run_time.strftime('%Y-%m-%d %H:%M') if task.next_run_time else '未设置'
                     
@@ -85,22 +79,29 @@ def create_task_section():
                     elif task.execution_status == 'running':
                         status_display = '执行中'
                     
-                    task_data.append({
-                        'id': task.id,
-                        'task_name': task.task_name or task.task_type,
-                        'task_type': task_type_display,
-                        'execution_status': status_display,
-                        'next_run_time': next_run
-                    })
-                
-                task_table.rows = task_data
-                
-                # 显示任务数量
-                task_count_label.text = f'当前任务数量: {len(task_data)}'
+                    # 创建列表项
+                    with task_list:
+                        with ui.item().classes('w-full'):
+                            with ui.item_section().classes('w-full'):
+                                with ui.row().classes('w-full items-center justify-between'):
+                                    # 左侧任务信息
+                                    with ui.column().classes('flex-1'):
+                                        with ui.row().classes('items-center gap-3'):
+                                            ui.label(f'ID: {task.id}').classes('text-sm font-medium text-gray-600')
+                                            ui.label(task.task_name or task.task_type).classes('text-lg font-semibold text-gray-800')
+                                        with ui.row().classes('items-center gap-4 mt-2'):
+                                            ui.label(f'类型: {task_type_display}').classes('text-sm text-gray-600')
+                                            ui.label(f'状态: {status_display}').classes('text-sm text-gray-600')
+                                            ui.label(f'下次执行: {next_run}').classes('text-sm text-gray-600')
+                                    
+                                    # 右侧操作按钮
+                                    with ui.row().classes('items-center gap-2'):
+                                        ui.button('立即执行', on_click=lambda t=task: execute_task_immediately(t.id),
+                                                 icon='play_arrow').classes('bg-green-50 hover:bg-green-100 text-green-600 font-medium py-2 px-4 rounded-lg shadow-sm text-sm')
                 
             except Exception as e:
                 ui.notify(f'获取任务失败: {str(e)}', type='negative')
-                task_table.rows = []
+                task_list_container.clear()
             finally:
                 db.close()
 
@@ -108,10 +109,6 @@ def create_task_section():
         with ui.column().classes('w-full gap-4 md:gap-0 md:flex-row md:justify-between md:items-center mt-5 md:mt-6'):
             with ui.row().classes('gap-3 flex-wrap'):
                 ui.button('刷新任务', on_click=refresh_tasks, icon='refresh').classes('bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-2 md:py-3 px-4 md:px-5 rounded-lg shadow-sm text-base')
-                
-                # 手动执行按钮
-                task_id_input = ui.input('任务ID', placeholder='输入任务ID').classes('w-28 md:w-36 text-base')
-                ui.button('执行任务', on_click=lambda: execute_task(task_id_input.value), icon='play_arrow').classes('bg-green-50 hover:bg-green-100 text-green-600 font-medium py-2 md:py-3 px-4 md:px-5 rounded-lg shadow-sm text-base')
             
             # 快速操作按钮
             with ui.row().classes('gap-3'):
@@ -154,6 +151,10 @@ def create_task_section():
                 ui.notify(f'执行任务失败: {str(e)}', type='negative')
             finally:
                 db.close()
+        
+        def execute_task_immediately(task_id):
+            """立即执行任务（用于表格中的按钮）"""
+            execute_task(str(task_id))
         
         # 初始加载任务
         refresh_tasks()
