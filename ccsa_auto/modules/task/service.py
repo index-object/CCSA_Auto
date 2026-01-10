@@ -378,49 +378,92 @@ class TaskService:
             }
     
     @staticmethod
-    def execute_task(task, user):
+    def execute_task(task, user, max_retries=2):
         """
-        执行任务
+        执行任务（带令牌自动刷新重试）
+        
+        Args:
+            task: 任务对象
+            user: 用户对象
+            max_retries: 最大重试次数（包括令牌刷新）
+            
+        Returns:
+            dict: 执行结果
         """
-        try:
-            # 1. 验证外部平台账号
-            if not user.external_username or not user.external_password:
+        for attempt in range(max_retries):
+            try:
+                # 1. 验证外部平台账号
+                if not user.external_username or not user.external_password:
+                    return {
+                        'success': False,
+                        'message': '未设置外部平台账号信息'
+                    }
+                
+                # 2. 获取有效的外部平台令牌（优先使用已保存的令牌）
+                # 如果是重试且不是第一次尝试，强制刷新令牌
+                force_refresh = (attempt > 0)
+                access_token = AuthService.get_valid_external_token(user.id, force_refresh=force_refresh)
+                
+                # 如果令牌获取失败，尝试重新登录
+                if not access_token:
+                    logger.info(f"用户 {user.id} 没有有效令牌，尝试重新登录...")
+                    auth_success, user_info, new_token = AuthService.authenticate_external(
+                        user.external_username,
+                        user.external_password
+                    )
+                    if not auth_success:
+                        return {
+                            'success': False,
+                            'message': '外部平台认证失败'
+                        }
+                    access_token = new_token
+                    
+                    # 保存新获取的令牌
+                    if access_token:
+                        AuthService.save_external_token(user.id, access_token)
+                
+                # 3. 执行任务
+                if task.task_type == 'daily':
+                    result = TaskService.execute_daily_question(access_token, user.id)
+                elif task.task_type == 'weekly':
+                    result = TaskService.execute_weekly_lesson(access_token, user.id)
+                elif task.task_type == 'monthly':
+                    result = TaskService.execute_monthly_exam(access_token, user.id)
+                else:
+                    return {
+                        'success': False,
+                        'message': '任务类型无效'
+                    }
+                
+                # 4. 检查结果，如果是认证错误则重试
+                if not result.get('success'):
+                    error_msg = result.get('message', '')
+                    # 检查是否是认证相关错误
+                    if any(keyword in error_msg for keyword in ['认证', 'token', 'auth', 'Auth', 'Token', '未授权', '无权限']):
+                        logger.info(f"检测到认证错误: {error_msg}，尝试刷新令牌并重试...")
+                        if attempt < max_retries - 1:
+                            continue  # 继续下一次重试
+                
+                return result
+            except Exception as e:
+                logger.exception(f"执行任务异常: {str(e)}")
+                error_msg = str(e)
+                # 检查是否是认证相关异常
+                if any(keyword in error_msg for keyword in ['认证', 'token', 'auth', 'Auth', 'Token', '未授权', '无权限']):
+                    logger.info(f"检测到认证异常: {error_msg}，尝试刷新令牌并重试...")
+                    if attempt < max_retries - 1:
+                        continue  # 继续下一次重试
+                
                 return {
                     'success': False,
-                    'message': '未设置外部平台账号信息'
+                    'message': f"执行任务异常: {str(e)}"
                 }
-            
-            # 外部平台认证 - 使用用户存储的密码
-            # 注意：这里假设 external_password 是明文存储，实际应该解密
-            auth_success, user_info, access_token = AuthService.authenticate_external(
-                user.external_username,
-                user.external_password  # 使用用户存储的密码
-            )
-            if not auth_success:
-                return {
-                    'success': False,
-                    'message': '外部平台认证失败'
-                }
-            
-            # 2. 执行任务
-            if task.task_type == 'daily':
-                result = TaskService.execute_daily_question(access_token, user.id)
-            elif task.task_type == 'weekly':
-                result = TaskService.execute_weekly_lesson(access_token, user.id)
-            elif task.task_type == 'monthly':
-                result = TaskService.execute_monthly_exam(access_token, user.id)
-            else:
-                return {
-                    'success': False,
-                    'message': '任务类型无效'
-                }
-            
-            return result
-        except Exception as e:
-            return {
-                'success': False,
-                'message': f"执行任务异常: {str(e)}"
-            }
+        
+        # 所有重试都失败
+        return {
+            'success': False,
+            'message': f"任务执行失败，已重试{max_retries}次"
+        }
     
     @staticmethod
     def create_default_tasks_for_user(user_id):

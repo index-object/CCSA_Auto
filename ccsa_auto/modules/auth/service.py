@@ -2,6 +2,7 @@ import sys
 import os
 import requests  # 添加requests库用于发送HTTP请求
 import threading
+from datetime import datetime, timedelta
 
 # 添加项目根目录到Python路径
 sys.path.insert(0, os.path.abspath('.'))
@@ -19,6 +20,124 @@ _config_lock = threading.Lock()
 
 class AuthService:
     """认证服务"""
+    
+    @staticmethod
+    def save_external_token(user_id, token, expires_in_hours=24):
+        """保存外部平台令牌到用户记录
+        
+        Args:
+            user_id: 用户ID
+            token: 访问令牌
+            expires_in_hours: 令牌有效期（小时），默认24小时
+        """
+        db = SessionLocal()
+        try:
+            user = db.query(User).filter_by(id=user_id).first()
+            if not user:
+                return False
+            
+            user.external_token = token
+            user.token_expires_at = datetime.utcnow() + timedelta(hours=expires_in_hours)
+            user.last_token_refresh = datetime.utcnow()
+            user.updated_at = datetime.utcnow()
+            
+            db.commit()
+            db.refresh(user)
+            return True
+        except Exception as e:
+            print(f"保存外部令牌失败: {e}")
+            db.rollback()
+            return False
+        finally:
+            db.close()
+    
+    @staticmethod
+    def get_valid_external_token(user_id, force_refresh=False):
+        """获取用户的有效外部令牌（如果过期或强制刷新则尝试刷新）
+        
+        Args:
+            user_id: 用户ID
+            force_refresh: 是否强制刷新令牌（即使令牌未过期）
+            
+        Returns:
+            str: 有效令牌，如果获取失败返回None
+        """
+        db = SessionLocal()
+        try:
+            user = db.query(User).filter_by(id=user_id).first()
+            if not user:
+                return None
+            
+            # 检查是否有令牌
+            if not user.external_token:
+                return None
+            
+            # 如果强制刷新，直接尝试重新登录
+            if force_refresh:
+                print(f"强制刷新用户 {user_id} 的令牌...")
+                if user.external_username and user.external_password:
+                    auth_success, _, new_token = AuthService.authenticate_external(
+                        user.external_username,
+                        user.external_password
+                    )
+                    if auth_success and new_token:
+                        # 保存新令牌
+                        AuthService.save_external_token(user_id, new_token)
+                        return new_token
+                return None
+            
+            # 检查令牌是否有效
+            if user.is_token_valid():
+                return user.external_token
+            
+            # 令牌已过期，尝试刷新
+            print(f"用户 {user_id} 的令牌已过期，尝试刷新...")
+            refreshed_token = AuthService.refresh_external_token(user)
+            if refreshed_token:
+                return refreshed_token
+            
+            # 刷新失败，尝试重新登录
+            print(f"令牌刷新失败，尝试重新登录用户 {user_id}...")
+            if user.external_username and user.external_password:
+                auth_success, _, new_token = AuthService.authenticate_external(
+                    user.external_username,
+                    user.external_password
+                )
+                if auth_success and new_token:
+                    # 保存新令牌
+                    AuthService.save_external_token(user_id, new_token)
+                    return new_token
+            
+            return None
+        finally:
+            db.close()
+    
+    @staticmethod
+    def refresh_external_token(user):
+        """刷新外部平台令牌
+        
+        Args:
+            user: User对象
+            
+        Returns:
+            str: 新令牌，如果刷新失败返回None
+        """
+        # 注意：当前外部平台可能不支持令牌刷新，这里实现为重新登录
+        # 如果有刷新令牌机制，可以在这里实现
+        try:
+            if user.external_username and user.external_password:
+                auth_success, _, new_token = AuthService.authenticate_external(
+                    user.external_username,
+                    user.external_password
+                )
+                if auth_success and new_token:
+                    # 保存新令牌
+                    AuthService.save_external_token(user.id, new_token)
+                    return new_token
+        except Exception as e:
+            print(f"刷新令牌失败: {e}")
+        
+        return None
     
     @staticmethod
     def authenticate_external(username, password):
@@ -100,12 +219,13 @@ class AuthService:
             }
     
     @staticmethod
-    def auto_register(username, password, user_info=None):
+    def auto_register(username, password, user_info=None, external_token=None):
         """自动注册用户
         Args:
             username: 用户名
             password: 密码
             user_info: 可选的用户信息，如果已从外部API获取则传入以避免重复调用
+            external_token: 可选的访问令牌，如果已从外部API获取则传入
         """
         db = SessionLocal()
         try:
@@ -116,13 +236,20 @@ class AuthService:
             if existing_user:
                 if user_info and user_info.get('company_name'):
                     existing_user.company_name = user_info.get('company_name')
-                    db.commit()
-                    db.refresh(existing_user)
+                
+                # 如果提供了令牌，更新令牌
+                if external_token:
+                    existing_user.external_token = external_token
+                    existing_user.token_expires_at = datetime.utcnow() + timedelta(hours=24)
+                    existing_user.last_token_refresh = datetime.utcnow()
+                
+                db.commit()
+                db.refresh(existing_user)
                 return existing_user
             
             # 如果用户不存在且没有提供user_info，则需要获取用户信息
             if not user_info:
-                auth_success, user_info, _ = AuthService.authenticate_external(username, password)
+                auth_success, user_info, external_token = AuthService.authenticate_external(username, password)
                 if not auth_success:
                     return None
             
@@ -133,7 +260,10 @@ class AuthService:
                 external_username=username,
                 external_password=password,
                 company_name=user_info.get('company_name', ''),
-                status=0
+                status=0,
+                external_token=external_token,
+                token_expires_at=datetime.utcnow() + timedelta(hours=24) if external_token else None,
+                last_token_refresh=datetime.utcnow() if external_token else None
             )
             
             db.add(new_user)
@@ -171,6 +301,10 @@ class AuthService:
         if user.status == 1:
             return False, None, "账号已被封禁"
         
+        # 保存外部平台令牌到数据库
+        if external_token:
+            AuthService.save_external_token(user.id, external_token)
+        
         # 创建访问令牌
         access_token = create_access_token({"sub": str(user.id)})
         
@@ -187,8 +321,81 @@ class AuthService:
         }, "登录成功"
     
     @staticmethod
+    def get_scores_with_retry(user_id, max_retries=2):
+        """获取用户积分信息（带令牌自动刷新重试）
+        
+        Args:
+            user_id: 用户ID
+            max_retries: 最大重试次数（包括令牌刷新）
+            
+        Returns:
+            dict: 积分信息，如果获取失败返回None
+        """
+        for attempt in range(max_retries):
+            try:
+                # 获取有效令牌
+                token = AuthService.get_valid_external_token(user_id)
+                if not token:
+                    print(f"获取用户 {user_id} 的令牌失败")
+                    return None
+                
+                headers = {
+                    'accept': 'application/json, text/plain, */*',
+                    'authorization': f'Bearer {token}',
+                    'clientid': RefactoredConfig.CLIENT_ID,
+                    'content-language': 'zh_CN',
+                }
+                response = requests.get(
+                    f"{RefactoredConfig.BASE_URL}/progress/app/regularStudyRecord/getRegularFractionInfo",
+                    headers=headers
+                )
+                
+                # 检查响应状态
+                if response.status_code != 200:
+                    print(f"获取积分信息失败: HTTP状态码 {response.status_code}")
+                    # 如果是认证失败，尝试刷新令牌
+                    if response.status_code == 401 or response.status_code == 403:
+                        print(f"认证失败，尝试刷新用户 {user_id} 的令牌...")
+                        AuthService.get_valid_external_token(user_id, force_refresh=True)
+                        continue
+                    return None
+                    
+                data = response.json()
+                if data and data.get('code') == 200:
+                    return {
+                        'total_score': data['data']['totalScore'],
+                        'monthly_score': data['data']['obtainScore']
+                    }
+                else:
+                    error_msg = data.get('msg', '未知错误') if data else '响应数据为空'
+                    print(f"获取积分信息失败: {error_msg}")
+                    
+                    # 检查是否是认证错误
+                    if '认证' in error_msg or 'token' in error_msg.lower() or 'auth' in error_msg.lower():
+                        print(f"检测到认证错误，尝试刷新用户 {user_id} 的令牌...")
+                        AuthService.get_valid_external_token(user_id, force_refresh=True)
+                        continue
+                    
+                    return None
+            except Exception as e:
+                print(f"调用积分信息API时发生异常: {e}")
+                if attempt < max_retries - 1:
+                    print(f"第 {attempt + 1} 次尝试失败，准备重试...")
+                else:
+                    return None
+        
+        return None
+    
+    @staticmethod
     def get_scores(token):
-        """获取用户积分信息"""
+        """获取用户积分信息（向后兼容版本）
+        
+        Args:
+            token: 访问令牌
+            
+        Returns:
+            dict: 积分信息，如果获取失败返回None
+        """
         try:
             headers = {
                 'accept': 'application/json, text/plain, */*',
@@ -221,8 +428,110 @@ class AuthService:
             return None
     
     @staticmethod
+    def get_task_status_with_retry(user_id, max_retries=2):
+        """获取任务完成情况（三个一：每日一题、每周一课、每月一考）（带令牌自动刷新重试）
+        
+        Args:
+            user_id: 用户ID
+            max_retries: 最大重试次数（包括令牌刷新）
+            
+        Returns:
+            dict: 任务完成情况，如果获取失败返回None
+        """
+        for attempt in range(max_retries):
+            try:
+                # 获取有效令牌
+                token = AuthService.get_valid_external_token(user_id)
+                if not token:
+                    print(f"获取用户 {user_id} 的令牌失败")
+                    return None
+                
+                headers = {
+                    'accept': 'application/json, text/plain, */*',
+                    'authorization': f'Bearer {token}',
+                    'clientid': RefactoredConfig.CLIENT_ID,
+                    'content-language': 'zh_CN',
+                }
+                response = requests.get(
+                    f"{RefactoredConfig.BASE_URL}/progress/app/regularStudy/getNewRegularStudyList",
+                    headers=headers
+                )
+                
+                # 检查响应状态
+                if response.status_code != 200:
+                    print(f"获取任务完成情况失败: HTTP状态码 {response.status_code}")
+                    # 如果是认证失败，尝试刷新令牌
+                    if response.status_code == 401 or response.status_code == 403:
+                        print(f"认证失败，尝试刷新用户 {user_id} 的令牌...")
+                        AuthService.get_valid_external_token(user_id, force_refresh=True)
+                        continue
+                    return None
+                    
+                data = response.json()
+                if data and data.get('code') == 200:
+                    response_data = data.get('data', {})
+                    
+                    # 解析三个任务的状态
+                    daily_info = response_data.get('regularStudyDayInfo', {})
+                    weekly_info = response_data.get('repeatCourseWeekInfo', {})
+                    monthly_info = response_data.get('regularExamMonthInfo', {})
+                    
+                    # 状态映射：1=未完成，2=已完成
+                    status_map = {
+                        1: '未完成',
+                        2: '已完成'
+                    }
+                    
+                    return {
+                        'daily': {
+                            'name': daily_info.get('studyName', '每日一题'),
+                            'status': status_map.get(daily_info.get('studyStatus', 1), '未知'),
+                            'available_score': daily_info.get('availableScore', 0),
+                            'obtained_score': daily_info.get('obtainedScore', 0)
+                        },
+                        'weekly': {
+                            'name': weekly_info.get('courseName', '每周一课'),
+                            'status': status_map.get(weekly_info.get('studyStatus', 1), '未知'),
+                            'available_score': weekly_info.get('availableScore', 0),
+                            'obtained_score': weekly_info.get('obtainedScore', 0)
+                        },
+                        'monthly': {
+                            'name': monthly_info.get('examName', '每月一考'),
+                            'status': status_map.get(monthly_info.get('studyStatus', 1), '未知'),
+                            'available_score': monthly_info.get('availableScore', 0),
+                            'obtained_score': monthly_info.get('obtainedScore', 0)
+                        }
+                    }
+                else:
+                    error_msg = data.get('msg', '未知错误') if data else '响应数据为空'
+                    print(f"获取任务完成情况失败: {error_msg}")
+                    
+                    # 检查是否是认证错误
+                    if '认证' in error_msg or 'token' in error_msg.lower() or 'auth' in error_msg.lower():
+                        print(f"检测到认证错误，尝试刷新用户 {user_id} 的令牌...")
+                        AuthService.get_valid_external_token(user_id, force_refresh=True)
+                        continue
+                    
+                    return None
+            except Exception as e:
+                print(f"调用任务完成情况API时发生异常: {e}")
+                if attempt < max_retries - 1:
+                    print(f"第 {attempt + 1} 次尝试失败，准备重试...")
+                else:
+                    return None
+        
+        return None
+    
+    @staticmethod
     def get_task_status(token):
-        """获取任务完成情况（三个一：每日一题、每周一课、每月一考）"""
+        """获取任务完成情况（三个一：每日一题、每周一课、每月一考）（向后兼容版本）
+        
+        Args:
+            token: 访问令牌
+            
+        Returns:
+            dict: 任务完成情况，如果获取失败返回None
+        """
         try:
             headers = {
                 'accept': 'application/json, text/plain, */*',

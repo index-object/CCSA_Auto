@@ -38,32 +38,51 @@ def create_three_one_page():
         # 刷新按钮
         def refresh_task_status():
             """刷新任务完成情况"""
-            # 从app.storage.user获取外部令牌
-            external_token = app.storage.user.get('external_token')
-            if external_token:
-                task_status = AuthService.get_task_status(external_token)
-                if task_status:
-                    # 更新每日一题信息
-                    daily = task_status.get('daily', {})
-                    daily_name_label.text = f'任务名称: {daily.get("name", "每日一题")}'
-                    daily_status_label.text = f'完成状态: {daily.get("status", "未知")}'
-                    daily_obtained_label.text = f'已获得积分: {daily.get("obtained_score", 0)}'
+            # 从app.storage.user获取用户ID
+            user_info = app.storage.user.get('user_info', {})
+            user_id = user_info.get('id')
+            
+            if not user_id:
+                ui.notify('未获取到用户信息，请重新登录', type='error')
+                return
+            
+            # 使用带重试的方法获取任务状态
+            task_status = AuthService.get_task_status_with_retry(user_id)
+            if task_status:
+                # 更新每日一题信息
+                daily = task_status.get('daily', {})
+                daily_name_label.text = f'任务名称: {daily.get("name", "每日一题")}'
+                daily_status_label.text = f'完成状态: {daily.get("status", "未知")}'
+                daily_obtained_label.text = f'已获得积分: {daily.get("obtained_score", 0)}'
+                
+                # 更新每周一课信息
+                weekly = task_status.get('weekly', {})
+                weekly_name_label.text = f'任务名称: {weekly.get("name", "每周一课")}'
+                weekly_status_label.text = f'完成状态: {weekly.get("status", "未知")}'
+                weekly_obtained_label.text = f'已获得积分: {weekly.get("obtained_score", 0)}'
+                
+                # 更新每月一考信息
+                monthly = task_status.get('monthly', {})
+                monthly_name_label.text = f'任务名称: {monthly.get("name", "每月一考")}'
+                monthly_status_label.text = f'完成状态: {monthly.get("status", "未知")}'
+                monthly_obtained_label.text = f'已获得积分: {monthly.get("obtained_score", 0)}'
+                
+                # 如果成功获取，更新存储的外部令牌（可能已被刷新）
+                # 注意：get_task_status_with_retry内部已经更新了数据库中的令牌
+                # 但app.storage.user中的令牌可能需要更新
+                # 我们可以从数据库获取最新令牌
+                from ccsa_auto.core.database import SessionLocal
+                from ccsa_auto.core.models import User
+                db = SessionLocal()
+                try:
+                    user = db.query(User).filter_by(id=user_id).first()
+                    if user and user.external_token:
+                        app.storage.user['external_token'] = user.external_token
+                finally:
+                    db.close()
                     
-                    # 更新每周一课信息
-                    weekly = task_status.get('weekly', {})
-                    weekly_name_label.text = f'任务名称: {weekly.get("name", "每周一课")}'
-                    weekly_status_label.text = f'完成状态: {weekly.get("status", "未知")}'
-                    weekly_obtained_label.text = f'已获得积分: {weekly.get("obtained_score", 0)}'
-                    
-                    # 更新每月一考信息
-                    monthly = task_status.get('monthly', {})
-                    monthly_name_label.text = f'任务名称: {monthly.get("name", "每月一考")}'
-                    monthly_status_label.text = f'完成状态: {monthly.get("status", "未知")}'
-                    monthly_obtained_label.text = f'已获得积分: {monthly.get("obtained_score", 0)}'
-                else:
-                    ui.notify('获取任务完成情况失败', type='error')
             else:
-                ui.notify('未获取到外部平台令牌', type='error')
+                ui.notify('获取任务完成情况失败: 认证失败或网络错误', type='error')
         
         ui.button('刷新任务状态', on_click=refresh_task_status).classes('mt-6 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded')
         

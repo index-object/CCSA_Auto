@@ -17,6 +17,11 @@ class User(Base):
     company_name = Column(String(255))  # 公司名称
     status = Column(Integer, default=0)  # 状态(0:正常, 1:封号)
     is_admin = Column(Boolean, default=False)  # 是否为管理员
+    # 外部平台令牌相关字段
+    external_token = Column(Text)  # 外部平台访问令牌
+    token_expires_at = Column(DateTime)  # 令牌过期时间
+    token_refresh_token = Column(Text)  # 刷新令牌（如果支持）
+    last_token_refresh = Column(DateTime)  # 最后刷新时间
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -34,9 +39,25 @@ class User(Base):
             'company_name': self.company_name,
             'status': self.status,
             'is_admin': self.is_admin,
+            'external_token': self.external_token[:20] + '...' if self.external_token and len(self.external_token) > 20 else self.external_token,
+            'token_expires_at': self.token_expires_at.isoformat() if self.token_expires_at else None,
+            'last_token_refresh': self.last_token_refresh.isoformat() if self.last_token_refresh else None,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }
+    
+    def is_token_valid(self):
+        """检查令牌是否有效（未过期）"""
+        if not self.external_token:
+            return False
+        if not self.token_expires_at:
+            return True  # 如果没有设置过期时间，假设令牌一直有效
+        from datetime import datetime
+        return datetime.utcnow() < self.token_expires_at
+    
+    def is_token_expired(self):
+        """检查令牌是否已过期"""
+        return not self.is_token_valid()
 
 class Task(Base):
     """任务模型"""
