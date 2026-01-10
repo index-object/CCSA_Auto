@@ -1,8 +1,8 @@
 """主页面模块 - 基于app.storage.user的会话隔离版本"""
 from nicegui import ui, app
+from ccsa_auto.ui.components.announcement_section import create_announcement_section
 from ccsa_auto.ui.components.profile_section import create_profile_section
 from ccsa_auto.ui.components.task_section import create_task_section
-from ccsa_auto.ui.components.announcement_section import create_announcement_section
 from ccsa_auto.ui.pages.three_one_page import create_three_one_page
 from datetime import datetime
 

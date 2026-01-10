@@ -28,6 +28,7 @@ def create_login_page(navigate_to):
                 # 将用户信息存储到app.storage.user中
                 app.storage.user.update({
                     'authenticated': True,
+                    'is_admin': False,  # 明确设置为非管理员
                     'user_info': result['user'],
                     'access_token': result['access_token'],
                     'external_token': result.get('external_token'),

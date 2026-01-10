@@ -82,8 +82,13 @@ def main_page():
     # 获取用户信息
     user_info = app.storage.user.get('user_info', {})
     
+    # 调试日志
+    print(f"主页面: user_info={user_info}")
+    print(f"主页面: is_admin={user_info.get('is_admin')}")
+    
     # 如果是管理员，重定向到管理后台
     if user_info.get('is_admin'):
+        print("检测到管理员，重定向到/admin")
         ui.navigate.to('/admin')
         return
     
