@@ -17,37 +17,24 @@ def create_main_page(navigate_to):
     user_info = app.storage.user.get('user_info', {})
     username = user_info.get('username', '用户')
     
-    # 头部区域 - 参考样式中的header（使用卡片而不是header布局元素）
-    with ui.card().classes('w-full bg-gradient-to-r from-blue-600 to-blue-900 text-white p-6 rounded-xl shadow-lg mb-8 border-0'):
-        with ui.row().classes('w-full justify-between items-center'):
-            # 左侧logo和标题区域
-            with ui.row().classes('items-center gap-4'):
-                ui.icon('school', size='2rem').classes('text-white')
-                with ui.column().classes('gap-1'):
-                    ui.label('员工学习平台').classes('text-2xl font-bold')
-                    ui.label('知识积累，积分成长').classes('text-sm opacity-90')
-            
-            # 右侧日期信息
-            with ui.column().classes('text-right'):
-                current_date = datetime.now().strftime('%Y年%m月%d日 %A')
-                ui.label(current_date).classes('text-lg font-semibold')
-                ui.label('数据实时更新').classes('text-sm opacity-90')
-    
-    # 主内容区域 - 使用网格布局
-    with ui.row().classes('w-full gap-6'):
-        # 左侧区域 - 占1/3宽度
-        with ui.column().classes('w-full md:w-1/3 gap-6'):
+    # 主内容区域 - 使用响应式网格布局
+    with ui.grid(columns='1fr 2fr').classes('w-full gap-6'):
+        # 左侧区域
+        with ui.column().classes('gap-6'):
             create_announcement_section()
             create_profile_section()
         
-        # 右侧区域 - 占2/3宽度
-        with ui.column().classes('w-full md:w-2/3 gap-6'):
+        # 右侧区域
+        with ui.column().classes('gap-6'):
             create_three_one_page()
             create_task_section()
     
-    # 底部区域（使用卡片而不是footer布局元素）
+    # 响应式布局：在小屏幕上改为单列布局
+    ui.query('.nicegui-grid').classes('lg:grid-cols-1 md:grid-cols-2')
+    
+    # 底部区域
     with ui.card().classes('w-full mt-8 text-center text-gray-600 text-sm bg-gray-50 p-4 rounded-lg shadow-sm'):
-        ui.label('陕西精益化工有限公司 员工学习平台 © 2026 | 数据更新时间: ' + datetime.now().strftime('%Y-%m-%d %H:%M'))
+        ui.label('陕西精益化工有限公司 用户答题托管平台 © 2026 | 数据更新时间: ' + datetime.now().strftime('%Y-%m-%d %H:%M'))
     
     # 保留管理员入口按钮（针对管理员用户）
     if user_info.get('username') == 'admin':

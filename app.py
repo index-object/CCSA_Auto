@@ -105,10 +105,26 @@ def main_page():
             ui.navigate.to(f'/{page}')
     
     with ui.column().classes('w-full'):
-        # 顶部导航栏
-        with ui.row().classes('w-full justify-between items-center p-4 bg-gray-100'):
-            ui.label('用户答题托管平台').classes('text-xl font-bold')
-            ui.button('退出登录', on_click=lambda: navigate_to('logout')).classes('bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded text-sm')
+        # 顶部导航栏 - 参考样式头部布局
+        with ui.card().classes('w-full bg-gradient-to-r from-blue-600 to-blue-900 text-white p-4 rounded-none shadow-lg mb-6 border-0'):
+            with ui.row().classes('w-full justify-between items-center'):
+                # 左侧logo和标题区域
+                with ui.row().classes('items-center gap-4'):
+                    ui.icon('quiz', size='1.8rem').classes('text-white')
+                    with ui.column().classes('gap-1'):
+                        ui.label('用户答题托管平台').classes('text-xl font-bold')
+                        ui.label('智能答题，高效学习').classes('text-xs opacity-90')
+                
+                # 右侧导航和退出按钮
+                with ui.row().classes('items-center gap-4'):
+                    # 导航按钮
+                    ui.button('首页', on_click=lambda: ui.navigate.to('/')).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
+                    ui.button('个人中心', on_click=lambda: ui.navigate.to('/profile')).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
+                    ui.button('任务管理', on_click=lambda: ui.navigate.to('/task')).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
+                    ui.button('公告', on_click=lambda: ui.navigate.to('/announcement')).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
+                    
+                    # 退出登录按钮
+                    ui.button('退出登录', on_click=lambda: navigate_to('logout'), icon='logout').classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
         
         # 主内容区
         create_main_page(navigate_to)
@@ -123,13 +139,33 @@ def profile_page():
         return
     
     with ui.column().classes('w-full'):
-        # 顶部导航栏
-        with ui.row().classes('w-full justify-between items-center p-4 bg-gray-100'):
-            ui.label('个人中心').classes('text-xl font-bold')
-            ui.button('返回首页', on_click=lambda: ui.navigate.to('/')).classes('bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded text-sm')
+        # 顶部导航栏 - 参考样式头部布局
+        with ui.card().classes('w-full bg-gradient-to-r from-blue-600 to-blue-900 text-white p-4 rounded-none shadow-lg mb-6 border-0'):
+            with ui.row().classes('w-full justify-between items-center'):
+                # 左侧logo和标题区域
+                with ui.row().classes('items-center gap-4'):
+                    ui.icon('person', size='1.8rem').classes('text-white')
+                    with ui.column().classes('gap-1'):
+                        ui.label('个人中心').classes('text-xl font-bold')
+                        ui.label('用户信息管理').classes('text-xs opacity-90')
+                
+                # 右侧导航和返回按钮
+                with ui.row().classes('items-center gap-4'):
+                    # 导航按钮
+                    ui.button('首页', on_click=lambda: ui.navigate.to('/')).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
+                    ui.button('任务管理', on_click=lambda: ui.navigate.to('/task')).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
+                    ui.button('公告', on_click=lambda: ui.navigate.to('/announcement')).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
+                    
+                    # 退出登录按钮
+                    ui.button('退出登录', on_click=lambda: logout()).classes('bg-white/20 hover:bg-white/30 text-white font-medium py-1 px-3 rounded text-sm')
         
         # 个人中心内容
         create_profile_page()
+    
+    def logout():
+        """退出登录"""
+        app.storage.user.clear()
+        ui.navigate.to('/login')
 
 # 任务管理页面 - 需要认证
 @ui.page('/task')
