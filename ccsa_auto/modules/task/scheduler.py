@@ -1,17 +1,94 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.date import DateTrigger
 from datetime import datetime, timedelta
 import logging
 
 from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import Task, User
 from ccsa_auto.modules.task.service import TaskService
+from ccsa_auto.core.config import Config
 
 # 创建后台调度器实例
 scheduler = BackgroundScheduler()
 
 # 配置日志
 logger = logging.getLogger(__name__)
+
+def calculate_next_run_time(task, now=None):
+    """
+    根据任务类型和配置计算下次运行时间
+    
+    Args:
+        task: 任务对象
+        now: 当前时间，默认为UTC当前时间
+    
+    Returns:
+        datetime: 下次运行时间
+    """
+    import random
+    from datetime import datetime as dt
+    
+    if now is None:
+        now = datetime.utcnow()
+    
+    task_type = task.task_type
+    
+    if task_type == 'daily':
+        hour_range = Config.TASK_DETAILS['DAILY']['hour_range']
+        minute_range = Config.TASK_DETAILS['DAILY']['minute_range']
+        # 生成随机小时和分钟
+        hour = random.randint(hour_range[0], hour_range[1])
+        minute = random.randint(minute_range[0], minute_range[1])
+        # 计算今天的执行时间
+        today_execution = dt(now.year, now.month, now.day, hour, minute, 0)
+        # 如果当前时间已经过了今天的执行时间，则使用明天的时间
+        if now >= today_execution:
+            next_run = today_execution + timedelta(days=1)
+        else:
+            next_run = today_execution
+        return next_run
+        
+    elif task_type == 'weekly':
+        weekday = Config.TASK_DETAILS['WEEKLY']['weekday']
+        hour_range = Config.TASK_DETAILS['WEEKLY']['hour_range']
+        minute_range = Config.TASK_DETAILS['WEEKLY']['minute_range']
+        hour = random.randint(hour_range[0], hour_range[1])
+        minute = random.randint(minute_range[0], minute_range[1])
+        # 计算距离下周二还有多少天
+        days_until = (weekday - now.weekday()) % 7
+        if days_until == 0:
+            # 如果是今天，检查是否已经过了执行时间
+            today_execution = dt(now.year, now.month, now.day, hour, minute, 0)
+            if now >= today_execution:
+                days_until = 7
+        next_run = dt(now.year, now.month, now.day, hour, minute, 0) + timedelta(days=days_until)
+        return next_run
+        
+    elif task_type == 'monthly':
+        day = Config.TASK_DETAILS['MONTHLY']['day']
+        hour_range = Config.TASK_DETAILS['MONTHLY']['hour_range']
+        minute_range = Config.TASK_DETAILS['MONTHLY']['minute_range']
+        hour = random.randint(hour_range[0], hour_range[1])
+        minute = random.randint(minute_range[0], minute_range[1])
+        # 计算下个月的同一天
+        if now.month == 12:
+            next_year = now.year + 1
+            next_month = 1
+        else:
+            next_year = now.year
+            next_month = now.month + 1
+        # 创建下个月的时间
+        next_run = dt(next_year, next_month, day, hour, minute, 0)
+        # 如果当前日期是当天且还未到执行时间，则使用本月的当天
+        if now.day == day:
+            today_execution = dt(now.year, now.month, day, hour, minute, 0)
+            if now < today_execution:
+                next_run = today_execution
+        return next_run
+    else:
+        # 未知任务类型，使用默认的24小时后
+        return datetime.utcnow() + timedelta(days=1)
 
 def execute_user_task(task_id):
     """
@@ -57,24 +134,22 @@ def execute_user_task(task_id):
         task.updated_at = datetime.utcnow()
         
         # 计算下次运行时间
-        if task.is_active and task.cron_expression:
+        if task.is_active:
             try:
-                from croniter import croniter
-                from datetime import datetime as dt
-                
-                base_time = datetime.utcnow()
-                cron = croniter(task.cron_expression, base_time)
-                task.next_run_time = cron.get_next(dt)
-            except ImportError:
-                logger.warning("croniter模块未安装，无法计算下次运行时间")
-                # 设置默认的下次运行时间（24小时后）
-                task.next_run_time = datetime.utcnow() + timedelta(days=1)
+                task.next_run_time = calculate_next_run_time(task)
             except Exception as e:
                 logger.error(f"计算下次运行时间失败: {e}")
                 # 设置默认的下次运行时间（24小时后）
                 task.next_run_time = datetime.utcnow() + timedelta(days=1)
         
         db.commit()
+        
+        # 重新调度下一次执行
+        try:
+            add_task_to_scheduler(task.id)
+            logger.info(f"任务 {task_id} 已重新调度，下次运行时间: {task.next_run_time}")
+        except Exception as e:
+            logger.error(f"重新调度任务 {task_id} 失败: {e}")
         
         if result.get('success'):
             logger.info(f"任务 {task_id} 执行成功: {result.get('message')}")
@@ -123,27 +198,49 @@ def init_scheduler():
             for task in active_tasks:
                 try:
                     # 为每个任务创建调度任务
-                    if task.cron_expression:
-                        job_id = f"user_task_{task.id}"
-                        
-                        # 检查是否已存在相同ID的任务
-                        existing_job = scheduler.get_job(job_id)
-                        if existing_job:
-                            scheduler.remove_job(job_id)
-                        
-                        # 添加任务到调度器
-                        scheduler.add_job(
-                            func=execute_user_task,
-                            args=[task.id],
-                            trigger=CronTrigger.from_crontab(task.cron_expression),
-                            id=job_id,
-                            name=f"{task.task_name} (用户{task.user_id})",
-                            replace_existing=True
-                        )
-                        
-                        logger.info(f"添加任务调度: {job_id} - {task.task_name} (cron: {task.cron_expression})")
-                    else:
+                    if not task.cron_expression:
                         logger.warning(f"任务 {task.id} 没有cron表达式，跳过调度")
+                        continue
+                    
+                    job_id = f"user_task_{task.id}"
+                    
+                    # 检查是否已存在相同ID的任务
+                    existing_job = scheduler.get_job(job_id)
+                    if existing_job:
+                        scheduler.remove_job(job_id)
+                    
+                    # 确定下次运行时间
+                    run_time = task.next_run_time
+                    if not run_time:
+                        # 如果没有设置下次运行时间，则根据任务类型计算
+                        try:
+                            run_time = calculate_next_run_time(task)
+                            # 更新数据库中的next_run_time
+                            task.next_run_time = run_time
+                            db.commit()
+                        except Exception as e:
+                            logger.error(f"计算下次运行时间失败: {e}")
+                            run_time = datetime.utcnow() + timedelta(days=1)
+                    
+                    # 确保运行时间在未来
+                    if run_time <= datetime.utcnow():
+                        # 如果已经过期，重新计算下一次
+                        try:
+                            run_time = calculate_next_run_time(task)
+                        except Exception:
+                            run_time = datetime.utcnow() + timedelta(days=1)
+                    
+                    # 使用DateTrigger在具体时间点调度
+                    scheduler.add_job(
+                        func=execute_user_task,
+                        args=[task.id],
+                        trigger=DateTrigger(run_time),
+                        id=job_id,
+                        name=f"{task.task_name} (用户{task.user_id})",
+                        replace_existing=True
+                    )
+                    
+                    logger.info(f"添加任务调度: {job_id} - {task.task_name} (运行时间: {run_time})")
                         
                 except Exception as e:
                     logger.error(f"添加任务 {task.id} 到调度器失败: {e}")
@@ -203,17 +300,38 @@ def add_task_to_scheduler(task_id):
         if existing_job:
             scheduler.remove_job(job_id)
         
-        # 添加任务到调度器
+        # 确定下次运行时间
+        run_time = task.next_run_time
+        if not run_time:
+            # 如果没有设置下次运行时间，则根据任务类型计算
+            try:
+                run_time = calculate_next_run_time(task)
+                # 更新数据库中的next_run_time
+                task.next_run_time = run_time
+                db.commit()
+            except Exception as e:
+                logger.error(f"计算下次运行时间失败: {e}")
+                run_time = datetime.utcnow() + timedelta(days=1)
+        
+        # 确保运行时间在未来
+        if run_time <= datetime.utcnow():
+            # 如果已经过期，重新计算下一次
+            try:
+                run_time = calculate_next_run_time(task)
+            except Exception:
+                run_time = datetime.utcnow() + timedelta(days=1)
+        
+        # 使用DateTrigger在具体时间点调度
         scheduler.add_job(
             func=execute_user_task,
             args=[task.id],
-            trigger=CronTrigger.from_crontab(task.cron_expression),
+            trigger=DateTrigger(run_time),
             id=job_id,
             name=f"{task.task_name} (用户{task.user_id})",
             replace_existing=True
         )
         
-        logger.info(f"添加任务到调度器: {job_id} - {task.task_name}")
+        logger.info(f"添加任务到调度器: {job_id} - {task.task_name} (运行时间: {run_time})")
         return True
         
     except Exception as e:
