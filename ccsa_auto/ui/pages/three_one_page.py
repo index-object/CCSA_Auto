@@ -1,6 +1,7 @@
 """三个一任务完成情况页面模块 - 基于app.storage.user的会话隔离版本"""
 from nicegui import ui, app
 from ccsa_auto.modules.auth.service import AuthService
+import asyncio
 
 
 def create_three_one_page():
@@ -110,7 +111,30 @@ def create_three_one_page():
                 ui.notify('获取任务完成情况失败: 认证失败或网络错误', type='error')
         
         with ui.row().classes('w-full justify-end'):
-            ui.button('刷新任务状态', on_click=refresh_task_status, icon='refresh').classes('bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-1 md:py-2 px-3 md:px-4 rounded-lg shadow-sm text-sm md:text-base')
+            # 创建按钮
+            refresh_btn = ui.button('刷新任务状态', icon='refresh').classes('bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-1 md:py-2 px-3 md:px-4 rounded-lg shadow-sm text-sm md:text-base')
+            
+            # 按照test_simple_loading.py的模式设置点击事件
+            async def on_refresh_click():
+                # 设置加载状态
+                refresh_btn.props('loading')
+                refresh_btn.disable()
+                
+                try:
+                    # 添加1秒延迟确保用户能看到加载动画
+                    await asyncio.sleep(1)
+                    
+                    # 执行刷新函数
+                    refresh_task_status()
+                except Exception as e:
+                    ui.notify(f'刷新失败: {str(e)}', type='negative')
+                    raise
+                finally:
+                    # 恢复按钮状态
+                    refresh_btn.enable()
+                    refresh_btn.props(remove='loading')
+            
+            refresh_btn.on_click(on_refresh_click)
         
         # 初始加载任务状态
         ui.timer(0.1, lambda: refresh_task_status(), once=True)

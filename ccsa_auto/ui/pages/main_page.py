@@ -4,6 +4,7 @@ from ccsa_auto.ui.components.announcement_section import create_announcement_sec
 from ccsa_auto.ui.components.profile_section import create_profile_section
 from ccsa_auto.ui.components.task_section import create_task_section
 from ccsa_auto.ui.pages.three_one_page import create_three_one_page
+from ccsa_auto.ui.utils.loading_utils import create_loading_button
 from datetime import datetime
 
 
@@ -38,4 +39,11 @@ def create_main_page(navigate_to):
     # 保留管理员入口按钮（针对管理员用户）
     if user_info.get('username') == 'admin':
         with ui.row().classes('w-full justify-center mt-6'):
-            ui.button('管理后台', on_click=lambda: navigate_to('admin')).classes('bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg shadow-lg')
+            def navigate_to_admin():
+                navigate_to('admin')
+            
+            create_loading_button(
+                '管理后台',
+                on_click=navigate_to_admin,
+                icon='admin_panel_settings'
+            ).classes('bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg shadow-lg')

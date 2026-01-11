@@ -2,6 +2,7 @@
 from nicegui import ui
 from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import Task
+from ccsa_auto.ui.utils.loading_utils import create_loading_button
 
 
 def create_task_section():
@@ -96,8 +97,16 @@ def create_task_section():
                                     
                                     # 右侧操作按钮
                                     with ui.row().classes('items-center gap-2'):
-                                        ui.button('立即执行', on_click=lambda t=task: execute_task_immediately(t.id),
-                                                 icon='play_arrow').classes('bg-green-50 hover:bg-green-100 text-green-600 font-medium py-2 px-4 rounded-lg shadow-sm text-sm')
+                                        # 创建带加载动画的立即执行按钮
+                                        def create_execute_button(task_obj):
+                                            return create_loading_button(
+                                                '立即执行',
+                                                on_click=lambda: execute_task_immediately(task_obj.id),
+                                                icon='play_arrow'
+                                            ).classes('bg-green-50 hover:bg-green-100 text-green-600 font-medium py-2 px-4 rounded-lg shadow-sm text-sm')
+                                        
+                                        # 为当前任务创建按钮
+                                        create_execute_button(task)
                 
             except Exception as e:
                 ui.notify(f'获取任务失败: {str(e)}', type='negative')
@@ -108,10 +117,15 @@ def create_task_section():
         # 操作按钮区域 - 响应式布局
         with ui.column().classes('w-full gap-4 md:gap-0 md:flex-row md:justify-between md:items-center mt-5 md:mt-6'):
             with ui.row().classes('gap-3 flex-wrap'):
-                ui.button('刷新任务', on_click=refresh_tasks, icon='refresh').classes('bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-2 md:py-3 px-4 md:px-5 rounded-lg shadow-sm text-base')
+                create_loading_button(
+                    '刷新任务',
+                    on_click=refresh_tasks,
+                    icon='refresh'
+                ).classes('bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-2 md:py-3 px-4 md:px-5 rounded-lg shadow-sm text-base')
             
             # 快速操作按钮
             with ui.row().classes('gap-3'):
+                # 查看全部按钮暂时保持原样，因为没有定义点击事件
                 ui.button('查看全部', icon='visibility').classes('bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium py-2 md:py-3 px-4 md:px-5 rounded-lg shadow-sm text-base')
         
         def execute_task(task_id):

@@ -1,6 +1,7 @@
 """公告信息区组件模块"""
 from nicegui import ui
 from ccsa_auto.modules.announcement.service import AnnouncementService
+from ccsa_auto.ui.utils.loading_utils import create_loading_button
 
 
 def create_announcement_section():
@@ -38,6 +39,10 @@ def create_announcement_section():
                         ui.item_label('暂无公告').classes('text-gray-500 text-center py-3 md:py-4')
 
         with ui.row().classes('w-full justify-end mt-2 md:mt-3'):
-            ui.button('刷新公告', on_click=load_announcements_embedded, icon='refresh').classes('bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-1 md:py-1.5 px-2.5 md:px-3 rounded-lg shadow-sm text-xs')
+            create_loading_button(
+                '刷新公告',
+                on_click=load_announcements_embedded,
+                icon='refresh'
+            ).classes('bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-1 md:py-1.5 px-2.5 md:px-3 rounded-lg shadow-sm text-xs')
         
         load_announcements_embedded()
