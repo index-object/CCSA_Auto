@@ -81,3 +81,7 @@ class Config:
     # 日志配置
     LOG_LEVEL = "INFO"
     LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+    # 会话配置
+    SESSION_TIMEOUT = 3600  # 1小时无活动过期（秒）
+    SESSION_ABSOLUTE_TIMEOUT = 86400  # 24小时强制过期（秒）

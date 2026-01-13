@@ -20,6 +20,20 @@ from ccsa_auto.utils.timezone import (
     ensure_utc_timezone,
 )
 
+
+def cleanup_expired_sessions_job():
+    """定时清理过期会话任务"""
+    try:
+        from ccsa_auto.modules.auth.session_manager import get_session_manager
+
+        session_manager = get_session_manager()
+        count = session_manager.cleanup_expired_sessions()
+        if count > 0:
+            logger.info(f"定时任务: 已清理 {count} 个过期会话")
+    except Exception as e:
+        logger.error(f"清理过期会话任务失败: {e}")
+
+
 # 创建后台调度器实例
 scheduler = BackgroundScheduler()
 
@@ -198,6 +212,16 @@ def init_scheduler():
 
         finally:
             db.close()
+
+        # 添加清理过期会话的定时任务（每小时执行一次）
+        scheduler.add_job(
+            func=cleanup_expired_sessions_job,
+            trigger=CronTrigger(minute=0),
+            id="cleanup_expired_sessions",
+            name="清理过期会话",
+            replace_existing=True,
+        )
+        logger.info("已添加清理过期会话定时任务（每小时执行一次）")
 
         scheduler.start()
         logger.info("任务调度器初始化完成并已启动")
