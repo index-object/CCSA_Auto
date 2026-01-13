@@ -5,6 +5,9 @@ from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import Task
 from ccsa_auto.ui.utils.loading_utils import create_loading_button
 from ccsa_auto.utils.timezone import format_datetime_short
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def create_task_section():
@@ -26,6 +29,72 @@ def create_task_section():
         # 任务列表容器 - 使用ui.list控件
         task_list = ui.list().classes("w-full").props("bordered separator")
         task_list_container = task_list
+
+        def execute_task(task_id):
+            """手动执行任务"""
+            logger.info(f"[UI] execute_task 被调用, task_id={task_id}")
+            if not task_id:
+                ui.notify("请输入任务ID", type="warning")
+                return
+
+            try:
+                from ccsa_auto.modules.task.service import TaskService
+                from ccsa_auto.core.database import SessionLocal
+                from ccsa_auto.core.models import Task, User
+
+                db = SessionLocal()
+                task = db.query(Task).filter_by(id=int(task_id)).first()
+                logger.info(
+                    f"[UI] 查询任务: task_id={task_id}, 找到={task is not None}"
+                )
+                if not task:
+                    ui.notify(f"任务 {task_id} 不存在", type="negative")
+                    return
+
+                user = db.query(User).filter_by(id=task.user_id).first()
+                logger.info(
+                    f"[UI] 查询用户: user_id={task.user_id}, 找到={user is not None}"
+                )
+                if not user:
+                    ui.notify(f"用户 {task.user_id} 不存在", type="negative")
+                    return
+
+                # 执行任务
+                logger.info(
+                    f"[UI] 开始执行任务: task_id={task_id}, task_type={task.task_type}"
+                )
+                result = TaskService.execute_task(task, user)
+                logger.info(
+                    f"[UI] 任务执行完成: success={result.get('success')}, message={result.get('message')}"
+                )
+
+                if result.get("success"):
+                    ui.notify(
+                        f"任务 {task_id} 执行成功: {result.get('message')}",
+                        type="positive",
+                    )
+                else:
+                    ui.notify(
+                        f"任务 {task_id} 执行失败: {result.get('message')}",
+                        type="negative",
+                    )
+
+                # 刷新任务列表
+                refresh_tasks()
+
+            except Exception as e:
+                logger.exception(f"[UI] 执行任务异常: {str(e)}")
+                ui.notify(f"执行任务失败: {str(e)}", type="negative")
+            finally:
+                try:
+                    db.close()
+                except:
+                    pass
+
+        def execute_task_immediately(task_id):
+            """立即执行任务（用于表格中的按钮）"""
+            logger.info(f"[UI] execute_task_immediately 被调用, task_id={task_id}")
+            execute_task(str(task_id))
 
         def refresh_tasks():
             """刷新任务列表（嵌入区）"""
@@ -131,21 +200,27 @@ def create_task_section():
                                     # 右侧操作按钮
                                     with ui.row().classes("items-center gap-2"):
                                         # 创建带加载动画的立即执行按钮
-                                        def create_execute_button(task_obj):
+                                        # 使用默认参数解决闭包问题
+                                        def create_execute_button(task_id):
+                                            def on_click_handler():
+                                                logger.info(
+                                                    f"[UI] 按钮点击触发, task_id={task_id}"
+                                                )
+                                                execute_task_immediately(task_id)
+
                                             return create_loading_button(
                                                 "立即执行",
-                                                on_click=lambda: execute_task_immediately(
-                                                    task_obj.id
-                                                ),
+                                                on_click=on_click_handler,
                                                 icon="play_arrow",
                                             ).classes(
                                                 "bg-green-50 hover:bg-green-100 text-green-600 font-medium py-2 px-4 rounded-lg shadow-sm text-sm"
                                             )
 
                                         # 为当前任务创建按钮
-                                        create_execute_button(task)
+                                        create_execute_button(task.id)
 
             except Exception as e:
+                logger.exception(f"[UI] 获取任务失败: {str(e)}")
                 ui.notify(f"获取任务失败: {str(e)}", type="negative")
                 task_list_container.clear()
             finally:
@@ -168,54 +243,6 @@ def create_task_section():
                 ui.button("查看全部", icon="visibility").classes(
                     "bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium py-2 md:py-3 px-4 md:px-5 rounded-lg shadow-sm text-base"
                 )
-
-        def execute_task(task_id):
-            """手动执行任务"""
-            if not task_id:
-                ui.notify("请输入任务ID", type="warning")
-                return
-
-            try:
-                from ccsa_auto.modules.task.service import TaskService
-                from ccsa_auto.core.database import SessionLocal
-                from ccsa_auto.core.models import Task, User
-
-                db = SessionLocal()
-                task = db.query(Task).filter_by(id=int(task_id)).first()
-                if not task:
-                    ui.notify(f"任务 {task_id} 不存在", type="negative")
-                    return
-
-                user = db.query(User).filter_by(id=task.user_id).first()
-                if not user:
-                    ui.notify(f"用户 {task.user_id} 不存在", type="negative")
-                    return
-
-                # 执行任务
-                result = TaskService.execute_task(task, user)
-
-                if result.get("success"):
-                    ui.notify(
-                        f"任务 {task_id} 执行成功: {result.get('message')}",
-                        type="positive",
-                    )
-                else:
-                    ui.notify(
-                        f"任务 {task_id} 执行失败: {result.get('message')}",
-                        type="negative",
-                    )
-
-                # 刷新任务列表
-                refresh_tasks()
-
-            except Exception as e:
-                ui.notify(f"执行任务失败: {str(e)}", type="negative")
-            finally:
-                db.close()
-
-        def execute_task_immediately(task_id):
-            """立即执行任务（用于表格中的按钮）"""
-            execute_task(str(task_id))
 
         # 初始加载任务
         refresh_tasks()
