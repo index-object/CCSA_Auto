@@ -261,7 +261,9 @@ class AuthService:
                 if user_info and user_info.get("company_name"):
                     existing_user.company_name = user_info.get("company_name")
 
-                # 如果提供了令牌，更新令牌
+                if user_info and user_info.get("username"):
+                    existing_user.external_username = user_info.get("username")
+
                 if external_token:
                     existing_user.external_token = external_token
                     existing_user.token_expires_at = datetime.utcnow() + timedelta(

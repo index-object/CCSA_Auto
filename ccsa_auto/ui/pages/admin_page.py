@@ -33,6 +33,11 @@ def create_admin_page():
                         {"name": "id", "label": "ID", "field": "id", "align": "center"},
                         {"name": "username", "label": "账号", "field": "username"},
                         {
+                            "name": "external_username",
+                            "label": "平台用户名",
+                            "field": "external_username",
+                        },
+                        {
                             "name": "company_name",
                             "label": "公司",
                             "field": "company_name",
