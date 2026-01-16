@@ -7,6 +7,7 @@ import logging
 from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import Task, User, TaskFixLog
 from ccsa_auto.modules.task.service import TaskService
+from ccsa_auto.modules.logging.service import LoggingService
 from ccsa_auto.core.config import Config
 from ccsa_auto.utils.timezone import (
     get_current_time,
@@ -189,6 +190,14 @@ def execute_user_task(task_id):
         else:
             logger.error(f"任务 {task_id} 执行失败: {result.get('message')}")
 
+        LoggingService.log_task_execution(
+            task_id=task_id,
+            user_id=task.user_id,
+            task_type=task.task_type,
+            status="success" if result.get("success") else "failed",
+            message=result.get("message", str(result)),
+        )
+
     except Exception as e:
         logger.exception(f"执行任务 {task_id} 时发生异常: {e}")
 
@@ -315,6 +324,18 @@ def init_scheduler():
             if existing_job:
                 scheduler.remove_job(FIXER_JOB_ID)
                 logger.info("任务修复器已禁用，已从调度器移除")
+
+        # 添加日志清理定时任务（每天凌晨3点执行，保留60天）
+        from ccsa_auto.modules.logging.service import LoggingService
+
+        scheduler.add_job(
+            func=lambda: LoggingService.cleanup_old_logs(days=60),
+            trigger=CronTrigger(hour=3, minute=0, timezone="Asia/Shanghai"),
+            id="cleanup_logs",
+            name="清理过期日志",
+            replace_existing=True,
+        )
+        logger.info("已添加日志清理定时任务（每天凌晨3点执行，保留60天）")
 
         scheduler.start()
         logger.info("任务调度器初始化完成并已启动")

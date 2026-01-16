@@ -10,6 +10,7 @@ from ccsa_auto.core.models import (
     OperationLog,
     AuthSession,
 )
+from ccsa_auto.modules.logging.models import AppLog
 
 
 # 创建数据库表

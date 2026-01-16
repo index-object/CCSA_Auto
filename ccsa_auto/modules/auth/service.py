@@ -12,6 +12,7 @@ from refactored_code.config import Config as RefactoredConfig
 
 from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import User
+from ccsa_auto.modules.logging.service import LoggingService
 from ccsa_auto.utils.password import hash_password
 from ccsa_auto.utils.jwt import create_access_token
 
@@ -331,35 +332,55 @@ class AuthService:
         """管理员登录"""
         db = SessionLocal()
         try:
-            # 查询管理员用户
             user = db.query(User).filter_by(username=username, is_admin=True).first()
             if not user:
+                LoggingService.log_auth(
+                    user_id=None,
+                    action="ADMIN_LOGIN",
+                    success=False,
+                    detail=f"管理员账号不存在: {username}",
+                )
                 return False, None, "管理员账号不存在"
 
-            # 验证密码
             from ccsa_auto.utils.password import verify_password
 
             if not verify_password(user.password, password):
+                LoggingService.log_auth(
+                    user_id=user.id,
+                    action="ADMIN_LOGIN",
+                    success=False,
+                    detail=f"密码错误: {username}",
+                )
                 return False, None, "密码错误"
 
-            # 检查用户状态
             if user.status == 1:
+                LoggingService.log_auth(
+                    user_id=user.id,
+                    action="ADMIN_LOGIN",
+                    success=False,
+                    detail=f"账号已被封禁: {username}",
+                )
                 return False, None, "账号已被封禁"
 
-            # 创建访问令牌
             access_token = create_access_token({"sub": str(user.id)})
 
-            # 创建数据库会话
             from ccsa_auto.modules.auth.session_manager import get_session_manager
 
             session_manager = get_session_manager()
             session_manager.create_db_session(user.id, access_token)
 
+            LoggingService.log_auth(
+                user_id=user.id,
+                action="ADMIN_LOGIN",
+                success=True,
+                detail=f"管理员登录成功: {username}",
+            )
+
             return (
                 True,
                 {
                     "access_token": access_token,
-                    "external_token": None,  # 管理员没有外部令牌
+                    "external_token": None,
                     "user": {
                         "id": user.id,
                         "username": user.username,
@@ -376,44 +397,62 @@ class AuthService:
     @staticmethod
     def user_login(username, password):
         """普通用户登录"""
-        # 外部平台认证，获取详细错误信息
         auth_success, user_info, external_token, error_info = (
             AuthService.authenticate_external(
                 username, password, return_error_info=True
             )
         )
         if not auth_success:
-            # 如果有详细的错误信息，构建更有用的错误消息
             if error_info:
                 error_msg = error_info.get("msg", "外部平台认证失败")
                 error_code = error_info.get("code", "未知错误码")
-                # 构建包含错误码和错误消息的详细错误信息
                 detailed_msg = f"外部平台认证失败 (错误码: {error_code}): {error_msg}"
             else:
                 detailed_msg = "外部平台认证失败"
+
+            LoggingService.log_auth(
+                user_id=None,
+                action="USER_LOGIN",
+                success=False,
+                detail=f"用户 {username} 登录失败: {detailed_msg}",
+            )
             return False, None, detailed_msg
 
-        # 自动注册或获取用户，传入已获取的user_info避免重复认证
         user = AuthService.auto_register(username, password, user_info)
         if not user:
+            LoggingService.log_auth(
+                user_id=None,
+                action="USER_LOGIN",
+                success=False,
+                detail=f"用户 {username} 注册失败",
+            )
             return False, None, "用户注册失败"
 
-        # 检查用户状态
         if user.status == 1:
+            LoggingService.log_auth(
+                user_id=user.id,
+                action="USER_LOGIN",
+                success=False,
+                detail=f"用户 {username} 账号已被封禁",
+            )
             return False, None, "账号已被封禁"
 
-        # 保存外部平台令牌到数据库
         if external_token:
             AuthService.save_external_token(user.id, external_token)
 
-        # 创建访问令牌
         access_token = create_access_token({"sub": str(user.id)})
 
-        # 创建数据库会话
         from ccsa_auto.modules.auth.session_manager import get_session_manager
 
         session_manager = get_session_manager()
         session_manager.create_db_session(user.id, access_token)
+
+        LoggingService.log_auth(
+            user_id=user.id,
+            action="USER_LOGIN",
+            success=True,
+            detail=f"用户 {username} 登录成功",
+        )
 
         # 使用从外部API获取的最新用户信息（特别是公司名称）
         # 注意：user_info是从外部API获取的，包含最新的nickName和companyName

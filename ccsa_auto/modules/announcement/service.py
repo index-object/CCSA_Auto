@@ -109,6 +109,48 @@ class AnnouncementService:
             db.close()
 
     @staticmethod
+    def update_announcement(announcement_id, title, content):
+        """更新公告"""
+        db = SessionLocal()
+        try:
+            announcement = db.query(Announcement).filter_by(id=announcement_id).first()
+            if not announcement:
+                return {"success": False, "message": "公告不存在"}
+
+            announcement.title = title
+            announcement.content = content
+            db.commit()
+
+            return {"success": True, "message": "公告更新成功"}
+        except Exception as e:
+            db.rollback()
+            return {"success": False, "message": f"更新公告失败: {str(e)}"}
+        finally:
+            db.close()
+
+    @staticmethod
+    def delete_announcement(announcement_id):
+        """删除公告"""
+        db = SessionLocal()
+        try:
+            announcement = db.query(Announcement).filter_by(id=announcement_id).first()
+            if not announcement:
+                return {"success": False, "message": "公告不存在"}
+
+            db.query(AnnouncementRead).filter_by(
+                announcement_id=announcement_id
+            ).delete()
+            db.delete(announcement)
+            db.commit()
+
+            return {"success": True, "message": "公告删除成功"}
+        except Exception as e:
+            db.rollback()
+            return {"success": False, "message": f"删除公告失败: {str(e)}"}
+        finally:
+            db.close()
+
+    @staticmethod
     def get_announcement_stats():
         """获取公告阅读统计"""
         db = SessionLocal()
