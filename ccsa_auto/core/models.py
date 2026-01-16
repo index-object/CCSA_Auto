@@ -198,6 +198,27 @@ class AuthSession(Base):
 
     user = relationship("User", backref="sessions")
 
+    is_authenticated = Column(Boolean, default=False, nullable=False)
+    is_admin = Column(Boolean, default=False, nullable=False)
+    user_info_json = Column(Text)
+    access_token = Column(String(500))
+    external_token = Column(Text)
+    referrer_path = Column(String(500))
+
+    def get_user_info(self) -> dict:
+        """反序列化 user_info"""
+        if self.user_info_json:
+            import json
+
+            return json.loads(self.user_info_json)
+        return {}
+
+    def set_user_info(self, user_info: dict):
+        """序列化 user_info"""
+        import json
+
+        self.user_info_json = json.dumps(user_info, ensure_ascii=False)
+
     def to_dict(self):
         return {
             "id": self.id,

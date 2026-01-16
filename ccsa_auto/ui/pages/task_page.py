@@ -5,13 +5,14 @@ import sys
 import os
 from datetime import datetime
 
-# 添加项目根目录到Python路径
 sys.path.insert(0, os.path.abspath("."))
 
 from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import Task
 from ccsa_auto.modules.task.service import TaskService
 from ccsa_auto.utils.timezone import format_datetime_for_display
+from ccsa_auto.modules.auth.session_manager import get_session_manager
+from ccsa_auto.modules.auth.user_state import UserStateService
 
 
 def create_task_page():
@@ -20,8 +21,15 @@ def create_task_page():
         ui.label("任务管理").classes("text-2xl font-bold mb-6")
 
         # 获取当前用户ID
-        user_info = ui.context.client.storage.user.get("user_info", {})
-        user_id = user_info.get("id")
+        session_manager = get_session_manager()
+        session_id = session_manager.get_current_session_id()
+
+        user_id = None
+        if session_id:
+            state = UserStateService.get_state(session_id)
+            if state:
+                user_info = state.get("user_info", {})
+                user_id = user_info.get("id")
 
         if not user_id:
             ui.label("未获取到用户信息，请重新登录").classes("text-red-500 mb-4")

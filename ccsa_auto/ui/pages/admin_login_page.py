@@ -3,6 +3,7 @@
 from nicegui import ui, app
 from ccsa_auto.modules.auth.service import AuthService
 from ccsa_auto.modules.auth.session_manager import get_session_manager
+from ccsa_auto.modules.auth.user_state import UserStateService
 
 
 def create_admin_login_page(navigate_to):
@@ -67,11 +68,20 @@ def create_admin_login_page(navigate_to):
                         # 创建数据库会话并获取 session_id
                         session_manager = get_session_manager()
                         session_id = session_manager.create_db_session(
-                            result["user"]["id"], result["access_token"]
+                            user_id=result["user"]["id"],
+                            access_token=result["access_token"],
+                            user_info=result["user"],
+                            is_admin=True,
+                            external_token=result.get("external_token"),
                         )
 
-                        # 存储管理员信息到会话
-                        app.storage.user.update(
+                        if not session_id:
+                            ui.notify("创建会话失败", type="negative")
+                            return
+
+                        # 保存管理员状态到数据库
+                        UserStateService.save_state(
+                            session_id,
                             {
                                 "authenticated": True,
                                 "is_admin": True,
@@ -79,8 +89,7 @@ def create_admin_login_page(navigate_to):
                                 "access_token": result["access_token"],
                                 "user_id": result["user"]["id"],
                                 "external_token": result.get("external_token"),
-                                "session_id": session_id,
-                            }
+                            },
                         )
 
                         print(
@@ -88,8 +97,12 @@ def create_admin_login_page(navigate_to):
                         )
                         ui.notify("管理员登录成功", type="positive")
 
-                        # 直接调用导航函数
-                        navigate_to("admin")
+                        # 设置 session_id Cookie 并跳转到管理后台
+                        ui.run_javascript(f"""
+                            document.cookie = "session_id={session_id}; path=/; secure=False; samesite=lax; max-age={86400 * 7}";
+                            window.location.href = "/admin";
+                        """)
+                        return
                     else:
                         ui.notify(message, type="negative")
                 except Exception as e:

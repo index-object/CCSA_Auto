@@ -101,23 +101,24 @@ def create_task_section():
             # 从数据库获取当前用户的任务列表
             db = SessionLocal()
             try:
-                # 尝试从app.storage.user获取当前用户ID
-                from nicegui import app
+                from ccsa_auto.modules.auth.session_manager import get_session_manager
+                from ccsa_auto.modules.auth.user_state import UserStateService
 
-                # 尝试多种方式获取用户ID
+                session_manager = get_session_manager()
+                session_id = session_manager.get_current_session_id()
+
                 user_id = None
+                is_authenticated = False
 
-                # 方式1: 从user_info获取
-                user_info = app.storage.user.get("user_info", {})
-                if user_info and "id" in user_info:
-                    user_id = user_info.get("id")
-
-                # 方式2: 直接从user_id字段获取
-                if not user_id:
-                    user_id = app.storage.user.get("user_id")
-
-                # 检查用户是否已认证
-                is_authenticated = app.storage.user.get("authenticated", False)
+                if session_id:
+                    state = UserStateService.get_state(session_id)
+                    if state:
+                        user_info = state.get("user_info", {})
+                        if user_info and "id" in user_info:
+                            user_id = user_info.get("id")
+                        if not user_id:
+                            user_id = state.get("user_id")
+                        is_authenticated = state.get("authenticated", False)
 
                 if user_id and is_authenticated:
                     tasks = (

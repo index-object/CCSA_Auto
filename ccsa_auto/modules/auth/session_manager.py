@@ -12,6 +12,49 @@ from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import User, AuthSession
 from ccsa_auto.core.config import Config
 from ccsa_auto.modules.auth.models import get_auth_state
+from ccsa_auto.modules.auth.user_state import UserStateService
+
+
+def migrate_auth_session_schema():
+    """迁移 AuthSession 表结构，添加用户状态字段
+
+    此函数检查并添加新字段，如果列不存在则添加
+    """
+    db = SessionLocal()
+    try:
+        from sqlalchemy import inspect, text
+
+        inspector = inspect(db.bind)
+        columns = [c["name"] for c in inspector.get_columns("auth_sessions")]
+
+        new_columns = {
+            "is_authenticated": "BOOLEAN DEFAULT 0",
+            "is_admin": "BOOLEAN DEFAULT 0",
+            "user_info_json": "TEXT",
+            "access_token": "VARCHAR(500)",
+            "external_token": "TEXT",
+            "referrer_path": "VARCHAR(500)",
+        }
+
+        for col_name, col_def in new_columns.items():
+            if col_name not in columns:
+                try:
+                    db.execute(
+                        text(
+                            f"ALTER TABLE auth_sessions ADD COLUMN {col_name} {col_def}"
+                        )
+                    )
+                    print(f"已添加字段: auth_sessions.{col_name}")
+                except Exception as e:
+                    print(f"添加字段 {col_name} 失败（可能已存在）: {e}")
+
+        db.commit()
+        print("AuthSession 表结构迁移完成")
+    except Exception as e:
+        db.rollback()
+        print(f"迁移 AuthSession 表结构失败: {e}")
+    finally:
+        db.close()
 
 
 class SessionManager:
@@ -58,9 +101,17 @@ class SessionManager:
             "expires_at": (datetime.utcnow() + timedelta(hours=24)).isoformat(),
         }
 
-        session_file = os.path.join(self.SESSION_DIR, f"{session_id}.json")
-        with open(session_file, "w", encoding="utf-8") as f:
-            json.dump(session_data, f, ensure_ascii=False, indent=2)
+        UserStateService.save_state(
+            session_id,
+            {
+                "authenticated": True,
+                "is_admin": False,
+                "user_info": user_info,
+                "access_token": access_token,
+                "external_token": external_token,
+                "user_id": user_id,
+            },
+        )
 
         auth_state = get_auth_state()
         auth_state.set_auth(access_token, user_info, external_token)
@@ -72,15 +123,25 @@ class SessionManager:
 
         return session_id
 
-    def create_db_session(self, user_id: int, access_token: str) -> str:
+    def create_db_session(
+        self,
+        user_id: int,
+        access_token: str,
+        user_info: Dict[str, Any] = None,
+        is_admin: bool = False,
+        external_token: str = None,
+    ) -> Optional[str]:
         """创建数据库会话（新的服务器端会话管理）
 
         Args:
             user_id: 用户ID
             access_token: JWT令牌
+            user_info: 用户信息字典
+            is_admin: 是否管理员
+            external_token: 外部平台令牌
 
         Returns:
-            session_id: 会话ID
+            session_id: 会话ID，失败返回None
         """
         session_id = str(uuid.uuid4())
         token_hash = hashlib.sha256(access_token.encode()).hexdigest()
@@ -96,9 +157,24 @@ class SessionManager:
                 expires_at=datetime.utcnow()
                 + timedelta(seconds=Config.SESSION_ABSOLUTE_TIMEOUT),
                 is_active=True,
+                is_authenticated=True,
+                is_admin=is_admin,
+                access_token=access_token,
+                external_token=external_token,
             )
+
+            if user_info:
+                auth_session.set_user_info(user_info)
+
             db.add(auth_session)
             db.commit()
+
+            # 设置当前请求的 session_id
+            try:
+                ui.context.session_id = session_id
+            except (AttributeError, TypeError):
+                pass
+
             return session_id
         except Exception as e:
             db.rollback()
@@ -358,13 +434,7 @@ class SessionManager:
             session_id = self.get_current_session_id()
 
         if session_id:
-            session_file = os.path.join(self.SESSION_DIR, f"{session_id}.json")
-            if os.path.exists(session_file):
-                try:
-                    os.remove(session_file)
-                except Exception as e:
-                    print(f"删除会话文件失败: {e}")
-
+            UserStateService.clear_state(session_id)
             self.delete_session(session_id)
 
         auth_state = get_auth_state()

@@ -7,6 +7,8 @@ from ccsa_auto.ui.components.task_section import create_task_section
 from ccsa_auto.ui.pages.three_one_page import create_three_one_page
 from ccsa_auto.ui.utils.loading_utils import create_loading_button
 from ccsa_auto.utils.timezone import get_current_time, format_datetime_for_display
+from ccsa_auto.modules.auth.session_manager import get_session_manager
+from ccsa_auto.modules.auth.user_state import UserStateService
 
 
 def create_main_page(navigate_to):
@@ -15,8 +17,15 @@ def create_main_page(navigate_to):
     Args:
         navigate_to: 导航函数，用于页面跳转
     """
-    # 获取用户信息
-    user_info = app.storage.user.get("user_info", {})
+    session_manager = get_session_manager()
+    session_id = session_manager.get_current_session_id()
+
+    if session_id:
+        state = UserStateService.get_state(session_id)
+        user_info = state.get("user_info", {}) if state else {}
+    else:
+        user_info = {}
+
     username = user_info.get("username", "用户")
 
     # 主内容区域 - 使用响应式网格布局
