@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 import logging
 
 from ccsa_auto.core.database import SessionLocal
-from ccsa_auto.core.models import Task, User
+from ccsa_auto.core.models import Task, User, TaskFixLog
 from ccsa_auto.modules.task.service import TaskService
 from ccsa_auto.core.config import Config
 from ccsa_auto.utils.timezone import (
@@ -32,6 +32,82 @@ def cleanup_expired_sessions_job():
             logger.info(f"定时任务: 已清理 {count} 个过期会话")
     except Exception as e:
         logger.error(f"清理过期会话任务失败: {e}")
+
+
+FIXER_JOB_ID = "system_task_fixer"
+
+
+def fix_stale_tasks_job():
+    """修复过期任务定时任务"""
+    db = SessionLocal()
+    try:
+        current_time = get_current_utc_time()
+
+        stale_tasks = (
+            db.query(Task)
+            .filter(Task.is_active == True, Task.next_run_time < current_time)
+            .all()
+        )
+
+        if not stale_tasks:
+            logger.info("任务修复器: 没有发现过期任务")
+            return
+
+        logger.info(f"任务修复器: 发现 {len(stale_tasks)} 个过期任务，开始修复")
+
+        fixed_count = 0
+        for task in stale_tasks:
+            old_run_time = task.next_run_time
+
+            try:
+                new_run_time = calculate_next_run_time_utc(task, get_current_time())
+                new_run_time = ensure_utc_timezone(new_run_time)
+
+                if new_run_time <= current_time:
+                    new_run_time = current_time + timedelta(seconds=1)
+
+                task.next_run_time = new_run_time
+                db.commit()
+
+                fix_log = TaskFixLog(
+                    task_id=task.id,
+                    old_run_time=old_run_time,
+                    new_run_time=new_run_time,
+                    fix_reason="past_date",
+                )
+                db.add(fix_log)
+                db.commit()
+
+                job_id = f"user_task_{task.id}"
+                existing_job = scheduler.get_job(job_id)
+                if existing_job:
+                    scheduler.remove_job(job_id)
+                    scheduler.add_job(
+                        func=execute_user_task,
+                        args=[task.id],
+                        trigger=DateTrigger(new_run_time),
+                        id=job_id,
+                        name=f"{task.task_name} (用户{task.user_id})",
+                        replace_existing=True,
+                    )
+
+                fixed_count += 1
+                logger.info(
+                    f"任务 {task.id} ({task.task_name}) 已修复: "
+                    f"{format_datetime_for_display(old_run_time)} -> {format_datetime_for_display(new_run_time)}"
+                )
+
+            except Exception as e:
+                db.rollback()
+                logger.error(f"修复任务 {task.id} 失败: {e}")
+                continue
+
+        logger.info(f"任务修复器: 完成修复 {fixed_count}/{len(stale_tasks)} 个任务")
+
+    except Exception as e:
+        logger.exception(f"任务修复器执行失败: {e}")
+    finally:
+        db.close()
 
 
 # 创建后台调度器实例
@@ -223,6 +299,23 @@ def init_scheduler():
         )
         logger.info("已添加清理过期会话定时任务（每小时执行一次）")
 
+        if Config.TASK_FIXER_ENABLED:
+            scheduler.add_job(
+                func=fix_stale_tasks_job,
+                trigger=CronTrigger.from_crontab(
+                    Config.TASK_FIXER_CRON, timezone="Asia/Shanghai"
+                ),
+                id=FIXER_JOB_ID,
+                name="任务修复器",
+                replace_existing=True,
+            )
+            logger.info(f"已添加任务修复器定时任务 (Cron: {Config.TASK_FIXER_CRON})")
+        else:
+            existing_job = scheduler.get_job(FIXER_JOB_ID)
+            if existing_job:
+                scheduler.remove_job(FIXER_JOB_ID)
+                logger.info("任务修复器已禁用，已从调度器移除")
+
         scheduler.start()
         logger.info("任务调度器初始化完成并已启动")
 
@@ -346,3 +439,38 @@ def remove_task_from_scheduler(task_id):
     except Exception as e:
         logger.error(f"从调度器移除任务 {task_id} 失败: {e}")
         return False
+
+
+def toggle_task_fixer(enabled: bool):
+    """
+    启用或停用任务修复器
+
+    Args:
+        enabled: True=启用, False=停用
+    """
+    try:
+        if enabled:
+            existing_job = scheduler.get_job(FIXER_JOB_ID)
+            if existing_job:
+                scheduler.remove_job(FIXER_JOB_ID)
+
+            scheduler.add_job(
+                func=fix_stale_tasks_job,
+                trigger=CronTrigger.from_crontab(
+                    Config.TASK_FIXER_CRON, timezone="Asia/Shanghai"
+                ),
+                id=FIXER_JOB_ID,
+                name="任务修复器",
+                replace_existing=True,
+            )
+            logger.info(f"任务修复器已启用 (Cron: {Config.TASK_FIXER_CRON})")
+        else:
+            existing_job = scheduler.get_job(FIXER_JOB_ID)
+            if existing_job:
+                scheduler.remove_job(FIXER_JOB_ID)
+                logger.info("任务修复器已禁用")
+            else:
+                logger.info("任务修复器本来就没有运行")
+    except Exception as e:
+        logger.error(f"切换任务修复器状态失败: {e}")
+        raise

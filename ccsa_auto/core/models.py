@@ -182,6 +182,22 @@ class OperationLog(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class TaskFixLog(Base):
+    """任务修复日志模型"""
+
+    __tablename__ = "task_fix_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    old_run_time = Column(DateTime)
+    new_run_time = Column(DateTime)
+    fix_reason = Column(String(100))  # e.g., "past_date"
+    fixed_at = Column(DateTime, default=datetime.utcnow)
+    scheduler_updated = Column(Boolean, default=True)  # 是否已更新调度器
+
+    task = relationship("Task", backref="fix_logs")
+
+
 class AuthSession(Base):
     """用户会话模型 - 用于服务器端会话管理"""
 

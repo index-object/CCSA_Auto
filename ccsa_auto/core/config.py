@@ -85,3 +85,7 @@ class Config:
     # 会话配置
     SESSION_TIMEOUT = 3600  # 1小时无活动过期（秒）
     SESSION_ABSOLUTE_TIMEOUT = 86400  # 24小时强制过期（秒）
+
+    # 任务修复器配置
+    TASK_FIXER_ENABLED = True  # 是否启用任务修复器
+    TASK_FIXER_CRON = "0 2 * * *"  # 每天凌晨2点执行
