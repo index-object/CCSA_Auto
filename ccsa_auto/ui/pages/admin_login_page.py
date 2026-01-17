@@ -12,6 +12,41 @@ def create_admin_login_page(navigate_to):
     Args:
         navigate_to: 导航函数，用于页面跳转
     """
+
+    # 页面加载时同步 session_id（从 URL 参数同步到 Cookie）
+    # 用于解决从不同 IP 登录时的 session_id 传递问题
+    ui.run_javascript("""
+        (function() {
+            // 从 URL 参数获取 session_id
+            var urlParams = new URLSearchParams(window.location.search);
+            var sessionId = urlParams.get('session_id');
+
+            if (sessionId) {
+                console.log('[管理员登录同步] 从 URL 参数获取到 session_id:', sessionId);
+                // 如果 Cookie 中没有该 session_id，则设置 Cookie
+                if (!document.cookie.includes('session_id=' + sessionId)) {
+                    console.log('[管理员登录同步] Cookie 中没有该 session_id，同步到 Cookie');
+                    document.cookie = "session_id=" + sessionId + "; path=/; samesite=lax; max-age=" + (86400 * 7);
+                    console.log('[管理员登录同步] Cookie 已设置:', document.cookie);
+                } else {
+                    console.log('[管理员登录同步] Cookie 已存在该 session_id');
+                }
+            } else {
+                // 如果 URL 参数中没有 session_id，尝试从 localStorage 同步
+                var localSessionId = localStorage.getItem('session_id');
+                var sessionHostname = localStorage.getItem('session_hostname');
+                var currentHostname = window.location.hostname;
+
+                if (localSessionId && sessionHostname && sessionHostname !== currentHostname) {
+                    console.log('[管理员登录同步] 从 localStorage 同步 session_id:', localSessionId);
+                    document.cookie = "session_id=" + localSessionId + "; path=/; samesite=lax; max-age=" + (86400 * 7);
+                    localStorage.setItem('session_hostname', currentHostname);
+                    console.log('[管理员登录同步] Cookie 已设置');
+                }
+            }
+        })();
+    """)
+
     # 应用全局样式
     # 创建渐变背景容器
     with ui.element("div").classes(
@@ -95,14 +130,12 @@ def create_admin_login_page(navigate_to):
                         print(
                             f"管理员 {result['user']['username']} 登录成功，会话ID: {session_id}"
                         )
+                        print(f"[管理员登录] 重定向到 /admin?session_id={session_id}")
                         ui.notify("管理员登录成功", type="positive")
 
-                        # 设置 session_id Cookie 并跳转到管理后台
-                        ui.run_javascript(f"""
-                            document.cookie = "session_id={session_id}; path=/; secure=False; samesite=lax; max-age={86400 * 7}";
-                            window.location.href = "/admin";
-                        """)
-                        return
+                        # 使用 NiceGUI 导航跳转，URL 中携带 session_id 参数
+                        # 认证中间件会从 URL 参数获取 session_id
+                        ui.navigate.to(f"/admin?session_id={session_id}")
                     else:
                         ui.notify(message, type="negative")
                 except Exception as e:

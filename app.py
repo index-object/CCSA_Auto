@@ -46,11 +46,35 @@ unrestricted_page_routes = {"/login", "/admin_login"}
 
 
 def get_session_from_request(request: Request):
-    """从请求中获取 session_id 和 access_token"""
-    session_id = request.cookies.get("session_id")
+    """从请求中获取 session_id 和 access_token
+
+    优先级：
+    1. URL 参数 session_id（用于登录后重定向）
+    2. Cookie session_id（正常访问）
+    """
+    # 优先从 URL 参数获取，其次从 Cookie 获取
+    session_id = request.query_params.get("session_id") or request.cookies.get(
+        "session_id"
+    )
     auth_header = request.headers.get("Authorization")
     access_token = auth_header.replace("Bearer ", "") if auth_header else None
     return session_id, access_token
+
+
+def inject_session_retrieval_js():
+    """注入 JavaScript 用于页面加载时从 localStorage 获取 session_id 并通过 API 同步"""
+    ui.run_javascript("""
+        (function() {
+            var sessionId = localStorage.getItem('session_id');
+            var sessionHostname = localStorage.getItem('session_hostname');
+            var currentHostname = window.location.hostname;
+            
+            if (sessionId && sessionHostname && sessionHostname !== currentHostname) {
+                document.cookie = "session_id=" + sessionId + "; path=/; secure=False; samesite=lax; max-age=" + (86400 * 7);
+                localStorage.setItem('session_hostname', currentHostname);
+            }
+        })();
+    """)
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
@@ -63,18 +87,30 @@ class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         session_id, access_token = get_session_from_request(request)
 
+        print(f"[认证中间件] 请求路径: {request.url.path}")
+        print(f"[认证中间件] session_id: {session_id}")
+        print(
+            f"[认证中间件] access_token: {access_token[:20] + '...' if access_token else None}"
+        )
+
         # 设置 session_id 到 ui.context，供页面使用
         if session_id:
             try:
                 ui.context.session_id = session_id
-            except (AttributeError, TypeError):
+                print(f"[认证中间件] 已设置 ui.context.session_id: {session_id}")
+            except (AttributeError, TypeError) as e:
+                print(f"[认证中间件] 设置 ui.context.session_id 失败: {e}")
                 pass
 
         is_authenticated = False
         if session_id:
             state = UserStateService.get_state(session_id)
+            print(f"[认证中间件] 用户状态: {state}")
             if state and state.get("authenticated"):
                 is_authenticated = True
+                print(f"[认证中间件] 用户已认证: session_id={session_id}")
+            else:
+                print(f"[认证中间件] 用户未认证或状态无效")
 
         if not is_authenticated:
             page_routes = set()
@@ -86,9 +122,11 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 request.url.path in page_routes
                 and request.url.path not in unrestricted_page_routes
             ):
+                print(f"[认证中间件] 需要认证的页面，重定向到 /login")
                 if session_id:
                     UserStateService.set_referrer_path(session_id, request.url.path)
                 return RedirectResponse("/login")
+            print(f"[认证中间件] 放行请求: {request.url.path}")
             return await call_next(request)
 
         if session_id and access_token:
@@ -96,6 +134,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             session_data = session_manager.validate_session(session_id, access_token)
 
             if session_data is None:
+                print(f"[认证中间件] 会话验证失败，清除状态")
                 UserStateService.clear_state(session_id)
                 page_routes = set()
                 for route in app.routes:
@@ -110,6 +149,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                         UserStateService.set_referrer_path(session_id, request.url.path)
                     return RedirectResponse("/login")
             else:
+                print(f"[认证中间件] 会话验证成功，刷新会话")
                 session_manager.refresh_session(session_id)
 
         return await call_next(request)
