@@ -1,5 +1,6 @@
 """管理员登录页面模块"""
 
+import asyncio
 from nicegui import ui, app
 from ccsa_auto.modules.auth.service import AuthService
 from ccsa_auto.modules.auth.session_manager import get_session_manager
@@ -47,112 +48,194 @@ def create_admin_login_page(navigate_to):
         })();
     """)
 
+    # 页面加载动画样式
+    ui.run_javascript("""
+        (function() {
+            var style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes float {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                }
+                .admin-bg {
+                    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%);
+                    min-height: 100vh;
+                }
+                .admin-card {
+                    backdrop-filter: blur(10px);
+                    background: rgba(255, 255, 255, 0.95);
+                    animation: fadeInUp 0.6s ease-out;
+                }
+                .admin-input {
+                    transition: all 0.3s ease;
+                }
+                .admin-input:focus-within {
+                    transform: scale(1.02);
+                }
+                .admin-btn {
+                    transition: all 0.3s ease;
+                }
+                .admin-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+                }
+                .admin-btn:active {
+                    transform: translateY(0);
+                }
+                .admin-decor {
+                    position: absolute;
+                    border-radius: 50%;
+                    background: rgba(16, 185, 129, 0.15);
+                    animation: float 6s ease-in-out infinite;
+                }
+                .admin-decor-1 { width: 250px; height: 250px; top: -80px; right: -80px; animation-delay: 0s; }
+                .admin-decor-2 { width: 180px; height: 180px; bottom: -40px; left: -40px; animation-delay: 2s; }
+                .admin-decor-3 { width: 120px; height: 120px; top: 40%; left: -60px; animation-delay: 4s; }
+            `;
+            document.head.appendChild(style);
+        })();
+    """)
+
     # 应用全局样式
     # 创建渐变背景容器
     with ui.element("div").classes(
-        "w-full min-h-screen bg-gradient-to-br from-slate-50 via-red-50 to-pink-50 flex items-center justify-center p-4"
+        "w-full min-h-screen admin-bg flex items-center justify-center p-4 relative overflow-hidden"
     ):
-        with ui.card().classes("w-full max-w-md p-8 rounded-2xl shadow-2xl card-hover"):
-            ui.label("管理员后台登录").classes(
-                "text-3xl font-bold text-center text-gray-800 mb-2"
-            )
-            ui.label("请输入管理员账号信息").classes("text-center text-gray-600 mb-6")
+        # 装饰性圆形
+        with ui.element("div").classes("admin-decor admin-decor-1"):
+            pass
+        with ui.element("div").classes("admin-decor admin-decor-2"):
+            pass
+        with ui.element("div").classes("admin-decor admin-decor-3"):
+            pass
 
-            admin_username_input = ui.input(
-                "管理员账号", placeholder="请输入管理员账号"
-            ).classes(
-                "w-full mb-4 px-4 py-3 rounded-lg border border-gray-300 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200 transition-all"
-            )
+        with ui.card().classes("admin-card w-full max-w-sm p-8 rounded-2xl shadow-lg"):
+            # 标题区域
+            with ui.column().classes("w-full items-center mb-2"):
+                ui.label("管理员后台登录").classes(
+                    "text-2xl font-bold text-center text-gray-800 mb-2"
+                )
+                ui.label("请输入管理员账号信息").classes(
+                    "text-sm text-center text-gray-500"
+                )
 
-            admin_password_input = ui.input(
-                "管理员密码", placeholder="请输入管理员密码", password=True
-            ).classes(
-                "w-full mb-6 px-4 py-3 rounded-lg border border-gray-300 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200 transition-all"
-            )
-
-            # 登录处理
-            async def handle_admin_login():
-                """处理管理员登录"""
-                print("handle_admin_login 函数被调用")
-                try:
-                    admin_username = admin_username_input.value.strip()
-                    admin_password = admin_password_input.value.strip()
-
-                    print(
-                        f"获取到的用户名: {admin_username}, 密码长度: {len(admin_password)}"
+            # 输入框区域
+            with ui.column().classes("w-full mb-5 mt-4"):
+                with ui.row().classes(
+                    "w-full items-center mb-4 admin-input bg-gray-50 rounded-xl px-4 py-3 border-2 border-transparent focus-within:border-emerald-400 transition-all"
+                ):
+                    ui.icon("admin_panel_settings").classes(
+                        "text-emerald-500 text-xl mr-3"
+                    )
+                    admin_username_input = ui.input("管理员账号").classes(
+                        "flex-1 bg-transparent border-none outline-none text-gray-700 placeholder-gray-400"
                     )
 
-                    if not admin_username or not admin_password:
-                        ui.notify("请输入管理员账号和密码", type="warning")
-                        return
-
-                    print(f"尝试管理员登录: 用户名={admin_username}")
-                    success, result, message = AuthService.login(
-                        admin_username, admin_password
+                with ui.row().classes(
+                    "w-full items-center mb-2 admin-input bg-gray-50 rounded-xl px-4 py-3 border-2 border-transparent focus-within:border-emerald-400 transition-all"
+                ):
+                    ui.icon("lock").classes("text-emerald-500 text-xl mr-3")
+                    admin_password_input = ui.input(
+                        "管理员密码", password=True
+                    ).classes(
+                        "flex-1 bg-transparent border-none outline-none text-gray-700 placeholder-gray-400"
                     )
-                    print(f"登录结果: success={success}, message={message}")
 
-                    if success:
-                        # 检查是否为管理员
-                        if not result["user"].get("is_admin"):
-                            ui.notify(
-                                "非管理员账号，请使用普通用户登录", type="negative"
-                            )
-                            return
-
-                        # 创建数据库会话并获取 session_id
-                        session_manager = get_session_manager()
-                        session_id = session_manager.create_db_session(
-                            user_id=result["user"]["id"],
-                            access_token=result["access_token"],
-                            user_info=result["user"],
-                            is_admin=True,
-                            external_token=result.get("external_token"),
-                        )
-
-                        if not session_id:
-                            ui.notify("创建会话失败", type="negative")
-                            return
-
-                        # 保存管理员状态到数据库
-                        UserStateService.save_state(
-                            session_id,
-                            {
-                                "authenticated": True,
-                                "is_admin": True,
-                                "user_info": result["user"],
-                                "access_token": result["access_token"],
-                                "user_id": result["user"]["id"],
-                                "external_token": result.get("external_token"),
-                            },
-                        )
-
-                        print(
-                            f"管理员 {result['user']['username']} 登录成功，会话ID: {session_id}"
-                        )
-                        print(f"[管理员登录] 重定向到 /admin?session_id={session_id}")
-                        ui.notify("管理员登录成功", type="positive")
-
-                        # 使用 NiceGUI 导航跳转，URL 中携带 session_id 参数
-                        # 认证中间件会从 URL 参数获取 session_id
-                        ui.navigate.to(f"/admin?session_id={session_id}")
-                    else:
-                        ui.notify(message, type="negative")
-                except Exception as e:
-                    print(f"管理员登录过程中发生异常: {e}")
-                    import traceback
-
-                    traceback.print_exc()
-                    ui.notify(f"登录失败: {str(e)}", type="negative")
-
-            ui.button("管理员登录", on_click=handle_admin_login).classes(
-                "w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:scale-[1.02]"
+            # 登录按钮
+            login_btn = ui.button("管理员登录").classes(
+                "admin-btn w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md"
             )
 
             # 普通用户登录链接
-            with ui.row().classes("w-full justify-center mt-4"):
-                ui.label("返回普通用户登录").classes("text-gray-600 mr-2")
-                # 将链接目标设为字符串路径，避免把函数对象写入组件属性导致序列化失败
+            with ui.row().classes("w-full justify-center mt-6"):
+                ui.label("返回普通用户登录").classes("text-gray-500 mr-2")
                 ui.link("点击这里", "/login").classes(
-                    "text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                    "text-emerald-500 hover:text-emerald-700 font-medium transition-colors"
                 )
+
+        # 登录处理
+        async def handle_admin_login():
+            """处理管理员登录"""
+            # 显示加载状态
+            login_btn.props("loading")
+            await asyncio.sleep(0.1)
+
+            try:
+                admin_username = admin_username_input.value.strip()
+                admin_password = admin_password_input.value.strip()
+
+                if not admin_username or not admin_password:
+                    login_btn.props("loading=False")
+                    ui.notify("请输入管理员账号和密码", type="warning")
+                    return
+
+                success, result, message = AuthService.login(
+                    admin_username, admin_password
+                )
+
+                if success:
+                    # 检查是否为管理员
+                    if not result["user"].get("is_admin"):
+                        login_btn.props("loading=False")
+                        ui.notify("非管理员账号，请使用普通用户登录", type="negative")
+                        return
+
+                    # 创建数据库会话并获取 session_id
+                    session_manager = get_session_manager()
+                    session_id = session_manager.create_db_session(
+                        user_id=result["user"]["id"],
+                        access_token=result["access_token"],
+                        user_info=result["user"],
+                        is_admin=True,
+                        external_token=result.get("external_token"),
+                    )
+
+                    if not session_id:
+                        login_btn.props("loading=False")
+                        ui.notify("创建会话失败", type="negative")
+                        return
+
+                    # 保存管理员状态到数据库
+                    UserStateService.save_state(
+                        session_id,
+                        {
+                            "authenticated": True,
+                            "is_admin": True,
+                            "user_info": result["user"],
+                            "access_token": result["access_token"],
+                            "user_id": result["user"]["id"],
+                            "external_token": result.get("external_token"),
+                        },
+                    )
+
+                    print(
+                        f"管理员 {result['user']['username']} 登录成功，会话ID: {session_id}"
+                    )
+                    print(f"[管理员登录] 重定向到 /admin?session_id={session_id}")
+                    ui.notify("管理员登录成功", type="positive")
+
+                    # 使用 NiceGUI 导航跳转，URL 中携带 session_id 参数
+                    # 认证中间件会从 URL 参数获取 session_id
+                    ui.navigate.to(f"/admin?session_id={session_id}")
+                else:
+                    login_btn.props("loading=False")
+                    ui.notify(message, type="negative")
+            except Exception as e:
+                login_btn.props("loading=False")
+                print(f"管理员登录过程中发生异常: {e}")
+                import traceback
+
+                traceback.print_exc()
+                ui.notify(f"登录失败: {str(e)}", type="negative")
+
+        login_btn.on_click(handle_admin_login)

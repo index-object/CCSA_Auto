@@ -1,5 +1,6 @@
 """登录页面模块 - 基于数据库存储的会话管理"""
 
+import asyncio
 from fastapi.responses import RedirectResponse
 from nicegui import ui
 from ccsa_auto.modules.auth.service import AuthService
@@ -48,22 +49,131 @@ def create_login_page(navigate_to):
         })();
     """)
 
-    with ui.card().classes(
-        "w-96 h-auto mx-auto my-auto p-6 shadow-lg rounded-lg page-card login-page"
+    # 页面加载动画样式
+    ui.run_javascript("""
+        (function() {
+            var style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes float {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                }
+                .login-bg {
+                    background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+                    min-height: 100vh;
+                }
+                .login-card {
+                    backdrop-filter: blur(10px);
+                    background: rgba(255, 255, 255, 0.95);
+                    animation: fadeInUp 0.6s ease-out;
+                }
+                .login-input {
+                    transition: all 0.3s ease;
+                }
+                .login-input:focus-within {
+                    transform: scale(1.02);
+                }
+                .login-btn {
+                    transition: all 0.3s ease;
+                }
+                .login-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+                }
+                .login-btn:active {
+                    transform: translateY(0);
+                }
+                .decor-circle {
+                    position: absolute;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.15);
+                    animation: float 6s ease-in-out infinite;
+                }
+                .decoration-1 { width: 300px; height: 300px; top: -100px; left: -100px; animation-delay: 0s; }
+                .decoration-2 { width: 200px; height: 200px; bottom: -50px; right: -50px; animation-delay: 2s; }
+                .decoration-3 { width: 150px; height: 150px; top: 50%; right: -75px; animation-delay: 4s; }
+            `;
+            document.head.appendChild(style);
+        })();
+    """)
+
+    # 渐变背景容器
+    with ui.element("div").classes(
+        "w-full min-h-screen login-bg flex items-center justify-center p-4 relative overflow-hidden"
     ):
-        ui.label("用户答题托管平台").classes("text-2xl font-bold text-center mb-6")
+        # 装饰性圆形
+        with ui.element("div").classes("decor-circle decoration-1"):
+            pass
+        with ui.element("div").classes("decor-circle decoration-2"):
+            pass
+        with ui.element("div").classes("decor-circle decoration-3"):
+            pass
 
-        username = ui.input("外部平台账号").classes("w-full mb-4")
-        password = ui.input("外部平台密码", password=True).classes("w-full mb-6")
+        # 登录卡片
+        with ui.card().classes("login-card w-full max-w-sm p-8 rounded-2xl shadow-lg"):
+            # 标题区域
+            with ui.column().classes("w-full items-center mb-8"):
+                ui.label("用户答题托管平台").classes(
+                    "text-2xl font-bold text-center text-gray-800 mb-2"
+                )
+                ui.label("便捷答题，自动托管").classes(
+                    "text-sm text-center text-gray-500"
+                )
 
+            # 输入框区域
+            with ui.column().classes("w-full mb-6"):
+                with ui.row().classes(
+                    "w-full items-center mb-4 login-input bg-gray-50 rounded-xl px-4 py-3 border-2 border-transparent focus-within:border-emerald-400 transition-all"
+                ):
+                    ui.icon("person").classes("text-gray-400 text-xl mr-3")
+                    username = ui.input("外部平台账号").classes(
+                        "flex-1 bg-transparent border-none outline-none text-gray-700 placeholder-gray-400"
+                    )
+
+                with ui.row().classes(
+                    "w-full items-center mb-2 login-input bg-gray-50 rounded-xl px-4 py-3 border-2 border-transparent focus-within:border-emerald-400 transition-all"
+                ):
+                    ui.icon("lock").classes("text-gray-400 text-xl mr-3")
+                    password = ui.input("外部平台密码", password=True).classes(
+                        "flex-1 bg-transparent border-none outline-none text-gray-700 placeholder-gray-400"
+                    )
+
+            # 登录按钮
+            login_btn = ui.button("登 录").classes(
+                "login-btn w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md"
+            )
+
+            # 底部链接
+            with ui.row().classes("w-full justify-center mt-6"):
+                ui.label("返回管理员登录").classes("text-white/70 mr-2")
+                ui.link("点击这里", "/admin_login").classes(
+                    "text-white hover:text-white/80 font-medium transition-colors"
+                )
+
+        # 登录处理
         async def on_login(e):
             """登录处理"""
+            # 显示加载状态
+            login_btn.props("loading")
+            await asyncio.sleep(0.1)
+
             data = {"username": username.value, "password": password.value}
 
             # 调用认证服务
             success, result, message = AuthService.login(
                 data["username"], data["password"]
             )
+
             if success:
                 # 创建数据库会话并获取 session_id
                 session_manager = get_session_manager()
@@ -76,6 +186,7 @@ def create_login_page(navigate_to):
                 )
 
                 if not session_id:
+                    login_btn.props("loading=False")
                     ui.notify("创建会话失败", type="negative")
                     return
 
@@ -101,8 +212,7 @@ def create_login_page(navigate_to):
                 # 认证中间件会从 URL 参数获取 session_id
                 ui.navigate.to(f"/?session_id={session_id}")
             else:
+                login_btn.props("loading=False")
                 ui.notify(message, type="negative")
 
-        ui.button("登录", on_click=on_login).classes(
-            "w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded"
-        )
+        login_btn.on_click(on_login)
