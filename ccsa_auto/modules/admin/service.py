@@ -5,6 +5,7 @@ from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import User, Task, Announcement
 from ccsa_auto.modules.announcement.service import AnnouncementService
 from ccsa_auto.modules.logging.service import LoggingService
+from ccsa_auto.modules.task.scheduler import remove_task_from_scheduler
 from ccsa_auto.utils.timezone import format_datetime_for_display, get_current_time
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,7 @@ class AdminService:
                     {
                         "id": user.id,
                         "username": user.username,
+                        "name": user.name,
                         "external_username": user.external_username,
                         "company_name": user.company_name,
                         "status": user.status,

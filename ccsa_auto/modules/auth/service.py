@@ -261,8 +261,10 @@ class AuthService:
                 if user_info and user_info.get("company_name"):
                     existing_user.company_name = user_info.get("company_name")
 
+                # 将外部API返回的用户名（nickName）保存到 `name` 字段，
+                # 保持 `external_username` 为登录账号 `username`
                 if user_info and user_info.get("username"):
-                    existing_user.external_username = user_info.get("username")
+                    existing_user.name = user_info.get("username")
 
                 if external_token:
                     existing_user.external_token = external_token
@@ -287,6 +289,7 @@ class AuthService:
             new_user = User(
                 username=username,
                 password=hash_password(password),
+                name=user_info.get("username", ""),
                 external_username=username,
                 external_password=password,
                 company_name=user_info.get("company_name", ""),

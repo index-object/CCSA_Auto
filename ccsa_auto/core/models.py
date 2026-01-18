@@ -23,6 +23,7 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False, index=True)
     password = Column(String(255), nullable=False)
     nickname = Column(String(100))
+    name = Column(String(100))  # 来自外部用户信息的姓名
     external_username = Column(String(100))  # 外部平台用户名
     external_password = Column(String(255))  # 外部平台密码（加密存储）
     company_name = Column(String(255))  # 公司名称
@@ -47,6 +48,7 @@ class User(Base):
             "username": self.username,
             "nickname": self.nickname,
             "external_username": self.external_username,
+            "name": self.name,
             "company_name": self.company_name,
             "status": self.status,
             "is_admin": self.is_admin,
