@@ -130,6 +130,16 @@ class TaskService:
 
             logger.info(f"获取到 {len(questions)} 道试题")
 
+            # 应用控分策略
+            from ccsa_auto.modules.task.score_strategy import ScoreStrategy
+
+            questions, score_strategy = ScoreStrategy.modify_answers_for_score_control(
+                questions, "daily", user_id
+            )
+            logger.info(
+                f"控分策略: {score_strategy['reason']}, 预期得分: {score_strategy['score']}/{score_strategy['max_score']}"
+            )
+
             # 3. 准备提交数据
             use_time = random.randint(120, 300)  # 随机生成 2~5 分钟的答题时间
             payload = {
@@ -160,10 +170,25 @@ class TaskService:
 
             if submit_json.get("code") == 200:
                 logger.info("每日一题执行成功")
+
+                # 记录得分
+                from ccsa_auto.modules.task.score_tracker import ScoreTracker
+
+                ScoreTracker.record_score(
+                    user_id=user_id,
+                    task_id=None,
+                    task_type="daily",
+                    total_questions=len(questions),
+                    correct_questions=score_strategy["correct_questions"],
+                    score=score_strategy["score"],
+                    max_score=score_strategy["max_score"],
+                )
+
                 return {
                     "success": True,
                     "message": "每日一题执行成功",
                     "result": submit_json.get("data", {}),
+                    "score_strategy": score_strategy,
                 }
             else:
                 error_msg = f"提交答案失败: {submit_json.get('msg', '未知错误')}"
@@ -259,10 +284,31 @@ class TaskService:
 
             if submit_json.get("code") == 200:
                 logger.info(f"[WEEKLY_LESSON] 每周一课执行成功")
+
+                # 记录得分
+                from ccsa_auto.modules.task.score_tracker import ScoreTracker
+
+                ScoreTracker.record_score(
+                    user_id=user_id,
+                    task_id=None,
+                    task_type="weekly",
+                    total_questions=0,
+                    correct_questions=0,
+                    score=50.0,
+                    max_score=50.0,
+                )
+
                 return {
                     "success": True,
                     "message": "每周一课执行成功",
                     "result": submit_json.get("data", {}),
+                    "score_strategy": {
+                        "correct_questions": 0,
+                        "score": 50.0,
+                        "max_score": 50.0,
+                        "score_ratio": 1.0,
+                        "reason": "每周一课固定50分",
+                    },
                 }
             else:
                 error_msg = f"提交学习记录失败: {submit_json.get('msg', '未知错误')}"
@@ -348,6 +394,16 @@ class TaskService:
                 for question in question_list
             ]
 
+            # 应用控分策略
+            from ccsa_auto.modules.task.score_strategy import ScoreStrategy
+
+            questions, score_strategy = ScoreStrategy.modify_answers_for_score_control(
+                questions, "monthly", user_id
+            )
+            logger.info(
+                f"控分策略: {score_strategy['reason']}, 预期得分: {score_strategy['score']}/{score_strategy['max_score']}"
+            )
+
             # 3. 准备提交数据
             use_time = random.randint(300, 500)  # 随机生成答题时间
             payload = {
@@ -376,10 +432,24 @@ class TaskService:
             submit_json = submit_response.json()
 
             if submit_json.get("code") == 200:
+                # 记录得分
+                from ccsa_auto.modules.task.score_tracker import ScoreTracker
+
+                ScoreTracker.record_score(
+                    user_id=user_id,
+                    task_id=None,
+                    task_type="monthly",
+                    total_questions=len(questions),
+                    correct_questions=score_strategy["correct_questions"],
+                    score=score_strategy["score"],
+                    max_score=score_strategy["max_score"],
+                )
+
                 return {
                     "success": True,
                     "message": "每月一考执行成功",
                     "result": submit_json.get("data", {}),
+                    "score_strategy": score_strategy,
                 }
             else:
                 return {
