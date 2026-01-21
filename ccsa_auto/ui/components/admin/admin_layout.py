@@ -166,9 +166,9 @@ def create_admin_layout(
             )
             with sidebar_container:
                 create_sidebar(current_tab, on_tab_change)
-            content_container = ui.column().classes(
-                "flex-1 overflow-auto p-8 bg-gray-50"
-            )
-            with content_container:
-                render_content(current_tab)
+            with ui.column().classes("flex-1 h-full overflow-hidden"):
+                content_container = ui.column().classes("p-8 bg-gray-50 h-full")
+                content_container.style("overflow-y: auto; overflow-x: hidden;")
+                with content_container:
+                    render_content(current_tab)
     return sidebar_container, content_container
