@@ -9,10 +9,9 @@ from ccsa_auto.ui.components.admin.common import (
 
 
 def create_announcement_management():
-    """创建公告管理页面 - 现代化增强版"""
+    """创建公告管理页面"""
     loading = LoadingOverlay("加载公告数据中...")
 
-    # 页面标题
     header = PageHeader(
         title="公告管理",
         subtitle="发布和管理系统公告",
@@ -20,46 +19,66 @@ def create_announcement_management():
     )
     header.render()
 
-    # 发布/编辑表单
     with ui.card().classes(
-        "w-full p-6 mb-6 bg-white rounded-xl border border-gray-200 shadow-sm"
+        "w-full p-6 mb-6 bg-white rounded-2xl border border-gray-200 shadow-sm"
     ):
-        ui.label("发布公告").classes("text-lg font-semibold text-gray-800 mb-4")
+        with ui.row().classes("items-center justify-between mb-4"):
+            with ui.row().classes("items-center gap-3"):
+                with ui.row().classes(
+                    "w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 "
+                    "flex items-center justify-center shadow-lg shadow-blue-200"
+                ):
+                    ui.icon("edit_note").classes("w-5 h-5 text-white")
+                ui.label("发布公告").classes("text-xl font-bold text-gray-800")
 
         with ui.row().classes("w-full gap-4"):
             title_input = ui.input("标题").classes(
-                "flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 "
-                "rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                "flex-1 px-4 py-3 bg-gray-50 border border-gray-200 "
+                "rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 "
+                "focus:border-blue-400 transition-all placeholder:text-gray-400 text-gray-700 text-lg"
             )
 
         content_input = ui.textarea("内容").classes(
-            "w-full h-32 px-4 py-2.5 bg-gray-50 border border-gray-200 "
-            "rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 mt-4"
+            "w-full h-40 px-4 py-3 bg-gray-50 border border-gray-200 "
+            "rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 "
+            "focus:border-blue-400 transition-all resize-none text-gray-700 mt-4 text-lg"
         )
 
-        with ui.row().classes("gap-3 mt-4"):
-            publish_btn = ui.button("发布公告").classes(
-                "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        with ui.row().classes("gap-3 mt-5"):
+            publish_btn = ui.button("发布公告", icon="send").classes(
+                "bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 "
+                "transition-all duration-200 shadow-lg shadow-blue-200 hover:shadow-blue-300 "
+                "font-medium text-lg"
             )
-            save_btn = ui.button("保存修改").classes(
-                "bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+            save_btn = ui.button("保存修改", icon="save").classes(
+                "bg-emerald-600 text-white px-6 py-3 rounded-xl hover:bg-emerald-700 "
+                "transition-all duration-200 shadow-lg shadow-emerald-200 hover:shadow-emerald-300 "
+                "font-medium text-lg"
             )
-            clear_btn = ui.button("清空").classes(
-                "bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+            clear_btn = ui.button("清空", icon="clear").classes(
+                "bg-white text-gray-700 px-6 py-3 rounded-xl border-2 border-gray-200 "
+                "hover:border-blue-400 hover:text-blue-600 transition-all duration-200 "
+                "font-medium text-lg"
             )
 
-    # 公告列表
     with ui.card().classes(
-        "w-full bg-white rounded-xl border border-gray-200 shadow-sm"
+        "w-full bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
     ):
         with ui.row().classes(
-            "items-center justify-between px-4 py-3 border-b border-gray-200"
+            "items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50"
         ):
-            ui.label("公告列表").classes("text-lg font-semibold text-gray-800")
+            with ui.row().classes("items-center gap-3"):
+                with ui.row().classes(
+                    "w-10 h-10 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 "
+                    "flex items-center justify-center"
+                ):
+                    ui.icon("list").classes("w-5 h-5 text-gray-600")
+                ui.label("公告列表").classes("text-xl font-bold text-gray-800")
             refresh_list_btn = (
                 ui.button(icon="refresh")
                 .classes(
-                    "p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
+                    "p-2.5 rounded-xl hover:bg-blue-50 hover:text-blue-600 "
+                    "text-gray-500 transition-all duration-200"
                 )
                 .props("flat round size='sm'")
             )
@@ -81,10 +100,8 @@ def create_announcement_management():
             row_key="id",
         ).classes("w-full")
 
-    # 状态变量
     editing_id = [None]
 
-    # 定义函数
     def refresh_announcements():
         loading.show()
         try:
@@ -159,11 +176,9 @@ def create_announcement_management():
         content_input.value = ""
         editing_id[0] = None
 
-    # 绑定事件
     publish_btn.on("click", create_announcement)
     save_btn.on("click", update_announcement)
     clear_btn.on("click", clear_form)
     refresh_list_btn.on("click", refresh_announcements)
 
-    # 初始加载
     refresh_announcements()

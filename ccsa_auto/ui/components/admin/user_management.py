@@ -9,10 +9,9 @@ from ccsa_auto.ui.components.admin.common import (
 
 
 def create_user_management():
-    """创建用户管理页面 - 现代化增强版"""
+    """创建用户管理页面"""
     loading = LoadingOverlay("加载用户数据中...")
 
-    # 页面标题
     header = PageHeader(
         title="用户管理",
         subtitle="管理系统用户账户和权限状态",
@@ -20,33 +19,35 @@ def create_user_management():
     )
     header.render()
 
-    # 筛选工具栏
     with ui.row().classes(
-        "items-center gap-4 p-4 bg-white rounded-xl border border-gray-200 "
-        "shadow-sm mb-4 flex-wrap"
+        "items-center gap-4 p-5 bg-white rounded-2xl border border-gray-200 "
+        "shadow-sm mb-6 flex-wrap"
     ):
         keyword_input = ui.input("搜索账号/姓名/公司").classes(
-            "w-64 px-4 py-2.5 bg-gray-50 border border-gray-200 "
-            "rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 "
-            "focus:border-blue-400 transition-all"
+            "flex-1 min-w-[250px] px-4 py-3 bg-gray-50 border border-gray-200 "
+            "rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 "
+            "focus:border-blue-400 transition-all placeholder:text-gray-400 text-gray-700 text-lg"
         )
         status_select = ui.select(
             {None: "全部状态", 0: "正常", 1: "封号"},
             label="状态",
             value=None,
         ).classes(
-            "w-32 px-4 py-2.5 bg-gray-50 border border-gray-200 "
-            "rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            "w-36 px-4 py-3 bg-gray-50 border border-gray-200 "
+            "rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-lg"
         )
 
-        search_btn = ui.button("搜索").classes(
-            "bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        search_btn = ui.button("搜索", icon="search").classes(
+            "bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 "
+            "transition-all duration-200 shadow-lg shadow-blue-200 hover:shadow-blue-300 "
+            "font-medium text-lg"
         )
-        refresh_btn = ui.button("刷新").classes(
-            "bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+        refresh_btn = ui.button("刷新", icon="refresh").classes(
+            "bg-white text-gray-700 px-6 py-3 rounded-xl border-2 border-gray-200 "
+            "hover:border-blue-400 hover:text-blue-600 transition-all duration-200 "
+            "font-medium text-lg"
         )
 
-    # 用户表格
     user_table = ui.table(
         columns=[
             {
@@ -82,24 +83,27 @@ def create_user_management():
         row_key="id",
         selection="multiple",
     ).classes(
-        "w-full bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+        "w-full bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
     )
 
-    # 批量操作栏
     with ui.row().classes(
-        "items-center gap-3 mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100"
+        "items-center gap-4 mt-5 p-4 bg-blue-50 rounded-2xl border border-blue-100"
     ):
-        ui.icon("info").classes("w-5 h-5 text-blue-600")
-        ui.label("批量操作").classes("text-blue-800 font-medium text-sm")
-        ui.separator().classes("h-6 w-px bg-blue-200")
+        with ui.row().classes(
+            "w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center"
+        ):
+            ui.icon("info").classes("w-5 h-5 text-white")
+        ui.label("批量操作").classes("text-blue-800 font-bold text-base")
+        ui.separator().classes("h-8 w-px bg-blue-300")
         ban_btn = ui.button("批量封禁").classes(
-            "bg-red-600 text-white px-4 py-1.5 rounded-lg hover:bg-red-700 transition-colors text-sm"
+            "bg-red-600 text-white px-5 py-2.5 rounded-xl hover:bg-red-700 "
+            "transition-all duration-200 text-base font-medium shadow-lg shadow-red-200"
         )
         unban_btn = ui.button("批量解封").classes(
-            "bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 transition-colors text-sm"
+            "bg-emerald-600 text-white px-5 py-2.5 rounded-xl hover:bg-emerald-700 "
+            "transition-all duration-200 text-base font-medium shadow-lg shadow-emerald-200"
         )
 
-    # 定义函数
     def refresh_users():
         loading.show()
         try:
@@ -144,11 +148,9 @@ def create_user_management():
         else:
             Toast.error(result["message"])
 
-    # 绑定事件
     search_btn.on("click", refresh_users)
     refresh_btn.on("click", refresh_users)
     ban_btn.on("click", lambda: batch_update_status(1))
     unban_btn.on("click", lambda: batch_update_status(0))
 
-    # 初始加载
     refresh_users()

@@ -9,11 +9,10 @@ from ccsa_auto.ui.components.admin.common import (
 
 
 def create_log_management():
-    """创建操作日志页面 - 现代化增强版"""
+    """创建操作日志页面"""
     loading = LoadingOverlay("加载日志数据中...")
     current_page = [1]
 
-    # 页面标题
     header = PageHeader(
         title="操作日志",
         subtitle="查看系统操作记录和审计日志",
@@ -21,10 +20,9 @@ def create_log_management():
     )
     header.render()
 
-    # 筛选工具栏
     with ui.row().classes(
-        "items-center gap-4 p-4 bg-white rounded-xl border border-gray-200 "
-        "shadow-sm mb-4 flex-wrap"
+        "items-center gap-4 p-5 bg-white rounded-2xl border border-gray-200 "
+        "shadow-sm mb-6 flex-wrap"
     ):
         log_type_select = ui.select(
             {
@@ -37,22 +35,25 @@ def create_log_management():
             label="日志类型",
             value="all",
         ).classes(
-            "w-36 px-4 py-2.5 bg-gray-50 border border-gray-200 "
-            "rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            "w-40 px-4 py-3 bg-gray-50 border border-gray-200 "
+            "rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-lg"
         )
         log_user_input = ui.input("用户ID").classes(
-            "w-32 px-4 py-2.5 bg-gray-50 border border-gray-200 "
-            "rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            "w-36 px-4 py-3 bg-gray-50 border border-gray-200 "
+            "rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-lg"
         )
 
-        filter_btn = ui.button("筛选").classes(
-            "bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        filter_btn = ui.button("筛选", icon="filter_list").classes(
+            "bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 "
+            "transition-all duration-200 shadow-lg shadow-blue-200 hover:shadow-blue-300 "
+            "font-medium text-lg"
         )
-        export_btn = ui.button("导出XLSX").classes(
-            "bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+        export_btn = ui.button("导出XLSX", icon="download").classes(
+            "bg-white text-gray-700 px-6 py-3 rounded-xl border-2 border-gray-200 "
+            "hover:border-blue-400 hover:text-blue-600 transition-all duration-200 "
+            "font-medium text-lg"
         )
 
-    # 日志表格
     log_table = ui.table(
         columns=[
             {
@@ -75,23 +76,26 @@ def create_log_management():
         rows=[],
         row_key="id",
     ).classes(
-        "w-full bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+        "w-full bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
     )
 
-    # 分页信息
-    page_info = ui.label("第 1 页").classes("text-center text-gray-600")
+    page_info = ui.label("第 1 页").classes(
+        "text-center text-gray-600 font-medium text-lg"
+    )
 
-    # 分页控制
-    with ui.row().classes("justify-center items-center mt-4 gap-4"):
-        prev_btn = ui.button("上一页").classes(
-            "px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50"
+    with ui.row().classes(
+        "justify-center items-center mt-6 gap-4 bg-white px-6 py-4 rounded-2xl border border-gray-200 shadow-sm"
+    ):
+        prev_btn = ui.button("上一页", icon="chevron_left").classes(
+            "px-5 py-2.5 bg-gray-50 border-2 border-gray-200 text-gray-600 rounded-xl "
+            "hover:border-blue-400 hover:text-blue-600 transition-all duration-200 font-medium"
         )
         page_info
-        next_btn = ui.button("下一页").classes(
-            "px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50"
+        next_btn = ui.button("下一页", icon="chevron_right").classes(
+            "px-5 py-2.5 bg-gray-50 border-2 border-gray-200 text-gray-600 rounded-xl "
+            "hover:border-blue-400 hover:text-blue-600 transition-all duration-200 font-medium"
         )
 
-    # 定义函数
     def refresh_logs():
         loading.show()
         try:
@@ -141,11 +145,9 @@ def create_log_management():
         else:
             Toast.error("导出失败")
 
-    # 绑定事件
     filter_btn.on("click", refresh_logs)
     export_btn.on("click", export_logs)
     prev_btn.on("click", lambda: change_page(-1))
     next_btn.on("click", lambda: change_page(1))
 
-    # 初始加载
     refresh_logs()

@@ -9,10 +9,9 @@ from ccsa_auto.ui.components.admin.common import (
 
 
 def create_task_management():
-    """创建任务管理页面 - 现代化增强版"""
+    """创建任务管理页面"""
     loading = LoadingOverlay("加载任务数据中...")
 
-    # 页面标题
     header = PageHeader(
         title="任务管理",
         subtitle="管理系统定时任务和执行状态",
@@ -20,15 +19,14 @@ def create_task_management():
     )
     header.render()
 
-    # 筛选工具栏
     with ui.row().classes(
-        "items-center gap-4 p-4 bg-white rounded-xl border border-gray-200 "
-        "shadow-sm mb-4 flex-wrap"
+        "items-center gap-4 p-5 bg-white rounded-2xl border border-gray-200 "
+        "shadow-sm mb-6 flex-wrap"
     ):
         task_keyword = ui.input("搜索用户").classes(
-            "w-64 px-4 py-2.5 bg-gray-50 border border-gray-200 "
-            "rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 "
-            "focus:border-blue-400 transition-all"
+            "flex-1 min-w-[250px] px-4 py-3 bg-gray-50 border border-gray-200 "
+            "rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 "
+            "focus:border-blue-400 transition-all placeholder:text-gray-400 text-gray-700 text-lg"
         )
         task_type_select = ui.select(
             {
@@ -40,18 +38,21 @@ def create_task_management():
             label="任务类型",
             value=None,
         ).classes(
-            "w-36 px-4 py-2.5 bg-gray-50 border border-gray-200 "
-            "rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            "w-40 px-4 py-3 bg-gray-50 border border-gray-200 "
+            "rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-lg"
         )
 
-        search_btn = ui.button("搜索").classes(
-            "bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        search_btn = ui.button("搜索", icon="search").classes(
+            "bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 "
+            "transition-all duration-200 shadow-lg shadow-blue-200 hover:shadow-blue-300 "
+            "font-medium text-lg"
         )
-        refresh_btn = ui.button("刷新").classes(
-            "bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+        refresh_btn = ui.button("刷新", icon="refresh").classes(
+            "bg-white text-gray-700 px-6 py-3 rounded-xl border-2 border-gray-200 "
+            "hover:border-blue-400 hover:text-blue-600 transition-all duration-200 "
+            "font-medium text-lg"
         )
 
-    # 任务表格
     task_table = ui.table(
         columns=[
             {
@@ -96,37 +97,64 @@ def create_task_management():
         rows=[],
         row_key="id",
     ).classes(
-        "w-full bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+        "w-full bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
     )
 
-    # 任务统计卡片
-    with ui.row().classes("gap-4 mb-4 flex-wrap"):
+    with ui.row().classes("gap-5 mb-6 flex-wrap"):
         with ui.card().classes(
-            "p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200"
+            "flex-1 min-w-[240px] p-5 bg-white rounded-2xl border border-gray-200 "
+            "shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
         ):
-            with ui.row().classes("items-center gap-3"):
-                ui.icon("pending_actions").classes("w-10 h-10 text-blue-500")
+            with ui.row().classes("items-center gap-4"):
+                with ui.row().classes(
+                    "w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 "
+                    "flex items-center justify-center"
+                ):
+                    ui.icon("pending_actions").classes("w-6 h-6 text-blue-600")
                 with ui.column().classes("items-start"):
-                    ui.label("待执行").classes("text-sm text-blue-600 font-medium")
-                    ui.label("0").classes("text-2xl font-bold text-blue-800")
-        with ui.card().classes(
-            "p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200"
-        ):
-            with ui.row().classes("items-center gap-3"):
-                ui.icon("check_circle").classes("w-10 h-10 text-green-500")
-                with ui.column().classes("items-start"):
-                    ui.label("已完成").classes("text-sm text-green-600 font-medium")
-                    ui.label("0").classes("text-2xl font-bold text-green-800")
-        with ui.card().classes(
-            "p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-xl border border-red-200"
-        ):
-            with ui.row().classes("items-center gap-3"):
-                ui.icon("error").classes("w-10 h-10 text-red-500")
-                with ui.column().classes("items-start"):
-                    ui.label("失败").classes("text-sm text-red-600 font-medium")
-                    ui.label("0").classes("text-2xl font-bold text-red-800")
+                    ui.label("待执行").classes(
+                        "text-sm font-semibold text-gray-500 uppercase tracking-wide"
+                    )
+                    ui.label("0").classes(
+                        "text-4xl font-bold text-gray-800 mt-1 tracking-tight"
+                    )
 
-    # 定义函数
+        with ui.card().classes(
+            "flex-1 min-w-[240px] p-5 bg-white rounded-2xl border border-gray-200 "
+            "shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+        ):
+            with ui.row().classes("items-center gap-4"):
+                with ui.row().classes(
+                    "w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-200 "
+                    "flex items-center justify-center"
+                ):
+                    ui.icon("check_circle").classes("w-6 h-6 text-emerald-600")
+                with ui.column().classes("items-start"):
+                    ui.label("已完成").classes(
+                        "text-sm font-semibold text-gray-500 uppercase tracking-wide"
+                    )
+                    ui.label("0").classes(
+                        "text-4xl font-bold text-gray-800 mt-1 tracking-tight"
+                    )
+
+        with ui.card().classes(
+            "flex-1 min-w-[240px] p-5 bg-white rounded-2xl border border-gray-200 "
+            "shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+        ):
+            with ui.row().classes("items-center gap-4"):
+                with ui.row().classes(
+                    "w-12 h-12 rounded-2xl bg-gradient-to-br from-red-100 to-red-200 "
+                    "flex items-center justify-center"
+                ):
+                    ui.icon("error").classes("w-6 h-6 text-red-600")
+                with ui.column().classes("items-start"):
+                    ui.label("失败").classes(
+                        "text-sm font-semibold text-gray-500 uppercase tracking-wide"
+                    )
+                    ui.label("0").classes(
+                        "text-4xl font-bold text-gray-800 mt-1 tracking-tight"
+                    )
+
     def refresh_tasks():
         loading.show()
         try:
@@ -202,9 +230,7 @@ def create_task_management():
         else:
             Toast.error(result["message"])
 
-    # 绑定事件
     search_btn.on("click", refresh_tasks)
     refresh_btn.on("click", refresh_tasks)
 
-    # 初始加载
     refresh_tasks()
