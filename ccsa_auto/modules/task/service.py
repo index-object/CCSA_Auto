@@ -106,11 +106,42 @@ class TaskService:
             question_response_json = question_response.json()
 
             if question_response_json.get("code") != 200:
-                error_msg = (
-                    f"获取试题信息失败: {question_response_json.get('msg', '未知错误')}"
-                )
-                logger.error(error_msg)
-                return {"success": False, "message": error_msg}
+                error_msg = question_response_json.get("msg", "未知错误")
+                # 检查是否包含"您已完成此考试！"的消息，如果是则视为成功
+                if "您已完成此考试！" in error_msg:
+                    logger.info(f"检测到已完成考试消息: {error_msg}，视为任务成功")
+
+                    # 记录得分（即使已完成，也记录得分）
+                    from ccsa_auto.modules.task.score_tracker import ScoreTracker
+                    from ccsa_auto.modules.task.score_strategy import ScoreStrategy
+
+                    # 获取控分策略
+                    score_strategy = ScoreStrategy.calculate_strategy(
+                        user_id, "daily", 0, 0.0
+                    )
+
+                    ScoreTracker.record_score(
+                        user_id=user_id,
+                        task_id=None,
+                        task_type="daily",
+                        total_questions=0,
+                        correct_questions=score_strategy["correct_questions"],
+                        score=score_strategy["score"],
+                        max_score=score_strategy["max_score"],
+                    )
+
+                    return {
+                        "success": True,
+                        "message": f"每日一题已完成: {error_msg}",
+                        "result": question_response_json.get("data", {}),
+                        "score_strategy": score_strategy,
+                    }
+                else:
+                    logger.error(f"获取试题信息失败: {error_msg}")
+                    return {
+                        "success": False,
+                        "message": f"获取试题信息失败: {error_msg}",
+                    }
 
             # 封装试题数据
             question_data = question_response_json.get("data", {})
@@ -520,10 +551,41 @@ class TaskService:
             question_response_json = question_response.json()
 
             if question_response_json.get("code") != 200:
-                return {
-                    "success": False,
-                    "message": f"获取试题信息失败: {question_response_json.get('msg', '未知错误')}",
-                }
+                error_msg = question_response_json.get("msg", "未知错误")
+                # 检查是否包含"您已完成此考试！"的消息，如果是则视为成功
+                if "您已完成此考试！" in error_msg:
+                    logger.info(f"检测到已完成考试消息: {error_msg}，视为任务成功")
+
+                    # 记录得分（即使已完成，也记录得分）
+                    from ccsa_auto.modules.task.score_tracker import ScoreTracker
+                    from ccsa_auto.modules.task.score_strategy import ScoreStrategy
+
+                    # 获取控分策略
+                    score_strategy = ScoreStrategy.calculate_strategy(
+                        user_id, "monthly", 0, 0.0
+                    )
+
+                    ScoreTracker.record_score(
+                        user_id=user_id,
+                        task_id=None,
+                        task_type="monthly",
+                        total_questions=0,
+                        correct_questions=score_strategy["correct_questions"],
+                        score=score_strategy["score"],
+                        max_score=score_strategy["max_score"],
+                    )
+
+                    return {
+                        "success": True,
+                        "message": f"每月一考已完成: {error_msg}",
+                        "result": question_response_json.get("data", {}),
+                        "score_strategy": score_strategy,
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": f"获取试题信息失败: {error_msg}",
+                    }
 
             # 封装试题数据
             question_data = question_response_json.get("data", {})
