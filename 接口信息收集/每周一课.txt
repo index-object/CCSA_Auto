@@ -63,6 +63,100 @@ curl 'https://edu.axdxa.cn/prod-api/progress/app/regularCourseWeek/2007828829376
         "ifCollectionThisWeek": null
     }
 }
+规则设置：
+curl 'https://edu.axdxa.cn/prod-api/progress/app/regularCourseWeekRuleSetting/2012453377564749825?id=2012453377564749825' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzEzNzczNzY0NjA5Iiwicm5TdHIiOiJ4N05yVHZrMWt2bFZBWWlZREFqdEY5WWFEOTFURkwyQiIsImNsaWVudGlkIjoiZTVjZDdlNDg5MWJmOTVkMWQxOTIwNmNlMjRhN2IzMmUiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MTM3NzM3NjQ2MDksInVzZXJOYW1lIjoiMTg3KioqKjA1MTgifQ.em6qzec7KdTSPszDdNvuttlcC9BprK04NF_Y10sLoEc' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV; p_h5_u=598BFCB1-1FFB-4ED5-97E3-6FCA73353952; selectedStreamLevel=FD; selectedCC=off' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/weekClass/home?id=2012453377564749825' \
+  -H 'sec-ch-ua: "Not(A:Brand";v="8", "Chromium";v="144", "Microsoft Edge";v="144"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0'
+响应：{
+    "code": 200,
+    "msg": "操作成功",
+    "data": {
+        "id": "2012453377631858689",
+        "courseWeekId": "2012453377564749825",
+        "viewTimeRatio": 100,
+        "availableScore": 50,
+        "prohibitDrag": 1,
+        "prohibitSpeed": 1,
+        "openFaceDetect": 0,
+        "faultToleranceTime": 1,
+        "snapIntervalTime": 1,
+        "faultToleranceTimeUnit": 1,
+        "snapIntervalTimeUnit": 1,
+        "maxSnapNum": 1,
+        "remark": null
+    }
+}
+
+
+每周一课准备：
+curl 'https://edu.axdxa.cn/prod-api/system/app/config/configKey/vodReportingFrequency' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzEzNzczNzY0NjA5Iiwicm5TdHIiOiJ4N05yVHZrMWt2bFZBWWlZREFqdEY5WWFEOTFURkwyQiIsImNsaWVudGlkIjoiZTVjZDdlNDg5MWJmOTVkMWQxOTIwNmNlMjRhN2IzMmUiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MTM3NzM3NjQ2MDksInVzZXJOYW1lIjoiMTg3KioqKjA1MTgifQ.em6qzec7KdTSPszDdNvuttlcC9BprK04NF_Y10sLoEc' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV; p_h5_u=598BFCB1-1FFB-4ED5-97E3-6FCA73353952; selectedStreamLevel=FD; selectedCC=off' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/weekClass/home?id=2012453377564749825' \
+  -H 'sec-ch-ua: "Not(A:Brand";v="8", "Chromium";v="144", "Microsoft Edge";v="144"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0'
+
+响应：{"code":200,"msg":"操作成功","data":"120"}
+
+获取视频链接：
+curl 'https://edu.axdxa.cn/prod-api/platform-resource/app/resourceVideo/selectUrlByVodId' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzEzNzczNzY0NjA5Iiwicm5TdHIiOiJ4N05yVHZrMWt2bFZBWWlZREFqdEY5WWFEOTFURkwyQiIsImNsaWVudGlkIjoiZTVjZDdlNDg5MWJmOTVkMWQxOTIwNmNlMjRhN2IzMmUiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MTM3NzM3NjQ2MDksInVzZXJOYW1lIjoiMTg3KioqKjA1MTgifQ.em6qzec7KdTSPszDdNvuttlcC9BprK04NF_Y10sLoEc' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -H 'content-type: application/json;charset=UTF-8' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV; p_h5_u=598BFCB1-1FFB-4ED5-97E3-6FCA73353952; selectedStreamLevel=FD; selectedCC=off' \
+  -H 'origin: https://edu.axdxa.cn' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/weekClass/home?id=2012453377564749825' \
+  -H 'sec-ch-ua: "Not(A:Brand";v="8", "Chromium";v="144", "Microsoft Edge";v="144"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0' \
+  --data-raw '{"vodId":"209e6aaff38771f0bfb4752281ec0102","getPlayType":2,"resourceRelationId":"2012453377564749825","courseType":4}'
+
+  响应：{
+    "code": 200,
+    "msg": "操作成功",
+    "data": {
+        "vodId": "209e6aaff38771f0bfb4752281ec0102",
+        "courseId": null,
+        "getPlayType": 2,
+        "resourceRelationId": "2012453377564749825",
+        "previewTime": "0",
+        "results": "eyJTZWN1cml0eVRva2VuIjoiQ0FJUzFBTjFxNkZ0NUIyeWZTaklyNW4vSWREQmxKTVQ4L08rVmtIVGdsZ2RkdUpIMnFQK3JEejJJSGhNZjNWc0J1c2J0UDgxbVdsWTZmb1NscklxRWNBZkhCV2NQSnN2dDhVTnJscjRKb0hidk5ldTBic0hoWnY5dU9rcnU4aWdqcUhvZU96Y1lJNzMwWjdQQWdtMlEwWVJySkwrY1RLOUphYk1VL21nZ29KbWFkSTZSeFN4YVNFOGF2NWRPZ3BscnIwSVZ4elBNdnIvSFJQMnVtN1pIV3R1dEEwZTgzMTQ1ZmFRejlHaTZ4YlRpM2I5ek9FVXFPYVhKNFMvUGZGb05ZWnlTZjZvd093VUVxL2R5M3hvN3hGYjFhRjRpODRpL0N2YzdQMlFDRU5BK3dtbFB2dTJpOE5vSUYxV2E3UVdJWXRncmZQeGsrWjEySmJOa0lpbDVCdFJFZHR3ZUNuRldLR216c3krYjRIUEROc2ljcXZoTUhuZ3k4MkdNb0tQMHprcGVuVUdMZ2hIQ2JGRFF6MVNjVVYyRld1RGMvZjJxQStUTTEzOEV2Ry92ZnRvZ2NZdi9UTEI1c0dYSWxXRGViS2QzQnNETjRVMEIwRlNiRVpPaGpDOUxmUmJLVmNXTGdvM1dPckZWL2xhYUJGUHRLWFdtaUgrV3lOcDAzVkxoZnI2YXVOcGJnUHIxVVFwTlhndjhQMytCUHd1MndOQ0p6eDh5d2E5QS9WQ2Z5V2p6ZUxqSEJWSi9UdHI5UDdrcHF2YUtLWHRLZXRNbVQ0QkdrdXFwR0hHVW5nTEJrQ2ZxNk5sQnhQMmxNcTUyLzVNQmM0SWVHTWFnQUZKSDFGc3ZOeWxNNHNzbmxreUdjR05lT2FSRmluWStxRG5ybnhWakdRZ2hTcVlCaE1oMDFZQ3FzcEdlQVord1dHeURBeit3ZDRWYmZscUh5ZTZ0dnJKVCtDd01TdG02UDk5eHhxVnFPSUc4R3FNeFV6eEdiRFQ3YWIvSVZWeWRhWWdkSXkyeWtFZ1ljQW9iZ3VSejl5NXUrNVdLZitXNGNRcEFoR2dOT2UrdnlBQSIsIkF1dGhJbmZvIjoie1wiQ0lcIjpcIlRoMnFySmJTL0FIb25HZ2lnaG5SMjRSVWZ4NE9mUk13Y2tUM2Z4QkZoeXFWY0l3dExaZzZ0VUtINXBtVFVaekRyeEJmY3o4RU9KK0hqZmIwSzM1QzE2Vk5DemNTa0dFcUNXL1RxSGtTc1U0PVwiLFwiQ2FsbGVyXCI6XCJSUXIxb1lISHQ1bGZndlhyanllcG5KdHdNa0VSUk9yaUh4M3JnMzFXeHNnPVwiLFwiRXhwaXJlVGltZVwiOlwiMjAyNi0wMS0yM1QxMjo1OTo0MlpcIixcIk1lZGlhSWRcIjpcIjIwOWU2YWFmZjM4NzcxZjBiZmI0NzUyMjgxZWMwMTAyXCIsXCJQbGF5RG9tYWluXCI6XCJ2b2QuYXhkeGEuY25cIixcIlNpZ25hdHVyZVwiOlwiRUJYaCtLaWNvTjlIem5wYnd1WjlJMkRiS2xBPVwifSIsIlZpZGVvTWV0YSI6eyJTdGF0dXMiOiJOb3JtYWwiLCJWaWRlb0lkIjoiMjA5ZTZhYWZmMzg3NzFmMGJmYjQ3NTIyODFlYzAxMDIiLCJUaXRsZSI6InVuZGVmaW5lZCIsIkNvdmVyVVJMIjoiaHR0cHM6Ly92b2QuYXhkeGEuY24vMjA5ZTZhYWZmMzg3NzFmMGJmYjQ3NTIyODFlYzAxMDIvc25hcHNob3RzL2JhMzczNGEyYjJlNjRkZmY4YmQ4NjVjY2ViZDExYjkzLTAwMDA1LmpwZyIsIkR1cmF0aW9uIjo4NDMuNTQxM30sIkFjY2Vzc0tleUlkIjoiU1RTLk5aSmpqdXlMMkQxVVRnYmZYSHptazVmVU4iLCJQbGF5RG9tYWluIjoidm9kLmF4ZHhhLmNuIiwiQWNjZXNzS2V5U2VjcmV0IjoiRmJqV3lXYlh1M05FUld2NjNDYmdOYXVxcHBGRGFodGJheTYyeU1lVnVUR3QiLCJSZWdpb24iOiJjbi1iZWlqaW5nIiwiQ3VzdG9tZXJJZCI6MTI3MjExMDk4NzE5MjcxMX0=",
+        "msg": null
+    }
+}
+
+
 每周一课提交：
 curl 'https://edu.axdxa.cn/prod-api/progress/app/studyScheduleEscalation/studyScheduleEscalation' \
   -H 'accept: application/json, text/plain, */*' \

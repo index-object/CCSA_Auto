@@ -201,6 +201,104 @@ class TaskService:
             return {"success": False, "message": error_msg}
 
     @staticmethod
+    def get_weekly_lesson_details(access_token, lesson_id):
+        """
+        获取每周一课详细信息
+
+        Args:
+            access_token: 访问令牌
+            lesson_id: 课程ID
+
+        Returns:
+            dict: 课程详细信息
+        """
+        try:
+            url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["GET_WEEKLY_LESSON"].format(
+                lesson_id=lesson_id
+            )
+            params = {"id": lesson_id}
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                **Config.EXTERNAL_PLATFORM["HEADERS"],
+            }
+
+            logger.info(f"[WEEKLY_LESSON] 获取课程详情: {url}")
+            response = requests.get(url, headers=headers, params=params)
+            response_json = response.json()
+
+            if response_json.get("code") != 200:
+                error_msg = (
+                    f"获取每周一课详情失败: {response_json.get('msg', '未知错误')}"
+                )
+                logger.error(f"[WEEKLY_LESSON] {error_msg}")
+                return {"success": False, "message": error_msg}
+
+            lesson_info = response_json.get("data", {})
+            logger.info(
+                f"[WEEKLY_LESSON] 获取到课程详情: {lesson_info.get('resourceName', '未知课程')}"
+            )
+
+            return {
+                "success": True,
+                "data": {
+                    "resourceDuration": lesson_info.get("resourceDuration"),
+                    "resourceId": lesson_info.get("resourceId"),
+                    "resourceUrl": lesson_info.get("resourceUrl"),
+                    "resourceName": lesson_info.get("resourceName"),
+                    "lesson_id": lesson_info.get("id"),
+                },
+            }
+
+        except Exception as e:
+            error_msg = f"获取每周一课详情异常: {str(e)}"
+            logger.exception(f"[WEEKLY_LESSON] {error_msg}")
+            return {"success": False, "message": error_msg}
+
+    @staticmethod
+    def get_video_url(access_token, vod_id, resource_relation_id):
+        """
+        获取视频链接
+
+        Args:
+            access_token: 访问令牌
+            vod_id: 视频ID
+            resource_relation_id: 资源关联ID
+
+        Returns:
+            dict: 视频链接信息
+        """
+        try:
+            url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["GET_VIDEO_URL"]
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                **Config.EXTERNAL_PLATFORM["HEADERS"],
+                "Content-Type": "application/json;charset=UTF-8",
+            }
+            payload = {
+                "vodId": vod_id,
+                "getPlayType": 2,
+                "resourceRelationId": resource_relation_id,
+                "courseType": 4,
+            }
+
+            logger.info(f"[WEEKLY_LESSON] 获取视频链接: {url}")
+            response = requests.post(url, headers=headers, json=payload)
+            response_json = response.json()
+
+            if response_json.get("code") != 200:
+                error_msg = f"获取视频链接失败: {response_json.get('msg', '未知错误')}"
+                logger.error(f"[WEEKLY_LESSON] {error_msg}")
+                return {"success": False, "message": error_msg}
+
+            logger.info(f"[WEEKLY_LESSON] 获取到视频链接响应")
+            return {"success": True, "data": response_json.get("data", {})}
+
+        except Exception as e:
+            error_msg = f"获取视频链接异常: {str(e)}"
+            logger.exception(f"[WEEKLY_LESSON] {error_msg}")
+            return {"success": False, "message": error_msg}
+
+    @staticmethod
     def execute_weekly_lesson(access_token, user_id):
         """
         执行每周一课
@@ -248,14 +346,39 @@ class TaskService:
                 logger.error(f"[WEEKLY_LESSON] {error_msg}")
                 return {"success": False, "message": error_msg}
 
-            # 直接从列表响应中获取课程信息，无需再次请求课程详情
-            resource_duration = week_info.get("resourceDuration", 300)
-            resource_id = week_info.get("resourceId")
+            # 2. 获取每周一课详细信息
+            logger.info(f"[WEEKLY_LESSON] 获取课程详情: week_id={week_id}")
+            details_result = TaskService.get_weekly_lesson_details(
+                access_token, week_id
+            )
+            if not details_result.get("success"):
+                return details_result
+
+            lesson_details = details_result.get("data", {})
+            resource_duration = lesson_details.get("resourceDuration", 300)
+            resource_id = lesson_details.get("resourceId")
+            resource_url = lesson_details.get("resourceUrl")
+
             logger.info(
-                f"[WEEKLY_LESSON] 课程信息: lesson_id={week_id}, resource_id={resource_id}, duration={resource_duration}"
+                f"[WEEKLY_LESSON] 课程详情: duration={resource_duration}, resource_id={resource_id}, has_resource_url={resource_url is not None}"
             )
 
-            # 3. 提交学习进度
+            # 3. 获取视频链接（如果存在resourceUrl）
+            if resource_url:
+                logger.info(f"[WEEKLY_LESSON] 获取视频链接: vod_id={resource_url}")
+                video_result = TaskService.get_video_url(
+                    access_token, resource_url, week_id
+                )
+                if not video_result.get("success"):
+                    logger.warning(
+                        f"[WEEKLY_LESSON] 获取视频链接失败，但继续执行: {video_result.get('message')}"
+                    )
+                else:
+                    logger.info(f"[WEEKLY_LESSON] 视频链接获取成功")
+            else:
+                logger.info(f"[WEEKLY_LESSON] 无resourceUrl，跳过视频链接获取")
+
+            # 4. 提交学习进度
             submit_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"][
                 "SUBMIT_STUDY_SCHEDULE"
             ]
@@ -487,16 +610,15 @@ class TaskService:
                 )
 
                 # 如果令牌获取失败，尝试重新登录
-                if not access_token:
+                if access_token is None:
                     logger.info(f"用户 {user.id} 没有有效令牌，尝试重新登录...")
-                    auth_success, user_info, new_token = (
-                        AuthService.authenticate_external(
-                            user.external_username, user.external_password
-                        )
+                    # authenticate_external returns (success, user_info, token) when return_error_info=False
+                    auth_result = AuthService.authenticate_external(
+                        user.external_username, user.external_password
                     )
-                    if not auth_success:
+                    if not auth_result[0]:  # Check success flag
                         return {"success": False, "message": "外部平台认证失败"}
-                    access_token = new_token
+                    access_token = auth_result[2]  # Get token from tuple
 
                     # 保存新获取的令牌
                     if access_token:

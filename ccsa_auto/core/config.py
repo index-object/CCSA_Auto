@@ -39,6 +39,7 @@ class Config:
             "GET_DAILY_QUESTIONS": "https://edu.axdxa.cn/prod-api/progress/app/regularStudyQuestionBank/getRegularStudyQuestionInfo",
             # 每周一课相关
             "GET_WEEKLY_LESSON": "https://edu.axdxa.cn/prod-api/progress/app/regularCourseWeek/{lesson_id}",
+            "GET_VIDEO_URL": "https://edu.axdxa.cn/prod-api/platform-resource/app/resourceVideo/selectUrlByVodId",
             # 每月一考相关
             "GET_MONTHLY_QUESTIONS": "https://edu.axdxa.cn/prod-api/progress/app/regularStudyQuestionBank/getRegularStudyQuestionInfo",
             # 用户信息相关
