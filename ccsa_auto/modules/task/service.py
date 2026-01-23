@@ -191,9 +191,33 @@ class TaskService:
                     "score_strategy": score_strategy,
                 }
             else:
-                error_msg = f"提交答案失败: {submit_json.get('msg', '未知错误')}"
-                logger.error(error_msg)
-                return {"success": False, "message": error_msg}
+                error_msg = submit_json.get("msg", "未知错误")
+                # 检查是否包含"您已完成此考试！"的消息，如果是则视为成功
+                if "您已完成此考试！" in error_msg:
+                    logger.info(f"检测到已完成考试消息: {error_msg}，视为任务成功")
+
+                    # 记录得分（即使已完成，也记录得分）
+                    from ccsa_auto.modules.task.score_tracker import ScoreTracker
+
+                    ScoreTracker.record_score(
+                        user_id=user_id,
+                        task_id=None,
+                        task_type="daily",
+                        total_questions=len(questions),
+                        correct_questions=score_strategy["correct_questions"],
+                        score=score_strategy["score"],
+                        max_score=score_strategy["max_score"],
+                    )
+
+                    return {
+                        "success": True,
+                        "message": f"每日一题已完成: {error_msg}",
+                        "result": submit_json.get("data", {}),
+                        "score_strategy": score_strategy,
+                    }
+                else:
+                    logger.error(f"提交答案失败: {error_msg}")
+                    return {"success": False, "message": f"提交答案失败: {error_msg}"}
 
         except Exception as e:
             error_msg = f"执行每日一题异常: {str(e)}"
@@ -575,10 +599,35 @@ class TaskService:
                     "score_strategy": score_strategy,
                 }
             else:
-                return {
-                    "success": False,
-                    "message": f"提交考试答案失败: {submit_json.get('msg', '未知错误')}",
-                }
+                error_msg = submit_json.get("msg", "未知错误")
+                # 检查是否包含"您已完成此考试！"的消息，如果是则视为成功
+                if "您已完成此考试！" in error_msg:
+                    logger.info(f"检测到已完成考试消息: {error_msg}，视为任务成功")
+
+                    # 记录得分（即使已完成，也记录得分）
+                    from ccsa_auto.modules.task.score_tracker import ScoreTracker
+
+                    ScoreTracker.record_score(
+                        user_id=user_id,
+                        task_id=None,
+                        task_type="monthly",
+                        total_questions=len(questions),
+                        correct_questions=score_strategy["correct_questions"],
+                        score=score_strategy["score"],
+                        max_score=score_strategy["max_score"],
+                    )
+
+                    return {
+                        "success": True,
+                        "message": f"每月一考已完成: {error_msg}",
+                        "result": submit_json.get("data", {}),
+                        "score_strategy": score_strategy,
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": f"提交考试答案失败: {error_msg}",
+                    }
 
         except Exception as e:
             return {"success": False, "message": f"执行每月一考异常: {str(e)}"}
