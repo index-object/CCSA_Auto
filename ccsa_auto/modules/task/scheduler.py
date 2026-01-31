@@ -2,13 +2,13 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from datetime import datetime, timedelta, timezone
-import logging
 
 from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import Task, User, TaskFixLog
 from ccsa_auto.modules.task.service import TaskService
 from ccsa_auto.modules.logging.service import LoggingService
 from ccsa_auto.core.config import Config
+from ccsa_auto.core.logger import setup_logger
 from ccsa_auto.utils.timezone import (
     get_current_time,
     get_current_utc_time,
@@ -21,6 +21,8 @@ from ccsa_auto.utils.timezone import (
     ensure_utc_timezone,
 )
 
+logger = setup_logger(__name__)
+
 
 def cleanup_expired_sessions_job():
     """定时清理过期会话任务"""
@@ -30,9 +32,9 @@ def cleanup_expired_sessions_job():
         session_manager = get_session_manager()
         count = session_manager.cleanup_expired_sessions()
         if count > 0:
-            logger.info(f"定时任务: 已清理 {count} 个过期会话")
+            logger.info(f"定时任务：已清理 {count} 个过期会话")
     except Exception as e:
-        logger.error(f"清理过期会话任务失败: {e}")
+        logger.error(f"清理过期会话任务失败：{e}")
 
 
 FIXER_JOB_ID = "system_task_fixer"
@@ -114,9 +116,6 @@ def fix_stale_tasks_job():
 # 创建后台调度器实例
 scheduler = BackgroundScheduler()
 
-# 配置日志
-logger = logging.getLogger(__name__)
-
 
 def execute_user_task(task_id):
     """
@@ -127,29 +126,25 @@ def execute_user_task(task_id):
     """
     db = SessionLocal()
     try:
-        # 获取任务
         task = db.query(Task).filter_by(id=task_id).first()
         if not task:
             logger.error(f"任务 {task_id} 不存在")
             return
 
-        # 获取用户
         user = db.query(User).filter_by(id=task.user_id).first()
-        if not user:
-            logger.error(f"用户 {task.user_id} 不存在")
-            return
+        user_name = user.name if user else "未知"
 
-        # 检查任务是否激活
         if not task.is_active:
-            logger.info(f"任务 {task_id} 未激活，跳过执行")
+            logger.info(
+                f"任务 {task.task_name} 未激活，跳过执行，用户：{user_name}({task.user_id})"
+            )
             return
 
-        # 更新任务状态为运行中
         task.execution_status = "running"
         task.updated_at = datetime.utcnow()
         db.commit()
 
-        logger.info(f"开始执行任务 {task_id} (用户: {user.id}, 类型: {task.task_type})")
+        logger.info(f"{task.task_name} 开始执行，用户：{user_name}({task.user_id})")
 
         # 执行任务
         result = TaskService.execute_task(task, user)
@@ -186,9 +181,11 @@ def execute_user_task(task_id):
             logger.error(f"重新调度任务 {task_id} 失败: {e}")
 
         if result.get("success"):
-            logger.info(f"任务 {task_id} 执行成功: {result.get('message')}")
+            logger.info(f"{task.task_name} 执行完成，用户：{user_name}({task.user_id})")
         else:
-            logger.error(f"任务 {task_id} 执行失败: {result.get('message')}")
+            logger.error(
+                f"{task.task_name} 执行失败，用户：{user_name}({task.user_id})，原因：{result.get('message')}"
+            )
 
         LoggingService.log_task_execution(
             task_id=task_id,

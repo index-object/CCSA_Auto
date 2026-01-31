@@ -1,5 +1,4 @@
 import requests
-import logging
 from datetime import datetime, timedelta
 
 from ccsa_auto.core.config import Config
@@ -11,16 +10,9 @@ from ccsa_auto.utils.timezone import (
     shanghai_to_utc,
     SHANGHAI_TZ,
 )
+from ccsa_auto.core.logger import setup_logger
 
-# 配置日志记录
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-
-# 创建日志记录器
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 class TaskService:
@@ -50,33 +42,35 @@ class TaskService:
         return hour, minute
 
     @staticmethod
-    def execute_daily_question(access_token, user_id):
+    def execute_daily_question(access_token, user_id, user_name="未知"):
         """
         执行每日一题
+
+        Args:
+            access_token: 访问令牌
+            user_id: 用户ID
+            user_name: 用户姓名
         """
         try:
             import random
             import json
 
-            logger.info(f"开始执行每日一题，用户ID: {user_id}")
+            logger.info(f"每日一题开始执行，用户：{user_name}({user_id})")
 
-            # 1. 获取每日一学列表
             study_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["GET_STUDY_LIST"]
             study_headers = {
                 "Authorization": f"Bearer {access_token}",
                 **Config.EXTERNAL_PLATFORM["HEADERS"],
             }
 
-            logger.info(f"获取每日一学列表: {study_url}")
             study_response = requests.get(study_url, headers=study_headers)
             study_response_json = study_response.json()
 
             if study_response_json.get("code") != 200:
-                error_msg = f"获取每日一学列表失败: {study_response_json.get('msg', '未知错误')}"
+                error_msg = f"获取每日一学列表失败：{study_response_json.get('msg', '未知错误')}"
                 logger.error(error_msg)
                 return {"success": False, "message": error_msg}
 
-            # 提取每日一学 ID
             study_data = study_response_json.get("data", {})
             daily_info = study_data.get("regularStudyDayInfo", {})
             study_id = daily_info.get("id")
@@ -85,8 +79,6 @@ class TaskService:
                 error_msg = "未能获取每日一学ID"
                 logger.error(error_msg)
                 return {"success": False, "message": error_msg}
-
-            logger.info(f"获取到每日一学ID: {study_id}")
 
             # 2. 获取试题信息
             question_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"][
@@ -99,7 +91,6 @@ class TaskService:
                 "isRepair": 0,
             }
 
-            logger.info(f"获取试题信息: {question_url}")
             question_response = requests.get(
                 question_url, params=question_params, headers=study_headers
             )
@@ -107,15 +98,12 @@ class TaskService:
 
             if question_response_json.get("code") != 200:
                 error_msg = question_response_json.get("msg", "未知错误")
-                # 检查是否包含"您已完成此考试！"的消息，如果是则视为成功
                 if "您已完成此考试！" in error_msg:
-                    logger.info(f"检测到已完成考试消息: {error_msg}，视为任务成功")
+                    logger.info(f"每日一题已完成，用户：{user_name}({user_id})")
 
-                    # 记录得分（即使已完成，也记录得分）
                     from ccsa_auto.modules.task.score_tracker import ScoreTracker
                     from ccsa_auto.modules.task.score_strategy import ScoreStrategy
 
-                    # 获取控分策略
                     score_strategy = ScoreStrategy.calculate_strategy(
                         user_id, "daily", 0, 0.0
                     )
@@ -132,18 +120,17 @@ class TaskService:
 
                     return {
                         "success": True,
-                        "message": f"每日一题已完成: {error_msg}",
+                        "message": f"每日一题已完成：{error_msg}",
                         "result": question_response_json.get("data", {}),
                         "score_strategy": score_strategy,
                     }
                 else:
-                    logger.error(f"获取试题信息失败: {error_msg}")
+                    logger.error(f"获取试题信息失败：{error_msg}")
                     return {
                         "success": False,
-                        "message": f"获取试题信息失败: {error_msg}",
+                        "message": f"获取试题信息失败：{error_msg}",
                     }
 
-            # 封装试题数据
             question_data = question_response_json.get("data", {})
             question_list = question_data.get("questionList", [])
 
@@ -152,23 +139,18 @@ class TaskService:
                     "id": question.get("id"),
                     "questionType": question.get("questionType"),
                     "questionPoint": question.get("questionPoint"),
-                    "questionAnswer": question.get("questionAnswera", "").strip(
-                        '"'
-                    ),  # 去掉答案的引号
+                    "questionAnswer": question.get("questionAnswera", "").strip('"'),
                 }
                 for question in question_list
             ]
 
-            logger.info(f"获取到 {len(questions)} 道试题")
-
-            # 应用控分策略
             from ccsa_auto.modules.task.score_strategy import ScoreStrategy
 
             questions, score_strategy = ScoreStrategy.modify_answers_for_score_control(
                 questions, "daily", user_id
             )
             logger.info(
-                f"控分策略: {score_strategy['reason']}, 预期得分: {score_strategy['score']}/{score_strategy['max_score']}"
+                f"每日一题获取{len(questions)}道试题，控分策略：{score_strategy['score']}/{score_strategy['max_score']}，用户：{user_name}({user_id})"
             )
 
             # 3. 准备提交数据
@@ -185,7 +167,6 @@ class TaskService:
                 "examDuration": 30,
             }
 
-            # 4. 提交答案
             submit_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["SUBMIT_EXAM"]
             submit_headers = {
                 "Authorization": f"Bearer {access_token}",
@@ -193,16 +174,12 @@ class TaskService:
                 "Content-Type": "application/json;charset=UTF-8",
             }
 
-            logger.info(f"提交每日一题答案: {submit_url}")
             submit_response = requests.post(
                 submit_url, headers=submit_headers, data=json.dumps(payload)
             )
             submit_json = submit_response.json()
 
             if submit_json.get("code") == 200:
-                logger.info("每日一题执行成功")
-
-                # 记录得分
                 from ccsa_auto.modules.task.score_tracker import ScoreTracker
 
                 ScoreTracker.record_score(
@@ -215,6 +192,9 @@ class TaskService:
                     max_score=score_strategy["max_score"],
                 )
 
+                logger.info(
+                    f"每日一题完成，得分：{score_strategy['score']}/{score_strategy['max_score']}，用户：{user_name}({user_id})"
+                )
                 return {
                     "success": True,
                     "message": "每日一题执行成功",
@@ -223,11 +203,9 @@ class TaskService:
                 }
             else:
                 error_msg = submit_json.get("msg", "未知错误")
-                # 检查是否包含"您已完成此考试！"的消息，如果是则视为成功
                 if "您已完成此考试！" in error_msg:
-                    logger.info(f"检测到已完成考试消息: {error_msg}，视为任务成功")
+                    logger.info(f"每日一题已完成，用户：{user_name}({user_id})")
 
-                    # 记录得分（即使已完成，也记录得分）
                     from ccsa_auto.modules.task.score_tracker import ScoreTracker
 
                     ScoreTracker.record_score(
@@ -242,16 +220,18 @@ class TaskService:
 
                     return {
                         "success": True,
-                        "message": f"每日一题已完成: {error_msg}",
+                        "message": f"每日一题已完成：{error_msg}",
                         "result": submit_json.get("data", {}),
                         "score_strategy": score_strategy,
                     }
                 else:
-                    logger.error(f"提交答案失败: {error_msg}")
-                    return {"success": False, "message": f"提交答案失败: {error_msg}"}
+                    logger.error(
+                        f"每日一题提交失败：{error_msg}，用户：{user_name}({user_id})"
+                    )
+                    return {"success": False, "message": f"提交答案失败：{error_msg}"}
 
         except Exception as e:
-            error_msg = f"执行每日一题异常: {str(e)}"
+            error_msg = f"每日一题异常：{str(e)}"
             logger.exception(error_msg)
             return {"success": False, "message": error_msg}
 
@@ -277,21 +257,17 @@ class TaskService:
                 **Config.EXTERNAL_PLATFORM["HEADERS"],
             }
 
-            logger.info(f"[WEEKLY_LESSON] 获取课程详情: {url}")
             response = requests.get(url, headers=headers, params=params)
             response_json = response.json()
 
             if response_json.get("code") != 200:
                 error_msg = (
-                    f"获取每周一课详情失败: {response_json.get('msg', '未知错误')}"
+                    f"获取每周一课详情失败：{response_json.get('msg', '未知错误')}"
                 )
-                logger.error(f"[WEEKLY_LESSON] {error_msg}")
+                logger.error(error_msg)
                 return {"success": False, "message": error_msg}
 
             lesson_info = response_json.get("data", {})
-            logger.info(
-                f"[WEEKLY_LESSON] 获取到课程详情: {lesson_info.get('resourceName', '未知课程')}"
-            )
 
             return {
                 "success": True,
@@ -305,8 +281,8 @@ class TaskService:
             }
 
         except Exception as e:
-            error_msg = f"获取每周一课详情异常: {str(e)}"
-            logger.exception(f"[WEEKLY_LESSON] {error_msg}")
+            error_msg = f"获取每周一课详情异常：{str(e)}"
+            logger.exception(error_msg)
             return {"success": False, "message": error_msg}
 
     @staticmethod
@@ -336,77 +312,68 @@ class TaskService:
                 "courseType": 4,
             }
 
-            logger.info(f"[WEEKLY_LESSON] 获取视频链接: {url}")
             response = requests.post(url, headers=headers, json=payload)
             response_json = response.json()
 
             if response_json.get("code") != 200:
-                error_msg = f"获取视频链接失败: {response_json.get('msg', '未知错误')}"
-                logger.error(f"[WEEKLY_LESSON] {error_msg}")
+                error_msg = f"获取视频链接失败：{response_json.get('msg', '未知错误')}"
+                logger.error(error_msg)
                 return {"success": False, "message": error_msg}
 
-            logger.info(f"[WEEKLY_LESSON] 获取到视频链接响应")
             return {"success": True, "data": response_json.get("data", {})}
 
         except Exception as e:
-            error_msg = f"获取视频链接异常: {str(e)}"
-            logger.exception(f"[WEEKLY_LESSON] {error_msg}")
+            error_msg = f"获取视频链接异常：{str(e)}"
+            logger.exception(error_msg)
             return {"success": False, "message": error_msg}
 
     @staticmethod
-    def execute_weekly_lesson(access_token, user_id):
+    def execute_weekly_lesson(access_token, user_id, user_name="未知"):
         """
         执行每周一课
+
+        Args:
+            access_token: 访问令牌
+            user_id: 用户ID
+            user_name: 用户姓名
         """
         try:
             import random
             import json
 
-            logger.info(f"[WEEKLY_LESSON] 开始执行每周一课，用户ID: {user_id}")
+            logger.info(f"每周一课开始执行，用户：{user_name}({user_id})")
 
-            # 1. 获取每周一课列表
             study_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["GET_STUDY_LIST"]
-            logger.info(f"[WEEKLY_LESSON] 获取每周一课列表: {study_url}")
             study_headers = {
                 "Authorization": f"Bearer {access_token}",
                 **Config.EXTERNAL_PLATFORM["HEADERS"],
             }
 
-            logger.info(f"[WEEKLY_LESSON] 发送请求到: {study_url}")
             study_response = requests.get(study_url, headers=study_headers)
             study_response_json = study_response.json()
-            logger.info(
-                f"[WEEKLY_LESSON] 响应状态码: {study_response.status_code}, 响应内容前100字符: {str(study_response_json)[:100]}"
-            )
 
             if study_response_json.get("code") != 200:
-                error_msg = f"获取每周一课列表失败: {study_response_json.get('msg', '未知错误')}"
-                logger.error(f"[WEEKLY_LESSON] {error_msg}")
+                error_msg = f"获取每周一课列表失败：{study_response_json.get('msg', '未知错误')}"
+                logger.error(error_msg)
                 return {
                     "success": False,
                     "message": error_msg,
                 }
 
-            # 提取每周一课信息
             study_data = study_response_json.get("data", {})
             week_info = study_data.get("repeatCourseWeekInfo", {})
             week_id = week_info.get("id")
-            week_resourceId = week_info.get("resourceId")
-            logger.info(
-                f"[WEEKLY_LESSON] 获取到每周一课信息: week_id={week_id}, resourceId={week_resourceId}"
-            )
 
             if not week_id:
                 error_msg = "未能获取每周一课ID"
-                logger.error(f"[WEEKLY_LESSON] {error_msg}")
+                logger.error(error_msg)
                 return {"success": False, "message": error_msg}
 
-            # 2. 获取每周一课详细信息
-            logger.info(f"[WEEKLY_LESSON] 获取课程详情: week_id={week_id}")
             details_result = TaskService.get_weekly_lesson_details(
                 access_token, week_id
             )
             if not details_result.get("success"):
+                logger.error(f"获取课程详情失败：{details_result.get('message')}")
                 return details_result
 
             lesson_details = details_result.get("data", {})
@@ -414,26 +381,13 @@ class TaskService:
             resource_id = lesson_details.get("resourceId")
             resource_url = lesson_details.get("resourceUrl")
 
-            logger.info(
-                f"[WEEKLY_LESSON] 课程详情: duration={resource_duration}, resource_id={resource_id}, has_resource_url={resource_url is not None}"
-            )
-
-            # 3. 获取视频链接（如果存在resourceUrl）
             if resource_url:
-                logger.info(f"[WEEKLY_LESSON] 获取视频链接: vod_id={resource_url}")
                 video_result = TaskService.get_video_url(
                     access_token, resource_url, week_id
                 )
                 if not video_result.get("success"):
-                    logger.warning(
-                        f"[WEEKLY_LESSON] 获取视频链接失败，但继续执行: {video_result.get('message')}"
-                    )
-                else:
-                    logger.info(f"[WEEKLY_LESSON] 视频链接获取成功")
-            else:
-                logger.info(f"[WEEKLY_LESSON] 无resourceUrl，跳过视频链接获取")
+                    logger.warning(f"获取视频链接失败，继续执行")
 
-            # 4. 提交学习进度
             submit_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"][
                 "SUBMIT_STUDY_SCHEDULE"
             ]
@@ -456,14 +410,8 @@ class TaskService:
                 submit_url, headers=submit_headers, json=payload
             )
             submit_json = submit_response.json()
-            logger.info(
-                f"[WEEKLY_LESSON] 提交学习进度响应: {submit_json.get('code', 'no code')}, msg: {submit_json.get('msg', 'no msg')}"
-            )
 
             if submit_json.get("code") == 200:
-                logger.info(f"[WEEKLY_LESSON] 每周一课执行成功")
-
-                # 记录得分
                 from ccsa_auto.modules.task.score_tracker import ScoreTracker
 
                 ScoreTracker.record_score(
@@ -476,6 +424,7 @@ class TaskService:
                     max_score=50.0,
                 )
 
+                logger.info(f"每周一课完成，得分：50/50，用户：{user_name}({user_id})")
                 return {
                     "success": True,
                     "message": "每周一课执行成功",
@@ -489,16 +438,16 @@ class TaskService:
                     },
                 }
             else:
-                error_msg = f"提交学习记录失败: {submit_json.get('msg', '未知错误')}"
-                logger.error(f"[WEEKLY_LESSON] {error_msg}")
+                error_msg = f"提交学习记录失败：{submit_json.get('msg', '未知错误')}"
+                logger.error(error_msg)
                 return {
                     "success": False,
                     "message": error_msg,
                 }
 
         except Exception as e:
-            error_msg = f"执行每周一课异常: {str(e)}"
-            logger.exception(f"[WEEKLY_LESSON] 异常: {error_msg}")
+            error_msg = f"每周一课异常：{str(e)}"
+            logger.exception(error_msg)
             return {"success": False, "message": error_msg}
 
     @staticmethod
@@ -736,10 +685,15 @@ class TaskService:
                         AuthService.save_external_token(user.id, access_token)
 
                 # 3. 执行任务
+                user_name = user.name if user else "未知"
                 if task.task_type == "daily":
-                    result = TaskService.execute_daily_question(access_token, user.id)
+                    result = TaskService.execute_daily_question(
+                        access_token, user.id, user_name
+                    )
                 elif task.task_type == "weekly":
-                    result = TaskService.execute_weekly_lesson(access_token, user.id)
+                    result = TaskService.execute_weekly_lesson(
+                        access_token, user.id, user_name
+                    )
                 elif task.task_type == "monthly":
                     result = TaskService.execute_monthly_exam(access_token, user.id)
                 else:

@@ -81,7 +81,8 @@ class Config:
 
     # 日志配置
     LOG_LEVEL = "INFO"
-    LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    LOG_DIR = "logs"
+    LOG_RETENTION_DAYS = 60
 
     # 会话配置
     SESSION_TIMEOUT = 3600  # 1小时无活动过期（秒）
