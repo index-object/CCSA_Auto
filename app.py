@@ -288,5 +288,4 @@ if __name__ in {"__main__", "__mp_main__"}:
     ui.run(
         title="用户答题托管平台",
         port=8082,
-        storage_secret="ccsa_auto_session_secret_2025",
     )
