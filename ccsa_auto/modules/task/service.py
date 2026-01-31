@@ -386,7 +386,12 @@ class TaskService:
                     access_token, resource_url, week_id
                 )
                 if not video_result.get("success"):
-                    logger.warning(f"获取视频链接失败，继续执行")
+                    error_msg = f"获取视频链接失败：{video_result.get('message')}"
+                    logger.error(error_msg)
+                    return {
+                        "success": False,
+                        "message": error_msg,
+                    }
 
             submit_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"][
                 "SUBMIT_STUDY_SCHEDULE"

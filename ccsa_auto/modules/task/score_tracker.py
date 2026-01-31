@@ -309,6 +309,58 @@ class ScoreTracker:
             }
 
     @staticmethod
+    def get_monthly_weekly_score(user_id: int, year: int, month: int) -> float:
+        """
+        获取指定月份每周一课的总得分
+
+        Args:
+            user_id: 用户ID
+            year: 年份
+            month: 月份
+
+        Returns:
+            float: 每周一课总得分
+        """
+        db = SessionLocal()
+        try:
+            from datetime import timedelta
+
+            from ccsa_auto.utils.timezone import SHANGHAI_TZ
+
+            start_date = datetime(year, month, 1, 0, 0, 0).replace(tzinfo=SHANGHAI_TZ)
+            if month == 12:
+                next_year = year + 1
+                next_month = 1
+            else:
+                next_year = year
+                next_month = month + 1
+
+            end_date = datetime(next_year, next_month, 1, 0, 0, 0).replace(
+                tzinfo=SHANGHAI_TZ
+            ) - timedelta(seconds=1)
+
+            result = (
+                db.query(ScoreRecord)
+                .filter(
+                    ScoreRecord.user_id == user_id,
+                    ScoreRecord.task_type == "weekly",
+                    ScoreRecord.record_date >= start_date,
+                    ScoreRecord.record_date <= end_date,
+                )
+                .order_by(ScoreRecord.record_date)
+                .all()
+            )
+
+            total_score = sum(record.score for record in result)
+            return total_score
+
+        except Exception as e:
+            logger.error(f"获取月度每周一课得分失败: {e}")
+            return 0.0
+        finally:
+            db.close()
+
+    @staticmethod
     def delete_old_records(months_to_keep: int = 6) -> int:
         """
         删除旧的得分记录
