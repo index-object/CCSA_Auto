@@ -14,13 +14,13 @@ logger = logging.getLogger(__name__)
 class ScoreStrategy:
     """分数控制策略服务"""
 
-    TARGET_MONTHLY_SCORE = 530
+    TARGET_MONTHLY_SCORE = 570
     MIN_SCORE_RATIO = 0.45
-    MAX_SCORE_RATIO = 0.75
+    MAX_SCORE_RATIO = 0.90
     USER_VARIATION_STD = 0.08
     DAILY_ALLOCATE_RATIO = 0.80
     MONTHLY_ALLOCATE_RATIO = 0.25
-    MONTHLY_BASE_SCORE = 90
+    MONTHLY_BASE_SCORE = 80
 
     @staticmethod
     def is_weekend_or_holiday(date: datetime) -> bool:
@@ -233,7 +233,10 @@ class ScoreStrategy:
         user_id: int, task_type: str, total_questions: int, score_per_question: float
     ) -> Dict[str, Any]:
         """
-        计算控分策略（完全动态版本）
+        计算控分策略（动态版本）
+        - 保证月度目标 >= 570分
+        - 同时尽量逼近570分，避免过高
+        - 每周一课只能是50或0，无法控分
 
         Args:
             user_id: 用户ID
@@ -273,24 +276,20 @@ class ScoreStrategy:
         weekly_info = ScoreStrategy.get_weekly_lessons_info(user_id, year, month)
         weekly_actual = weekly_info["actual_score"]
         weekly_remaining = weekly_info["remaining_sessions"]
-        weekly_full = weekly_info["full_score"]
-
-        weekly_expected = weekly_actual + weekly_remaining * 50
-
-        logger.info(
-            f"[控分策略] 用户{user_id} 每周一课: 已得{weekly_actual}分, 剩余{weekly_remaining}次, 预期{weekly_expected}分"
-        )
+        weekly_remaining_score = weekly_remaining * 50
 
         remaining_days = ScoreStrategy.get_remaining_working_days_in_month(
             year, month, now
         )
 
-        remaining_needed = max(
-            0, ScoreStrategy.TARGET_MONTHLY_SCORE - current_total - weekly_expected
-        )
+        daily_available = remaining_days * 20
+        monthly_min = ScoreStrategy.MONTHLY_BASE_SCORE
+
+        target = ScoreStrategy.TARGET_MONTHLY_SCORE
+        remaining_needed = max(0, target - current_total)
 
         logger.info(
-            f"[控分策略] 用户{user_id} 剩余工作日: {remaining_days}天, 剩余需达: {remaining_needed:.0f}分"
+            f"[控分策略] 用户{user_id} 剩余需达: {remaining_needed:.0f}分, 剩余工作日: {remaining_days}天, 剩余每周一课: {weekly_remaining}次({weekly_remaining_score}分)"
         )
 
         if task_type == "daily":
@@ -321,15 +320,27 @@ class ScoreStrategy:
                     f"[控分策略] 用户{user_id} 已达标({current_total}分), 得最低分{base_ratio * 100:.1f}%"
                 )
             else:
-                daily_needed = remaining_needed * ScoreStrategy.DAILY_ALLOCATE_RATIO
-                daily_target = daily_needed / remaining_days
-                base_ratio = min(daily_target / 20, 1.0)
-                reason = (
-                    f"剩余需达{remaining_needed:.0f}分, 日均目标{daily_target:.1f}分"
-                )
-                logger.info(
-                    f"[控分策略] 用户{user_id} 每日一题分配{daily_needed:.0f}分, 日均目标{daily_target:.1f}分, 基础得分率{base_ratio * 100:.1f}%"
-                )
+                weekly_monthly_reserve = weekly_remaining_score + monthly_min
+                daily_target = max(0, remaining_needed - weekly_monthly_reserve)
+
+                if daily_target <= daily_available * ScoreStrategy.MIN_SCORE_RATIO:
+                    base_ratio = ScoreStrategy.MIN_SCORE_RATIO
+                    reason = f"剩余需达{remaining_needed:.0f}分, 控最低分"
+                    logger.info(
+                        f"[控分策略] 用户{user_id} 只需控最低分, 得分率{base_ratio * 100:.1f}%"
+                    )
+                elif daily_target >= daily_available * ScoreStrategy.MAX_SCORE_RATIO:
+                    base_ratio = ScoreStrategy.MAX_SCORE_RATIO
+                    reason = f"剩余需达{remaining_needed:.0f}分, 需拿高分"
+                    logger.info(
+                        f"[控分策略] 用户{user_id} 需拿高分, 得分率{base_ratio * 100:.1f}%"
+                    )
+                else:
+                    base_ratio = daily_target / daily_available
+                    reason = f"剩余需达{remaining_needed:.0f}分, 日均目标{daily_target / remaining_days:.1f}分"
+                    logger.info(
+                        f"[控分策略] 用户{user_id} 日均目标{daily_target / remaining_days:.1f}分, 得分率{base_ratio * 100:.1f}%"
+                    )
 
             ratio = ScoreStrategy.apply_user_variation(user_id, now, base_ratio)
             correct_count = max(1, min(total_questions, int(total_questions * ratio)))
@@ -348,21 +359,27 @@ class ScoreStrategy:
             }
 
         elif task_type == "monthly":
-            if remaining_needed <= 0:
+            weekly_monthly_reserve = weekly_remaining_score
+            monthly_target = max(
+                0,
+                remaining_needed
+                - weekly_monthly_reserve
+                - daily_available * ScoreStrategy.MIN_SCORE_RATIO,
+            )
+
+            if monthly_target <= ScoreStrategy.MONTHLY_BASE_SCORE:
                 monthly_target = ScoreStrategy.MONTHLY_BASE_SCORE
                 base_ratio = monthly_target / 100
-                reason = "已达标，得保底分"
+                reason = "已达标或接近达标，得保底分"
                 logger.info(
-                    f"[控分策略] 用户{user_id} 已达标({current_total}分), 每月一考得保底{monthly_target}分"
+                    f"[控分策略] 用户{user_id} 每月一考得保底{monthly_target}分"
                 )
             else:
-                monthly_target = remaining_needed * ScoreStrategy.MONTHLY_ALLOCATE_RATIO
-                monthly_target = max(ScoreStrategy.MONTHLY_BASE_SCORE, monthly_target)
                 monthly_target = min(100, monthly_target)
                 base_ratio = monthly_target / 100
                 reason = f"剩余需达{remaining_needed:.0f}分, 承担{monthly_target:.0f}分"
                 logger.info(
-                    f"[控分策略] 用户{user_id} 每月一考分配{monthly_target:.0f}分, 基础得分率{base_ratio * 100:.1f}%"
+                    f"[控分策略] 用户{user_id} 每月一考分配{monthly_target:.0f}分, 得分率{base_ratio * 100:.1f}%"
                 )
 
             ratio = ScoreStrategy.apply_user_variation(user_id, now, base_ratio)

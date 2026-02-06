@@ -131,7 +131,7 @@ def create_profile_section():
 
                 if scores:
                     current_monthly_score = scores.get("monthly_score", 0)
-                    target_monthly_score = 530
+                    target_monthly_score = 570
 
                     # 计算进度百分比
                     progress_percentage = (

@@ -293,7 +293,7 @@ class ScoreTracker:
             year, month = now.year, now.month
             return {
                 "current_monthly_score": 0,
-                "target_monthly_score": 530,
+                "target_monthly_score": 570,
                 "remaining_potential": 0,
                 "total_potential": 0,
                 "progress_percentage": 0,
