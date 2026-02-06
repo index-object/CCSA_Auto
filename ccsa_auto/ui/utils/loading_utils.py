@@ -7,6 +7,7 @@ import logging
 from typing import Callable, Any
 from functools import wraps
 from nicegui import ui
+from ccsa_auto.ui.utils.safe_notify import safe_notify_error
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ def create_loading_button(text: str, on_click: Callable, **kwargs) -> ui.button:
             logger.info(f"[LOADING] 原始点击函数执行完成")
         except Exception as e:
             logger.exception(f"[LOADING] 执行点击事件异常: {str(e)}")
-            ui.notify(f"操作失败: {str(e)}", type="negative")
+            safe_notify_error(f"操作失败: {str(e)}")
             raise
         finally:
             # 恢复按钮状态
@@ -113,7 +114,7 @@ def with_loading(button: ui.button = None, loading_text: str = "处理中..."):
                 return result
 
             except Exception as e:
-                ui.notify(f"操作失败: {str(e)}", type="negative")
+                safe_notify_error(f"操作失败: {str(e)}")
                 raise
             finally:
                 # 恢复按钮状态

@@ -4,6 +4,11 @@ from nicegui import ui
 from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import Task
 from ccsa_auto.ui.utils.loading_utils import create_loading_button
+from ccsa_auto.ui.utils.safe_notify import (
+    safe_notify,
+    safe_notify_success,
+    safe_notify_error,
+)
 from ccsa_auto.utils.timezone import format_datetime_short
 import logging
 
@@ -34,7 +39,7 @@ def create_task_section():
             """手动执行任务"""
             logger.info(f"[UI] execute_task 被调用, task_id={task_id}")
             if not task_id:
-                ui.notify("请输入任务ID", type="warning")
+                safe_notify("请输入任务ID", type="warning")
                 return
 
             try:
@@ -48,7 +53,7 @@ def create_task_section():
                     f"[UI] 查询任务: task_id={task_id}, 找到={task is not None}"
                 )
                 if not task:
-                    ui.notify(f"任务 {task_id} 不存在", type="negative")
+                    safe_notify_error(f"任务 {task_id} 不存在")
                     return
 
                 user = db.query(User).filter_by(id=task.user_id).first()
@@ -56,7 +61,7 @@ def create_task_section():
                     f"[UI] 查询用户: user_id={task.user_id}, 找到={user is not None}"
                 )
                 if not user:
-                    ui.notify(f"用户 {task.user_id} 不存在", type="negative")
+                    safe_notify_error(f"用户 {task.user_id} 不存在")
                     return
 
                 # 执行任务
@@ -69,14 +74,12 @@ def create_task_section():
                 )
 
                 if result.get("success"):
-                    ui.notify(
-                        f"任务 {task_id} 执行成功: {result.get('message')}",
-                        type="positive",
+                    safe_notify_success(
+                        f"任务 {task_id} 执行成功: {result.get('message')}"
                     )
                 else:
-                    ui.notify(
-                        f"任务 {task_id} 执行失败: {result.get('message')}",
-                        type="negative",
+                    safe_notify_error(
+                        f"任务 {task_id} 执行失败: {result.get('message')}"
                     )
 
                 # 刷新任务列表
@@ -84,7 +87,7 @@ def create_task_section():
 
             except Exception as e:
                 logger.exception(f"[UI] 执行任务异常: {str(e)}")
-                ui.notify(f"执行任务失败: {str(e)}", type="negative")
+                safe_notify_error(f"执行任务失败: {str(e)}")
             finally:
                 try:
                     db.close()
@@ -133,7 +136,7 @@ def create_task_section():
                         db.query(Task).order_by(Task.created_at.desc()).limit(10).all()
                     )
                     if not is_authenticated:
-                        ui.notify(
+                        safe_notify(
                             "用户未登录，显示所有任务（调试模式）", type="warning"
                         )
 
@@ -222,7 +225,7 @@ def create_task_section():
 
             except Exception as e:
                 logger.exception(f"[UI] 获取任务失败: {str(e)}")
-                ui.notify(f"获取任务失败: {str(e)}", type="negative")
+                safe_notify_error(f"获取任务失败: {str(e)}")
                 task_list_container.clear()
             finally:
                 db.close()
