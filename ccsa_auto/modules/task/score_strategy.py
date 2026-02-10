@@ -15,12 +15,12 @@ class ScoreStrategy:
     """分数控制策略服务"""
 
     TARGET_MONTHLY_SCORE = 650
-    MIN_SCORE_RATIO = 0.45
-    MAX_SCORE_RATIO = 0.90
+    MIN_SCORE_RATIO = 0.50
+    MAX_SCORE_RATIO = 1.00
     USER_VARIATION_STD = 0.08
     DAILY_ALLOCATE_RATIO = 0.80
     MONTHLY_ALLOCATE_RATIO = 0.25
-    MONTHLY_BASE_SCORE = 90
+    MONTHLY_BASE_SCORE = 100  # 每月一考满分100分
 
     @staticmethod
     def is_weekend_or_holiday(date: datetime) -> bool:
@@ -205,6 +205,74 @@ class ScoreStrategy:
         }
 
     @staticmethod
+    def get_task_execution_status(user_id: int) -> Optional[Dict[str, bool]]:
+        """
+        从外部API获取三个任务的执行状态
+
+        Args:
+            user_id: 用户ID
+
+        Returns:
+            Dict: {
+                "daily_completed": True/False,   # 今日是否已完成
+                "weekly_completed": True/False,  # 本周是否已完成
+                "monthly_completed": True/False  # 本月是否已完成
+            }
+            如果API调用失败返回None
+        """
+        try:
+            from ccsa_auto.modules.auth.service import AuthService
+
+            result = AuthService.get_task_status_with_retry(user_id)
+            if result:
+                return {
+                    "daily_completed": result["daily"]["status"] == "已完成",
+                    "weekly_completed": result["weekly"]["status"] == "已完成",
+                    "monthly_completed": result["monthly"]["status"] == "已完成",
+                }
+            else:
+                logger.warning(f"[控分策略] 用户{user_id} 获取任务执行状态API返回失败")
+                return None
+        except Exception as e:
+            logger.error(f"[控分策略] 用户{user_id} 获取任务执行状态失败: {e}")
+            return None
+
+    @staticmethod
+    def get_monthly_exam_info(user_id: int, year: int, month: int) -> Dict[str, Any]:
+        """
+        获取本月每月一考信息
+
+        Args:
+            user_id: 用户ID
+            year: 年份
+            month: 月份
+
+        Returns:
+            Dict: {
+                "executed": 是否已执行,
+                "score": 已得分数,
+                "remaining_score": 剩余可得分(如果未执行)
+            }
+        """
+        from ccsa_auto.modules.task.score_tracker import ScoreTracker
+
+        records = ScoreTracker.get_monthly_scores(user_id, year, month)
+
+        monthly_score = 0
+        executed = False
+        for record in records:
+            if record.task_type == "monthly":
+                monthly_score = record.score
+                executed = True
+                break
+
+        return {
+            "executed": executed,
+            "score": monthly_score,
+            "remaining_score": 0 if executed else ScoreStrategy.MONTHLY_BASE_SCORE,
+        }
+
+    @staticmethod
     def apply_user_variation(user_id: int, date: datetime, base_ratio: float) -> float:
         """
         应用用户差异化随机波动
@@ -268,13 +336,10 @@ class ScoreStrategy:
                 "reason": "每周一课无法控分，必须满分",
             }
 
-        current_scores = ScoreTracker.get_current_month_scores(user_id)
-        current_total = current_scores["total"]
-
-        logger.info(f"[控分策略] 用户{user_id} 当前月度总分: {current_total}分")
+        # 【修复】不再从已完成分数计算剩余需达分数
+        # 改为从"理论上本月还能得多少分"计算
 
         weekly_info = ScoreStrategy.get_weekly_lessons_info(user_id, year, month)
-        weekly_actual = weekly_info["actual_score"]
         weekly_remaining = weekly_info["remaining_sessions"]
         weekly_remaining_score = weekly_remaining * 50
 
@@ -283,13 +348,21 @@ class ScoreStrategy:
         )
 
         daily_available = remaining_days * 20
-        monthly_min = ScoreStrategy.MONTHLY_BASE_SCORE
+
+        monthly_info = ScoreStrategy.get_monthly_exam_info(user_id, year, month)
+        monthly_remaining_score = (
+            0 if monthly_info["executed"] else ScoreStrategy.MONTHLY_BASE_SCORE
+        )
 
         target = ScoreStrategy.TARGET_MONTHLY_SCORE
-        remaining_needed = max(0, target - current_total)
+
+        # 计算理论上本月各任务最多还能得多少分
+        theoretical_max = (
+            daily_available + weekly_remaining_score + monthly_remaining_score
+        )
 
         logger.info(
-            f"[控分策略] 用户{user_id} 剩余需达: {remaining_needed:.0f}分, 剩余工作日: {remaining_days}天, 剩余每周一课: {weekly_remaining}次({weekly_remaining_score}分)"
+            f"[控分策略] 用户{user_id} 理论上限: {theoretical_max:.0f}分 (每日:{daily_available}, 每周一课:{weekly_remaining_score}, 每月一考:{monthly_remaining_score}), 剩余工作日: {remaining_days}天"
         )
 
         if task_type == "daily":
@@ -313,31 +386,34 @@ class ScoreStrategy:
                     "reason": "本月无剩余工作日",
                 }
 
-            if remaining_needed <= 0:
+            # 【修复】根据理论上限决定得分率
+            if theoretical_max >= target:
+                # 理论上限已经超过目标，可以控最低分
                 base_ratio = ScoreStrategy.MIN_SCORE_RATIO
-                reason = "已达标，得最低分"
+                reason = "理论上限达标，得最低分"
                 logger.info(
-                    f"[控分策略] 用户{user_id} 已达标({current_total}分), 得最低分{base_ratio * 100:.1f}%"
+                    f"[控分策略] 用户{user_id} 理论上限({theoretical_max:.0f})>=目标({target}), 得最低分{base_ratio * 100:.1f}%"
                 )
             else:
-                weekly_monthly_reserve = weekly_remaining_score + monthly_min
-                daily_target = max(0, remaining_needed - weekly_monthly_reserve)
+                # 需要算出每日任务需要承担多少分差
+                gap = target - theoretical_max
+                daily_target = gap  # 每日任务需要承担全部缺口
 
                 if daily_target <= daily_available * ScoreStrategy.MIN_SCORE_RATIO:
                     base_ratio = ScoreStrategy.MIN_SCORE_RATIO
-                    reason = f"剩余需达{remaining_needed:.0f}分, 控最低分"
+                    reason = f"缺口{daily_target:.0f}分, 只需控最低分"
                     logger.info(
                         f"[控分策略] 用户{user_id} 只需控最低分, 得分率{base_ratio * 100:.1f}%"
                     )
                 elif daily_target >= daily_available * ScoreStrategy.MAX_SCORE_RATIO:
                     base_ratio = ScoreStrategy.MAX_SCORE_RATIO
-                    reason = f"剩余需达{remaining_needed:.0f}分, 需拿高分"
+                    reason = f"缺口{daily_target:.0f}分, 需拿高分"
                     logger.info(
                         f"[控分策略] 用户{user_id} 需拿高分, 得分率{base_ratio * 100:.1f}%"
                     )
                 else:
                     base_ratio = daily_target / daily_available
-                    reason = f"剩余需达{remaining_needed:.0f}分, 日均目标{daily_target / remaining_days:.1f}分"
+                    reason = f"缺口{daily_target:.0f}分, 日均目标{daily_target / remaining_days:.1f}分"
                     logger.info(
                         f"[控分策略] 用户{user_id} 日均目标{daily_target / remaining_days:.1f}分, 得分率{base_ratio * 100:.1f}%"
                     )
@@ -359,25 +435,51 @@ class ScoreStrategy:
             }
 
         elif task_type == "monthly":
-            weekly_monthly_reserve = weekly_remaining_score
-            monthly_target = max(
-                0,
-                remaining_needed
-                - weekly_monthly_reserve
-                - daily_available * ScoreStrategy.MIN_SCORE_RATIO,
-            )
+            # 【修复】先从API检查本月是否已完成，再检查数据库
+            task_status = ScoreStrategy.get_task_execution_status(user_id)
 
-            if monthly_target <= ScoreStrategy.MONTHLY_BASE_SCORE:
+            if task_status and task_status["monthly_completed"]:
+                logger.info(f"[控分策略] 用户{user_id} 本月每月一考API显示已完成，跳过")
+                return {
+                    "correct_questions": 0,
+                    "score": 0,
+                    "max_score": 100,
+                    "score_ratio": 0.0,
+                    "reason": "本月每月一考已完成，跳过",
+                }
+
+            # API未完成或API调用失败时，查询数据库确认
+            if monthly_info["executed"]:
+                logger.info(
+                    f"[控分策略] 用户{user_id} 本月每月一考数据库显示已执行，跳过"
+                )
+                return {
+                    "correct_questions": 0,
+                    "score": 0,
+                    "max_score": 100,
+                    "score_ratio": 0.0,
+                    "reason": "本月每月一考已执行，跳过",
+                }
+
+            # 未执行时，根据理论上限计算得分
+            # 每月一考的任务是承担剩余分差中的一部分
+            daily_reserve = daily_available * ScoreStrategy.MIN_SCORE_RATIO
+
+            if theoretical_max >= target:
+                # 理论上限已达标，每月一考得保底分
                 monthly_target = ScoreStrategy.MONTHLY_BASE_SCORE
                 base_ratio = monthly_target / 100
-                reason = "已达标或接近达标，得保底分"
+                reason = "理论上限达标，每月一考得保底分"
                 logger.info(
                     f"[控分策略] 用户{user_id} 每月一考得保底{monthly_target}分"
                 )
             else:
+                # 需要算出每月一考需要承担多少分差
+                gap = target - theoretical_max
+                monthly_target = max(gap, ScoreStrategy.MONTHLY_BASE_SCORE)
                 monthly_target = min(100, monthly_target)
                 base_ratio = monthly_target / 100
-                reason = f"剩余需达{remaining_needed:.0f}分, 承担{monthly_target:.0f}分"
+                reason = f"缺口{gap:.0f}分，每月一考承担{monthly_target:.0f}分"
                 logger.info(
                     f"[控分策略] 用户{user_id} 每月一考分配{monthly_target:.0f}分, 得分率{base_ratio * 100:.1f}%"
                 )
