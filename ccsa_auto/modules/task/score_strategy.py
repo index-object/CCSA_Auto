@@ -14,13 +14,13 @@ logger = logging.getLogger(__name__)
 class ScoreStrategy:
     """分数控制策略服务"""
 
-    TARGET_MONTHLY_SCORE = 570
+    TARGET_MONTHLY_SCORE = 650
     MIN_SCORE_RATIO = 0.45
     MAX_SCORE_RATIO = 0.90
     USER_VARIATION_STD = 0.08
     DAILY_ALLOCATE_RATIO = 0.80
     MONTHLY_ALLOCATE_RATIO = 0.25
-    MONTHLY_BASE_SCORE = 80
+    MONTHLY_BASE_SCORE = 90
 
     @staticmethod
     def is_weekend_or_holiday(date: datetime) -> bool:

@@ -23,6 +23,9 @@ from ccsa_auto.utils.timezone import (
 
 logger = setup_logger(__name__)
 
+# 全局初始化标记，防止热重载导致重复初始化
+_scheduler_initialized = False
+
 
 def cleanup_expired_sessions_job():
     """定时清理过期会话任务"""
@@ -220,9 +223,17 @@ def init_scheduler():
     """
     初始化任务调度器
     """
+    global _scheduler_initialized
+
     try:
+        # 双重检查：先检查全局标记，再检查scheduler状态
+        if _scheduler_initialized:
+            logger.info("任务调度器已经初始化过，跳过重复初始化")
+            return
+
         if scheduler.running:
             logger.info("任务调度器已经在运行")
+            _scheduler_initialized = True
             return
 
         logger.info("开始初始化任务调度器")
@@ -335,6 +346,7 @@ def init_scheduler():
         logger.info("已添加日志清理定时任务（每天凌晨3点执行，保留60天）")
 
         scheduler.start()
+        _scheduler_initialized = True
         logger.info("任务调度器初始化完成并已启动")
 
     except Exception as e:
