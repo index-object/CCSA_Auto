@@ -1,3 +1,6 @@
+import threading
+import time
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
@@ -128,29 +131,51 @@ def execute_user_task(task_id):
         task_id: 任务ID
     """
     db = SessionLocal()
+    thread_id = threading.current_thread().ident
+    job_id = f"user_task_{task_id}"
+
     try:
         task = db.query(Task).filter_by(id=task_id).first()
         if not task:
-            logger.error(f"任务 {task_id} 不存在")
+            logger.error(
+                f"[任务调度] 任务不存在 | task_id={task_id} | thread_id={thread_id}"
+            )
             return
 
         user = db.query(User).filter_by(id=task.user_id).first()
         user_name = user.name if user else "未知"
 
+        logger.info(
+            f"[任务调度] 开始执行任务 | task_id={task_id} | job_id={job_id} | task_type={task.task_type} | user={user_name}({task.user_id}) | thread_id={thread_id} | execution_status={task.execution_status}"
+        )
+
         if not task.is_active:
             logger.info(
-                f"任务 {task.task_name} 未激活，跳过执行，用户：{user_name}({task.user_id})"
+                f"[任务调度] 任务未激活，跳过执行 | task_id={task_id} | task_name={task.task_name} | user={user_name}({task.user_id}) | thread_id={thread_id}"
             )
             return
 
         task.execution_status = "running"
         task.updated_at = datetime.utcnow()
         db.commit()
-
-        logger.info(f"{task.task_name} 开始执行，用户：{user_name}({task.user_id})")
+        logger.info(
+            f"[任务调度] 任务状态已更新 | task_id={task_id} | status=pending→running | thread_id={thread_id}"
+        )
 
         # 执行任务
+        exec_start_time = time.time()
+        logger.info(
+            f"[任务调度] 调用TaskService.execute_task | task_id={task_id} | task_type={task.task_type} | user={task.user_id} | thread_id={thread_id}"
+        )
         result = TaskService.execute_task(task, user)
+        exec_end_time = time.time()
+        exec_duration = exec_end_time - exec_start_time
+        logger.info(
+            f"[任务调度] TaskService.execute_task返回 | task_id={task_id} | duration={exec_duration:.3f}s | result_success={result.get('success')} | thread_id={thread_id}"
+        )
+        logger.debug(
+            f"[任务调度] 执行结果详情 | task_id={task_id} | result={result} | thread_id={thread_id}"
+        )
 
         # 获取当前执行时间（上海时间）
         executed_at_shanghai = get_current_time()
@@ -161,6 +186,9 @@ def execute_user_task(task_id):
         task.result = str(result)
         task.executed_at = datetime.utcnow()
         task.updated_at = datetime.utcnow()
+        logger.info(
+            f"[任务调度] 更新任务状态 | task_id={task_id} | execution_status={task.execution_status} | external_status={task.external_status} | thread_id={thread_id}"
+        )
 
         # 基于执行时间计算下次运行时间（确保是明天）
         if task.is_active:
@@ -184,10 +212,12 @@ def execute_user_task(task_id):
             logger.error(f"重新调度任务 {task_id} 失败: {e}")
 
         if result.get("success"):
-            logger.info(f"{task.task_name} 执行完成，用户：{user_name}({task.user_id})")
+            logger.info(
+                f"[任务调度] 任务执行成功 | task_id={task_id} | task_name={task.task_name} | user={user_name}({task.user_id}) | thread_id={thread_id}"
+            )
         else:
             logger.error(
-                f"{task.task_name} 执行失败，用户：{user_name}({task.user_id})，原因：{result.get('message')}"
+                f"[任务调度] 任务执行失败 | task_id={task_id} | task_name={task.task_name} | user={user_name}({task.user_id}) | error={result.get('message')} | thread_id={thread_id}"
             )
 
         LoggingService.log_task_execution(
@@ -199,7 +229,9 @@ def execute_user_task(task_id):
         )
 
     except Exception as e:
-        logger.exception(f"执行任务 {task_id} 时发生异常: {e}")
+        logger.exception(
+            f"[任务调度] 执行任务异常 | task_id={task_id} | error={str(e)} | thread_id={thread_id}"
+        )
 
         # 更新任务状态为失败
         try:
@@ -212,7 +244,9 @@ def execute_user_task(task_id):
                 task.executed_at = datetime.utcnow()
                 task.updated_at = datetime.utcnow()
                 db.commit()
-                logger.info(f"任务 {task_id} 状态已更新为失败")
+                logger.info(
+                    f"[任务调度] 任务状态已更新为失败 | task_id={task_id} | thread_id={thread_id}"
+                )
         except Exception as update_error:
             logger.error(f"更新任务 {task_id} 状态失败: {update_error}")
     finally:

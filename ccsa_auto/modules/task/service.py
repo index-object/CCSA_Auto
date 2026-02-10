@@ -1,4 +1,6 @@
 import requests
+import threading
+import time
 from datetime import datetime, timedelta
 
 from ccsa_auto.core.config import Config
@@ -337,11 +339,18 @@ class TaskService:
             user_id: 用户ID
             user_name: 用户姓名
         """
+        # 在try块外定义变量，确保异常处理时可用
+        start_time = time.time()
+        thread_id = threading.current_thread().ident
+
         try:
             import random
             import json
 
-            logger.info(f"每周一课开始执行，用户：{user_name}({user_id})")
+            start_datetime = datetime.now().isoformat()
+            logger.info(
+                f"[每周一课] 开始执行 | user={user_name}({user_id}) | thread_id={thread_id} | start_time={start_datetime}"
+            )
 
             study_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["GET_STUDY_LIST"]
             study_headers = {
@@ -349,12 +358,27 @@ class TaskService:
                 **Config.EXTERNAL_PLATFORM["HEADERS"],
             }
 
+            # 请求学习列表
+            logger.info(
+                f"[每周一课] 请求学习列表 | user={user_id} | url={study_url} | thread_id={thread_id}"
+            )
+            req_start = time.time()
             study_response = requests.get(study_url, headers=study_headers)
+            req_end = time.time()
+            req_duration = req_end - req_start
             study_response_json = study_response.json()
+            logger.info(
+                f"[每周一课] 学习列表响应 | user={user_id} | status={study_response.status_code} | duration={req_duration:.3f}s | code={study_response_json.get('code')} | thread_id={thread_id}"
+            )
+            logger.debug(
+                f"[每周一课] 学习列表数据 | user={user_id} | data={study_response_json} | thread_id={thread_id}"
+            )
 
             if study_response_json.get("code") != 200:
                 error_msg = f"获取每周一课列表失败：{study_response_json.get('msg', '未知错误')}"
-                logger.error(error_msg)
+                logger.error(
+                    f"[每周一课] {error_msg} | user={user_id} | thread_id={thread_id}"
+                )
                 return {
                     "success": False,
                     "message": error_msg,
@@ -366,28 +390,62 @@ class TaskService:
 
             if not week_id:
                 error_msg = "未能获取每周一课ID"
-                logger.error(error_msg)
+                logger.error(
+                    f"[每周一课] {error_msg} | user={user_id} | study_data={study_data} | thread_id={thread_id}"
+                )
                 return {"success": False, "message": error_msg}
 
+            logger.info(
+                f"[每周一课] 解析到week_id | user={user_id} | week_id={week_id} | thread_id={thread_id}"
+            )
+
+            # 获取课程详情
+            logger.info(
+                f"[每周一课] 请求课程详情 | user={user_id} | week_id={week_id} | thread_id={thread_id}"
+            )
+            details_start = time.time()
             details_result = TaskService.get_weekly_lesson_details(
                 access_token, week_id
             )
+            details_end = time.time()
+            details_duration = details_end - details_start
+            logger.info(
+                f"[每周一课] 课程详情响应 | user={user_id} | duration={details_duration:.3f}s | success={details_result.get('success')} | thread_id={thread_id}"
+            )
+
             if not details_result.get("success"):
-                logger.error(f"获取课程详情失败：{details_result.get('message')}")
+                logger.error(
+                    f"[每周一课] 获取课程详情失败 | user={user_id} | message={details_result.get('message')} | thread_id={thread_id}"
+                )
                 return details_result
 
             lesson_details = details_result.get("data", {})
             resource_duration = lesson_details.get("resourceDuration", 300)
             resource_id = lesson_details.get("resourceId")
             resource_url = lesson_details.get("resourceUrl")
+            logger.info(
+                f"[每周一课] 课程详情 | user={user_id} | resource_duration={resource_duration} | resource_id={resource_id} | resource_url={resource_url} | thread_id={thread_id}"
+            )
 
             if resource_url:
+                logger.info(
+                    f"[每周一课] 请求视频链接 | user={user_id} | resource_url={resource_url} | week_id={week_id} | thread_id={thread_id}"
+                )
+                video_start = time.time()
                 video_result = TaskService.get_video_url(
                     access_token, resource_url, week_id
                 )
+                video_end = time.time()
+                video_duration = video_end - video_start
+                logger.info(
+                    f"[每周一课] 视频链接响应 | user={user_id} | duration={video_duration:.3f}s | success={video_result.get('success')} | thread_id={thread_id}"
+                )
+
                 if not video_result.get("success"):
                     error_msg = f"获取视频链接失败：{video_result.get('message')}"
-                    logger.error(error_msg)
+                    logger.error(
+                        f"[每周一课] {error_msg} | user={user_id} | thread_id={thread_id}"
+                    )
                     return {
                         "success": False,
                         "message": error_msg,
@@ -411,10 +469,22 @@ class TaskService:
                 "studySchedule": 100,
             }
 
+            logger.info(
+                f"[每周一课] 提交学习记录 | user={user_id} | week_id={week_id} | resource_duration={resource_duration} | payload={payload} | thread_id={thread_id}"
+            )
+            submit_start = time.time()
             submit_response = requests.post(
                 submit_url, headers=submit_headers, json=payload
             )
+            submit_end = time.time()
+            submit_duration = submit_end - submit_start
             submit_json = submit_response.json()
+            logger.info(
+                f"[每周一课] 提交响应 | user={user_id} | status={submit_response.status_code} | duration={submit_duration:.3f}s | response_code={submit_json.get('code')} | msg={submit_json.get('msg')} | thread_id={thread_id}"
+            )
+            logger.debug(
+                f"[每周一课] 提交响应数据 | user={user_id} | data={submit_json.get('data')} | thread_id={thread_id}"
+            )
 
             if submit_json.get("code") == 200:
                 from ccsa_auto.modules.task.score_tracker import ScoreTracker
@@ -429,7 +499,11 @@ class TaskService:
                     max_score=50.0,
                 )
 
-                logger.info(f"每周一课完成，得分：50/50，用户：{user_name}({user_id})")
+                end_time = time.time()
+                total_duration = end_time - start_time
+                logger.info(
+                    f"[每周一课] 执行成功 | user={user_name}({user_id}) | total_duration={total_duration:.3f}s | thread_id={thread_id} | result={submit_json.get('data', {})}"
+                )
                 return {
                     "success": True,
                     "message": "每周一课执行成功",
@@ -444,15 +518,23 @@ class TaskService:
                 }
             else:
                 error_msg = f"提交学习记录失败：{submit_json.get('msg', '未知错误')}"
-                logger.error(error_msg)
+                end_time = time.time()
+                total_duration = end_time - start_time
+                logger.error(
+                    f"[每周一课] 执行失败 | user={user_name}({user_id}) | total_duration={total_duration:.3f}s | error={error_msg} | thread_id={thread_id} | response={submit_json}"
+                )
                 return {
                     "success": False,
                     "message": error_msg,
                 }
 
         except Exception as e:
+            end_time = time.time()
+            total_duration = end_time - start_time
             error_msg = f"每周一课异常：{str(e)}"
-            logger.exception(error_msg)
+            logger.exception(
+                f"[每周一课] 执行异常 | user={user_name}({user_id}) | total_duration={total_duration:.3f}s | error={str(e)} | thread_id={thread_id}"
+            )
             return {"success": False, "message": error_msg}
 
     @staticmethod
