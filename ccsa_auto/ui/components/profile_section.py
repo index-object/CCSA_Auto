@@ -4,6 +4,7 @@ from nicegui import ui, app
 from ccsa_auto.modules.auth.service import AuthService
 from ccsa_auto.modules.auth.session_manager import get_session_manager
 from ccsa_auto.modules.auth.user_state import UserStateService
+from ccsa_auto.modules.task.score_strategy import ScoreStrategy
 
 
 def create_profile_section():
@@ -131,7 +132,7 @@ def create_profile_section():
 
                 if scores:
                     current_monthly_score = scores.get("monthly_score", 0)
-                    target_monthly_score = 570
+                    target_monthly_score = ScoreStrategy.TARGET_MONTHLY_SCORE
 
                     # 计算进度百分比
                     progress_percentage = (

@@ -291,9 +291,12 @@ class ScoreTracker:
         except Exception as e:
             logger.error(f"获取控分策略状态失败: {e}")
             year, month = now.year, now.month
+            # 延迟导入避免循环依赖
+            from ccsa_auto.modules.task.score_strategy import ScoreStrategy
+
             return {
                 "current_monthly_score": 0,
-                "target_monthly_score": 570,
+                "target_monthly_score": ScoreStrategy.TARGET_MONTHLY_SCORE,
                 "remaining_potential": 0,
                 "total_potential": 0,
                 "progress_percentage": 0,
