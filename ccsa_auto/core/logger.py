@@ -1,89 +1,82 @@
 import logging
 import os
 import shutil
+import threading
 import time
 from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
 from ccsa_auto.core.config import Config
 
+_global_logger_lock = threading.Lock()
+
 
 class SafeTimedRotatingFileHandler(TimedRotatingFileHandler):
-    """安全的日志轮转处理器 - 解决 Windows 文件锁定问题"""
+    """安全的日志轮转处理器 - 解决 Windows 文件锁定和多线程并发问题"""
 
     def __init__(self, *args, **kwargs):
-        # Windows 上延迟打开文件，避免初始化时锁定
         kwargs.setdefault("delay", True)
         super().__init__(*args, **kwargs)
+        self.rollover_lock = threading.Lock()
 
     def doRollover(self):
-        """重写轮转逻辑，解决 Windows 文件锁定问题"""
-        # 关闭当前流
-        if self.stream:
-            self.stream.close()
-            self.stream = None
+        """重写轮转逻辑，解决 Windows 文件锁定和多线程问题"""
+        with self.rollover_lock:
+            if self.stream:
+                self.stream.close()
+                self.stream = None  # type: ignore
 
-        # 获取目标文件名 (格式: app_YYYY-MM-DD.log)
-        dfn = self.rotation_filename(
-            os.path.join(
-                os.path.dirname(self.baseFilename),
-                os.path.basename(self.baseFilename).replace(
-                    datetime.now().strftime("%Y-%m-%d"), self.suffix
-                ),
-            )
-        )
-
-        # 如果 suffix 与 baseFilename 相同，使用默认命名
-        if dfn == self.baseFilename:
             dfn = self.rotation_filename(
-                datetime.now()
-                .strftime("%Y-%m-%d")
-                .join(os.path.splitext(self.baseFilename)[:1])
-                + "_%Y-%m-%d.log"
+                os.path.join(
+                    os.path.dirname(self.baseFilename),
+                    os.path.basename(self.baseFilename).replace(
+                        datetime.now().strftime("%Y-%m-%d"), self.suffix
+                    ),
+                )
             )
 
-        safe_dfn = dfn
-        counter = 1
-        # 如果目标文件已存在，添加序号避免冲突
-        while os.path.exists(safe_dfn):
-            base, ext = os.path.splitext(dfn)
-            safe_dfn = f"{base}_{counter}{ext}"
-            counter += 1
+            if dfn == self.baseFilename:
+                dfn = self.rotation_filename(
+                    datetime.now()
+                    .strftime("%Y-%m-%d")
+                    .join(os.path.splitext(self.baseFilename)[:1])
+                    + "_%Y-%m-%d.log"
+                )
 
-        # 尝试安全的轮转方式
-        try:
-            # 尝试直接重命名（最快的方式）
-            if os.path.exists(self.baseFilename):
-                os.rename(self.baseFilename, safe_dfn)
-        except (OSError, PermissionError):
-            # Windows 上重命名失败时，使用复制+删除
+            safe_dfn = dfn
+            counter = 1
+            while os.path.exists(safe_dfn):
+                base, ext = os.path.splitext(dfn)
+                safe_dfn = f"{base}_{counter}{ext}"
+                counter += 1
+
             try:
                 if os.path.exists(self.baseFilename):
-                    shutil.copy2(self.baseFilename, safe_dfn)
-                    os.remove(self.baseFilename)
-            except (OSError, PermissionError) as e:
-                # 如果仍然失败，记录错误但不影响程序运行
-                import sys
-
-                print(f"[WARNING] 日志轮转失败: {e}", file=sys.stderr)
-                # 重新打开原文件继续写入
-                if os.path.exists(self.baseFilename):
-                    self.stream = open(self.baseFilename, "a")
-                return
-
-        # 删除过期日志
-        if self.backupCount > 0:
-            for s in self.getFilesToDelete():
+                    os.rename(self.baseFilename, safe_dfn)
+            except (OSError, PermissionError):
                 try:
-                    os.remove(s)
-                except OSError:
-                    pass
+                    if os.path.exists(self.baseFilename):
+                        shutil.copy2(self.baseFilename, safe_dfn)
+                        os.remove(self.baseFilename)
+                except (OSError, PermissionError) as e:
+                    import sys
 
-        # 重新打开新日志文件
-        if not self.delay:
-            self.stream = self._open()
+                    print(f"[WARNING] 日志轮转失败: {e}", file=sys.stderr)
+                    if os.path.exists(self.baseFilename):
+                        self.stream = open(self.baseFilename, "a", encoding="utf-8")
+                    return
+
+            if self.backupCount > 0:
+                for s in self.getFilesToDelete():
+                    try:
+                        os.remove(s)
+                    except OSError:
+                        pass
+
+            if not self.delay:
+                self.stream = self._open()
 
 
-def setup_logger(name: str = None) -> logging.Logger:
+def setup_logger(name: str | None = None) -> logging.Logger:
     """配置并返回日志器
 
     日志格式: %(asctime)s - %(levelname)s - %(name)s:%(lineno)d - %(message)s
