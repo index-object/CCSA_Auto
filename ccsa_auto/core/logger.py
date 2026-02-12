@@ -25,21 +25,20 @@ class SafeTimedRotatingFileHandler(TimedRotatingFileHandler):
                 self.stream.close()
                 self.stream = None  # type: ignore
 
-            dfn = self.rotation_filename(
-                os.path.join(
-                    os.path.dirname(self.baseFilename),
-                    os.path.basename(self.baseFilename).replace(
-                        datetime.now().strftime("%Y-%m-%d"), self.suffix
-                    ),
-                )
-            )
+            current_date_str = datetime.now().strftime("%Y-%m-%d")
+            log_dir = os.path.dirname(self.baseFilename)
+            base_name = os.path.basename(self.baseFilename)
+
+            old_date_pattern = datetime.strptime(
+                base_name.split("_")[1].split(".")[0], "%Y-%m-%d"
+            ).strftime("%Y-%m-%d")
+
+            new_log_name = base_name.replace(old_date_pattern, current_date_str)
+            dfn = os.path.join(log_dir, new_log_name)
 
             if dfn == self.baseFilename:
-                dfn = self.rotation_filename(
-                    datetime.now()
-                    .strftime("%Y-%m-%d")
-                    .join(os.path.splitext(self.baseFilename)[:1])
-                    + "_%Y-%m-%d.log"
+                dfn = os.path.join(
+                    log_dir, base_name.split("_")[0] + "_" + current_date_str + ".log"
                 )
 
             safe_dfn = dfn
