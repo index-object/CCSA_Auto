@@ -87,23 +87,33 @@ def create_logs_page():
                 ui.button(
                     "全部",
                     on_click=lambda: on_type_filter(None),
-                ).props(f"flat {'color=primary' if log_type_filter['value'] is None else ''}")
+                ).props(
+                    f"flat {'color=primary' if log_type_filter['value'] is None else ''}"
+                )
                 ui.button(
                     "操作",
                     on_click=lambda: on_type_filter("operation"),
-                ).props(f"flat {'color=info' if log_type_filter['value'] == 'operation' else ''}")
+                ).props(
+                    f"flat {'color=info' if log_type_filter['value'] == 'operation' else ''}"
+                )
                 ui.button(
                     "任务",
                     on_click=lambda: on_type_filter("task"),
-                ).props(f"flat {'color=purple' if log_type_filter['value'] == 'task' else ''}")
+                ).props(
+                    f"flat {'color=purple' if log_type_filter['value'] == 'task' else ''}"
+                )
                 ui.button(
                     "认证",
                     on_click=lambda: on_type_filter("auth"),
-                ).props(f"flat {'color=warning' if log_type_filter['value'] == 'auth' else ''}")
+                ).props(
+                    f"flat {'color=warning' if log_type_filter['value'] == 'auth' else ''}"
+                )
                 ui.button(
                     "错误",
                     on_click=lambda: on_type_filter("error"),
-                ).props(f"flat {'color=negative' if log_type_filter['value'] == 'error' else ''}")
+                ).props(
+                    f"flat {'color=negative' if log_type_filter['value'] == 'error' else ''}"
+                )
 
             # Date range
             with ui.row().classes("items-center gap-2"):
@@ -199,12 +209,13 @@ def create_logs_page():
             with ui.row().classes("items-center gap-2"):
                 ui.label(f"共 {logs_data['total']} 条").classes("text-sm text-gray-500")
 
-            with ui.pagination(
+            pagination = ui.pagination(
                 current_page["value"],
                 1,
                 total_pages,
                 on_change=lambda e: on_page_change(e.value),
-            ).props("boundary-links")
+            )
+            pagination.props("boundary-links")
 
 
 def render():

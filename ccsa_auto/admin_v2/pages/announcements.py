@@ -1,6 +1,8 @@
 from nicegui import ui
 
-from ccsa_auto.admin_v2.services.announcement_service import AnnouncementManagementService
+from ccsa_auto.admin_v2.services.announcement_service import (
+    AnnouncementManagementService,
+)
 
 
 def create_announcements_page():
@@ -56,7 +58,9 @@ def create_announcements_page():
                 ui.button("取消", on_click=dialog.close).props("flat")
                 ui.button(
                     "创建",
-                    on_click=lambda: do_create(title_input["value"], content_input["value"], dialog),
+                    on_click=lambda: do_create(
+                        title_input["value"], content_input["value"], dialog
+                    ),
                 ).props("color=primary")
 
         dialog.open()
@@ -75,7 +79,9 @@ def create_announcements_page():
         else:
             ui.notify(f"创建失败: {result.get('message')}", type="negative")
 
-    def edit_announcement(announcement_id: int, current_title: str, current_content: str):
+    def edit_announcement(
+        announcement_id: int, current_title: str, current_content: str
+    ):
         """Show edit announcement dialog"""
         title_input = {"value": current_title}
         content_input = {"value": current_content}
@@ -98,7 +104,10 @@ def create_announcements_page():
                 ui.button(
                     "保存",
                     on_click=lambda: do_update(
-                        announcement_id, title_input["value"], content_input["value"], dialog
+                        announcement_id,
+                        title_input["value"],
+                        content_input["value"],
+                        dialog,
                     ),
                 ).props("color=primary")
 
@@ -212,7 +221,8 @@ def create_announcements_page():
         # Pagination
         total_pages = max(
             1,
-            (announcements_data["total"] + page_size["value"] - 1) // page_size["value"],
+            (announcements_data["total"] + page_size["value"] - 1)
+            // page_size["value"],
         )
         with ui.row().classes("items-center justify-between w-full mt-4"):
             with ui.row().classes("items-center gap-2"):
@@ -220,12 +230,13 @@ def create_announcements_page():
                     "text-sm text-gray-500"
                 )
 
-            with ui.pagination(
+            pagination = ui.pagination(
                 current_page["value"],
                 1,
                 total_pages,
                 on_change=lambda e: on_page_change(e.value),
-            ).props("boundary-links")
+            )
+            pagination.props("boundary-links")
 
 
 def render():

@@ -23,6 +23,15 @@ from ccsa_auto.ui.pages.admin_login_page import create_admin_login_page
 from ccsa_auto.ui.pages.admin_page import create_admin_page
 from ccsa_auto.ui.pages.main_page import create_main_page
 
+# Admin V2 imports
+from ccsa_auto.admin_v2.pages.dashboard import create_dashboard_page
+from ccsa_auto.admin_v2.pages.users import create_users_page
+from ccsa_auto.admin_v2.pages.tasks import create_tasks_page
+from ccsa_auto.admin_v2.pages.announcements import create_announcements_page
+from ccsa_auto.admin_v2.pages.logs import create_logs_page
+from ccsa_auto.admin_v2.pages.settings import create_settings_page
+from ccsa_auto.admin_v2.components.layout.admin_layout import AdminLayout
+
 create_tables()
 init_admin()
 init_scheduler()
@@ -282,6 +291,151 @@ def admin_page():
             UserStateService.clear_state(session_id)
             session_manager.delete_session(session_id)
         ui.navigate.to("/admin_login")
+
+
+# Admin V2 Routes
+@ui.page("/admin_v2")
+def admin_v2_page():
+    """Admin V2 Dashboard"""
+    session_manager = get_session_manager()
+    session_id = session_manager.get_current_session_id()
+
+    if not session_id:
+        ui.navigate.to("/admin_login")
+        return
+
+    state = UserStateService.get_state(session_id)
+    if not state or not state.get("authenticated"):
+        ui.navigate.to("/admin_login")
+        return
+
+    user_info = state.get("user_info", {}) if state else {}
+    if not user_info.get("is_admin"):
+        ui.notify("需要管理员权限", type="warning")
+        ui.navigate.to("/")
+        return
+
+    AdminLayout(render_content=create_dashboard_page, title="数据概览").render()
+
+
+@ui.page("/admin_v2/users")
+def admin_v2_users_page():
+    """Admin V2 Users Management"""
+    session_manager = get_session_manager()
+    session_id = session_manager.get_current_session_id()
+
+    if not session_id:
+        ui.navigate.to("/admin_login")
+        return
+
+    state = UserStateService.get_state(session_id)
+    if not state or not state.get("authenticated"):
+        ui.navigate.to("/admin_login")
+        return
+
+    user_info = state.get("user_info", {}) if state else {}
+    if not user_info.get("is_admin"):
+        ui.notify("需要管理员权限", type="warning")
+        ui.navigate.to("/")
+        return
+
+    AdminLayout(render_content=create_users_page, title="用户管理").render()
+
+
+@ui.page("/admin_v2/tasks")
+def admin_v2_tasks_page():
+    """Admin V2 Tasks Management"""
+    session_manager = get_session_manager()
+    session_id = session_manager.get_current_session_id()
+
+    if not session_id:
+        ui.navigate.to("/admin_login")
+        return
+
+    state = UserStateService.get_state(session_id)
+    if not state or not state.get("authenticated"):
+        ui.navigate.to("/admin_login")
+        return
+
+    user_info = state.get("user_info", {}) if state else {}
+    if not user_info.get("is_admin"):
+        ui.notify("需要管理员权限", type="warning")
+        ui.navigate.to("/")
+        return
+
+    AdminLayout(render_content=create_tasks_page, title="任务管理").render()
+
+
+@ui.page("/admin_v2/announcements")
+def admin_v2_announcements_page():
+    """Admin V2 Announcements Management"""
+    session_manager = get_session_manager()
+    session_id = session_manager.get_current_session_id()
+
+    if not session_id:
+        ui.navigate.to("/admin_login")
+        return
+
+    state = UserStateService.get_state(session_id)
+    if not state or not state.get("authenticated"):
+        ui.navigate.to("/admin_login")
+        return
+
+    user_info = state.get("user_info", {}) if state else {}
+    if not user_info.get("is_admin"):
+        ui.notify("需要管理员权限", type="warning")
+        ui.navigate.to("/")
+        return
+
+    AdminLayout(render_content=create_announcements_page, title="公告管理").render()
+
+
+@ui.page("/admin_v2/logs")
+def admin_v2_logs_page():
+    """Admin V2 Operation Logs"""
+    session_manager = get_session_manager()
+    session_id = session_manager.get_current_session_id()
+
+    if not session_id:
+        ui.navigate.to("/admin_login")
+        return
+
+    state = UserStateService.get_state(session_id)
+    if not state or not state.get("authenticated"):
+        ui.navigate.to("/admin_login")
+        return
+
+    user_info = state.get("user_info", {}) if state else {}
+    if not user_info.get("is_admin"):
+        ui.notify("需要管理员权限", type="warning")
+        ui.navigate.to("/")
+        return
+
+    AdminLayout(render_content=create_logs_page, title="操作日志").render()
+
+
+@ui.page("/admin_v2/settings")
+def admin_v2_settings_page():
+    """Admin V2 Settings"""
+    session_manager = get_session_manager()
+    session_id = session_manager.get_current_session_id()
+
+    if not session_id:
+        ui.navigate.to("/admin_login")
+        return
+
+    state = UserStateService.get_state(session_id)
+    if not state or not state.get("authenticated"):
+        ui.navigate.to("/admin_login")
+        return
+
+    user_info = state.get("user_info", {}) if state else {}
+    if not user_info.get("is_admin"):
+        ui.notify("需要管理员权限", type="warning")
+        ui.navigate.to("/")
+        return
+
+    AdminLayout(render_content=create_settings_page, title="系统设置").render()
 
 
 if __name__ in {"__main__", "__mp_main__"}:

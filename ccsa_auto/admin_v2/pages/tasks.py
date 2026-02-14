@@ -108,42 +108,60 @@ def create_tasks_page():
                 ui.button(
                     "全部",
                     on_click=lambda: on_task_type_filter(None),
-                ).props(f"flat {'color=primary' if task_type_filter['value'] is None else ''}")
+                ).props(
+                    f"flat {'color=primary' if task_type_filter['value'] is None else ''}"
+                )
                 ui.button(
                     "每日",
                     on_click=lambda: on_task_type_filter("daily"),
-                ).props(f"flat {'color=info' if task_type_filter['value'] == 'daily' else ''}")
+                ).props(
+                    f"flat {'color=info' if task_type_filter['value'] == 'daily' else ''}"
+                )
                 ui.button(
                     "每周",
                     on_click=lambda: on_task_type_filter("weekly"),
-                ).props(f"flat {'color=purple' if task_type_filter['value'] == 'weekly' else ''}")
+                ).props(
+                    f"flat {'color=purple' if task_type_filter['value'] == 'weekly' else ''}"
+                )
                 ui.button(
                     "每月",
                     on_click=lambda: on_task_type_filter("monthly"),
-                ).props(f"flat {'color=warning' if task_type_filter['value'] == 'monthly' else ''}")
+                ).props(
+                    f"flat {'color=warning' if task_type_filter['value'] == 'monthly' else ''}"
+                )
 
             # Status filters
             with ui.row().classes("items-center gap-2"):
                 ui.button(
                     "全部",
                     on_click=lambda: on_status_filter(None),
-                ).props(f"flat {'color=primary' if status_filter['value'] is None else ''}")
+                ).props(
+                    f"flat {'color=primary' if status_filter['value'] is None else ''}"
+                )
                 ui.button(
                     "待执行",
                     on_click=lambda: on_status_filter("pending"),
-                ).props(f"flat {'color=grey' if status_filter['value'] == 'pending' else ''}")
+                ).props(
+                    f"flat {'color=grey' if status_filter['value'] == 'pending' else ''}"
+                )
                 ui.button(
                     "执行中",
                     on_click=lambda: on_status_filter("running"),
-                ).props(f"flat {'color=warning' if status_filter['value'] == 'running' else ''}")
+                ).props(
+                    f"flat {'color=warning' if status_filter['value'] == 'running' else ''}"
+                )
                 ui.button(
                     "已完成",
                     on_click=lambda: on_status_filter("completed"),
-                ).props(f"flat {'color=positive' if status_filter['value'] == 'completed' else ''}")
+                ).props(
+                    f"flat {'color=positive' if status_filter['value'] == 'completed' else ''}"
+                )
                 ui.button(
                     "失败",
                     on_click=lambda: on_status_filter("failed"),
-                ).props(f"flat {'color=negative' if status_filter['value'] == 'failed' else ''}")
+                ).props(
+                    f"flat {'color=negative' if status_filter['value'] == 'failed' else ''}"
+                )
 
     # Tasks table
     with ui.card().classes("p-4"):
@@ -211,7 +229,10 @@ def create_tasks_page():
                         "completed": "已完成",
                         "failed": "失败",
                     }
-                    ui.badge(status_labels.get(status, status), color=status_colors.get(status, "grey"))
+                    ui.badge(
+                        status_labels.get(status, status),
+                        color=status_colors.get(status, "grey"),
+                    )
                 with ui.column().classes("w-20"):
                     ext_status = task.get("external_status", "")
                     ext_colors = {
@@ -227,31 +248,38 @@ def create_tasks_page():
                         ui.button(
                             "触发",
                             on_click=lambda t=task: trigger_task(t.get("id")),
-                            icon="play_arrow"
+                            icon="play_arrow",
                         ).props("flat dense size=sm")
                         ui.button(
                             "启用" if not task.get("is_active") else "禁用",
-                            on_click=lambda t=task: toggle_task_status(t.get("id"), t.get("is_active")),
-                            icon="toggle_on" if task.get("is_active") else "toggle_off"
+                            on_click=lambda t=task: toggle_task_status(
+                                t.get("id"), t.get("is_active")
+                            ),
+                            icon="toggle_on" if task.get("is_active") else "toggle_off",
                         ).props("flat dense size=sm")
                         ui.button(
                             "删除",
                             on_click=lambda t=task: delete_task(t.get("id")),
-                            icon="delete"
+                            icon="delete",
                         ).props("flat dense size=sm color=negative")
 
         # Pagination
-        total_pages = max(1, (tasks_data["total"] + page_size["value"] - 1) // page_size["value"])
+        total_pages = max(
+            1, (tasks_data["total"] + page_size["value"] - 1) // page_size["value"]
+        )
         with ui.row().classes("items-center justify-between w-full mt-4"):
             with ui.row().classes("items-center gap-2"):
-                ui.label(f"共 {tasks_data['total']} 条").classes("text-sm text-gray-500")
+                ui.label(f"共 {tasks_data['total']} 条").classes(
+                    "text-sm text-gray-500"
+                )
 
-            with ui.pagination(
+            pagination = ui.pagination(
                 current_page["value"],
                 1,
                 total_pages,
                 on_change=lambda e: on_page_change(e.value),
-            ).props("boundary-links")
+            )
+            pagination.props("boundary-links")
 
 
 def render():

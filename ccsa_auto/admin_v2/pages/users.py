@@ -135,28 +135,30 @@ def create_users_page():
                 ui.button(
                     "全部",
                     on_click=lambda: on_status_filter(None),
-                ).props(f"flat {'color=primary' if status_filter['value'] is None else ''}")
+                ).props(
+                    f"flat {'color=primary' if status_filter['value'] is None else ''}"
+                )
                 ui.button(
                     "正常",
                     on_click=lambda: on_status_filter(0),
-                ).props(f"flat {'color=positive' if status_filter['value'] == 0 else ''}")
+                ).props(
+                    f"flat {'color=positive' if status_filter['value'] == 0 else ''}"
+                )
                 ui.button(
                     "封号",
                     on_click=lambda: on_status_filter(1),
-                ).props(f"flat {'color=negative' if status_filter['value'] == 1 else ''}")
+                ).props(
+                    f"flat {'color=negative' if status_filter['value'] == 1 else ''}"
+                )
 
             # Batch actions
             with ui.row().classes("items-center gap-2"):
-                ui.button(
-                    "批量封禁",
-                    on_click=batch_ban,
-                    icon="block"
-                ).props("flat color=negative")
-                ui.button(
-                    "批量解封",
-                    on_click=batch_unban,
-                    icon="check_circle"
-                ).props("flat color=positive")
+                ui.button("批量封禁", on_click=batch_ban, icon="block").props(
+                    "flat color=negative"
+                )
+                ui.button("批量解封", on_click=batch_unban, icon="check_circle").props(
+                    "flat color=positive"
+                )
 
     # Users table
     def render_status_badge(status: int) -> str:
@@ -207,31 +209,38 @@ def create_users_page():
                         ui.button(
                             "查看",
                             on_click=lambda u=user: show_user_detail(u.get("id")),
-                            icon="visibility"
+                            icon="visibility",
                         ).props("flat dense size=sm")
                         ui.button(
                             "封禁" if user.get("status") == 0 else "解封",
-                            on_click=lambda u=user: toggle_user_status(u.get("id"), u.get("status")),
-                            icon="block" if user.get("status") == 0 else "check_circle"
+                            on_click=lambda u=user: toggle_user_status(
+                                u.get("id"), u.get("status")
+                            ),
+                            icon="block" if user.get("status") == 0 else "check_circle",
                         ).props("flat dense size=sm")
                         ui.button(
                             "删除",
                             on_click=lambda u=user: delete_user(u.get("id")),
-                            icon="delete"
+                            icon="delete",
                         ).props("flat dense size=sm color=negative")
 
         # Pagination
-        total_pages = max(1, (users_data["total"] + page_size["value"] - 1) // page_size["value"])
+        total_pages = max(
+            1, (users_data["total"] + page_size["value"] - 1) // page_size["value"]
+        )
         with ui.row().classes("items-center justify-between w-full mt-4"):
             with ui.row().classes("items-center gap-2"):
-                ui.label(f"共 {users_data['total']} 条").classes("text-sm text-gray-500")
+                ui.label(f"共 {users_data['total']} 条").classes(
+                    "text-sm text-gray-500"
+                )
 
-            with ui.pagination(
+            pagination = ui.pagination(
                 current_page["value"],
                 1,
                 total_pages,
                 on_change=lambda e: on_page_change(e.value),
-            ).props("boundary-links")
+            )
+            pagination.props("boundary-links")
 
 
 def render():
