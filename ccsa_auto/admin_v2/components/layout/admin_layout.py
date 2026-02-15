@@ -30,14 +30,13 @@ class AdminLayout:
             })();
         """)
 
-        with ui.row().classes("w-full h-screen"):
+        with ui.row().classes("w-full h-screen overflow-hidden"):
             self.sidebar.render()
 
-            with ui.column().classes("flex-1 bg-gray-100 overflow-auto"):
-                with ui.row().classes("w-full bg-white p-4 items-center shadow"):
-                    ui.label(self.title).classes("text-2xl font-bold")
-
-                with ui.column().classes("w-full p-6"):
+            with ui.column().classes(
+                "flex-1 overflow-auto bg-gradient-to-b from-[#f0fdf4] to-[#ecfdf5]"
+            ):
+                with ui.column().classes("w-full p-8 gap-6"):
                     if self.render_content:
                         self.render_content()
                     else:

@@ -1,30 +1,25 @@
 from nicegui import ui
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from ccsa_auto.admin_v2.services.user_service import UserService
 from ccsa_auto.admin_v2.stores.admin_store import AdminStore
-from ccsa_auto.admin_v2.components.ui.card import Card
-from ccsa_auto.admin_v2.components.ui.button import Button
-from ccsa_auto.admin_v2.components.ui.input import Input
-from ccsa_auto.admin_v2.components.data.data_table import DataTable
 
 
 def create_users_page():
-    """Create the users management page"""
-    # State
-    keyword = {"value": ""}
-    status_filter = {"value": None}  # None = all, 0 = normal, 1 = banned
-    current_page = {"value": 1}
-    page_size = {"value": 20}
-    selected_users = {"value": []}
-    users_data = {"data": [], "total": 0}
-    selected_user_detail = {"data": None}
+    keyword: Dict[str, str] = {"value": ""}
+    status_filter: Dict[str, Optional[int]] = {"value": None}
+    current_page: Dict[str, int] = {"value": 1}
+    page_size: Dict[str, int] = {"value": 20}
+    selected_users: Dict[str, List[int]] = {"value": []}
+    users_data: Dict[str, Any] = {"data": [], "total": 0}
+    selected_user_detail: Dict[str, Any] = {"data": None}
 
     def load_users():
-        """Load users data"""
+        kw = keyword["value"] if keyword["value"] else None
+        st = status_filter["value"]
         result = UserService.get_users(
-            keyword=keyword["value"] if keyword["value"] else None,
-            status=status_filter["value"],
+            keyword=kw,
+            status=st,
             page=current_page["value"],
             page_size=page_size["value"],
         )
@@ -114,144 +109,182 @@ def create_users_page():
         else:
             ui.notify(f"操作失败: {result.get('message')}", type="negative")
 
-    # Initial load
     load_users()
 
-    # Toolbar
-    with ui.card().classes("p-4 mb-4"):
-        with ui.row().classes("items-center gap-4 w-full"):
-            # Search
-            with ui.row().classes("items-center gap-2 flex-1"):
-                ui.input(
-                    "搜索用户名/姓名/公司",
-                    value=keyword["value"],
-                    on_change=lambda e: keyword.update(value=e.value),
-                ).props("outlined dense clearable").classes("w-64").on(
-                    "keydown.enter", on_search
-                )
-                ui.button("搜索", on_click=on_search).props("flat color=primary")
+    with ui.row().classes("items-center justify-between w-full mb-6"):
+        ui.label("用户管理").classes("text-2xl font-semibold text-[#1f2937]")
 
-            # Filter buttons
-            with ui.row().classes("items-center gap-2"):
-                ui.button(
-                    "全部",
-                    on_click=lambda: on_status_filter(None),
-                ).props(
-                    f"flat {'color=primary' if status_filter['value'] is None else ''}"
+        with ui.row().classes("items-center gap-3"):
+            with ui.element("div").classes(
+                "flex items-center gap-2 bg-white rounded-lg px-4 py-2 border border-gray-200"
+            ):
+                ui.icon("search").classes("text-[#9ca3af]")
+                search_input = ui.input(placeholder="搜索用户...")
+                search_input.classes(
+                    "border-none outline-none bg-transparent text-sm w-48"
                 )
-                ui.button(
-                    "正常",
-                    on_click=lambda: on_status_filter(0),
-                ).props(
-                    f"flat {'color=positive' if status_filter['value'] == 0 else ''}"
-                )
-                ui.button(
-                    "封号",
-                    on_click=lambda: on_status_filter(1),
-                ).props(
-                    f"flat {'color=negative' if status_filter['value'] == 1 else ''}"
-                )
+                search_input.bind_value(keyword, "value")
+                search_input.on("keydown.enter", on_search)
 
-            # Batch actions
-            with ui.row().classes("items-center gap-2"):
-                ui.button("批量封禁", on_click=batch_ban, icon="block").props(
-                    "flat color=negative"
+            add_btn = (
+                ui.button()
+                .classes(
+                    "bg-[#10b981] hover:bg-[#059669] text-white rounded-lg px-4 py-2 "
+                    "flex items-center gap-2 transition-colors"
                 )
-                ui.button("批量解封", on_click=batch_unban, icon="check_circle").props(
-                    "flat color=positive"
-                )
+                .props("flat no-caps")
+            )
+            add_btn.on_click(lambda _: ui.notify("添加用户功能开发中", type="info"))
+            with add_btn:
+                ui.icon("add").classes("text-white")
+                ui.label("添加用户").classes("text-sm font-medium text-white")
 
-    # Users table
-    def render_status_badge(status: int) -> str:
-        """Render status badge"""
-        if status == 0:
-            return '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">正常</span>'
-        else:
-            return '<span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs">封号</span>'
+    with ui.card().classes("rounded-2xl p-6 shadow-sm bg-white flex flex-col"):
+        with ui.row().classes(
+            "grid grid-cols-6 gap-4 pb-4 border-b border-gray-100 mb-4 shrink-0"
+        ):
+            ui.label("用户ID").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("用户名").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("邮箱").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("状态").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("注册时间").classes(
+                "text-xs font-semibold text-[#6b7280] uppercase"
+            )
+            ui.label("操作").classes("text-xs font-semibold text-[#6b7280] uppercase")
 
-    with ui.card().classes("p-4"):
-        # Table header
-        with ui.row().classes("font-bold border-b pb-2 mb-2"):
-            with ui.column().classes("w-12"):
-                ui.label("ID")
-            with ui.column().classes("flex-1"):
-                ui.label("用户名")
-            with ui.column().classes("w-24"):
-                ui.label("姓名")
-            with ui.column().classes("w-32"):
-                ui.label("公司")
-            with ui.column().classes("w-20"):
-                ui.label("状态")
-            with ui.column().classes("w-32"):
-                ui.label("注册时间")
-            with ui.column().classes("w-40"):
-                ui.label("操作")
+        with ui.element("div").classes("overflow-y-auto max-h-[calc(100vh-380px)]"):
+            for idx, user in enumerate(users_data["data"]):
+                row_bg = "bg-[#f9fafb]" if idx % 2 == 1 else "bg-white"
 
-        # Table rows
-        for user in users_data["data"]:
-            with ui.row().classes("border-b py-2 hover:bg-gray-50 items-center"):
-                with ui.column().classes("w-12"):
-                    ui.label(str(user.get("id", "")))
-                with ui.column().classes("flex-1"):
-                    ui.label(str(user.get("username", "")))
-                with ui.column().classes("w-24"):
-                    ui.label(str(user.get("name") or "-"))
-                with ui.column().classes("w-32"):
-                    ui.label(str(user.get("company_name") or "-"))
-                with ui.column().classes("w-20"):
+                with ui.row().classes(
+                    f"grid grid-cols-6 gap-4 py-4 {row_bg} items-center"
+                ):
+                    ui.label(str(user.get("id", ""))).classes(
+                        "text-sm text-[#1f2937] font-medium"
+                    )
+                    ui.label(str(user.get("username", ""))).classes(
+                        "text-sm text-[#1f2937]"
+                    )
+                    ui.label(str(user.get("email") or "-")).classes(
+                        "text-sm text-[#6b7280]"
+                    )
+
                     if user.get("status") == 0:
-                        ui.badge("正常", color="positive")
+                        with ui.element("span").classes(
+                            "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#d1fae5] text-[#059669] w-fit"
+                        ):
+                            ui.label("正常")
                     else:
-                        ui.badge("封号", color="negative")
-                with ui.column().classes("w-32"):
-                    ui.label(str(user.get("created_at", "")))
-                with ui.column().classes("w-40"):
-                    with ui.row().classes("gap-1"):
-                        ui.button(
-                            "查看",
-                            on_click=lambda u=user: show_user_detail(u.get("id")),
-                            icon="visibility",
-                        ).props("flat dense size=sm")
-                        ui.button(
-                            "封禁" if user.get("status") == 0 else "解封",
-                            on_click=lambda u=user: toggle_user_status(
-                                u.get("id"), u.get("status")
-                            ),
-                            icon="block" if user.get("status") == 0 else "check_circle",
-                        ).props("flat dense size=sm")
-                        ui.button(
-                            "删除",
-                            on_click=lambda u=user: delete_user(u.get("id")),
-                            icon="delete",
-                        ).props("flat dense size=sm color=negative")
+                        with ui.element("span").classes(
+                            "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#fee2e2] text-[#dc2626] w-fit"
+                        ):
+                            ui.label("禁用")
 
-        # Pagination
-        total_pages = max(
-            1, (users_data["total"] + page_size["value"] - 1) // page_size["value"]
-        )
-        with ui.row().classes("items-center justify-between w-full mt-4"):
-            with ui.row().classes("items-center gap-2"):
-                ui.label(f"共 {users_data['total']} 条").classes(
-                    "text-sm text-gray-500"
-                )
+                    ui.label(str(user.get("created_at", ""))).classes(
+                        "text-sm text-[#6b7280]"
+                    )
 
-            total_pages = max(1, (users_data["total"] + 19) // 20)
-            with ui.row().classes("items-center gap-2"):
-                ui.button("首页", on_click=lambda: on_page_change(1)).props("flat")
-                ui.button(
-                    "上一页",
-                    on_click=lambda: on_page_change(max(1, current_page["value"] - 1)),
-                ).props("flat")
-                ui.label(f"{current_page['value']} / {total_pages}").classes("px-3")
-                ui.button(
-                    "下一页",
-                    on_click=lambda: on_page_change(
-                        min(total_pages, current_page["value"] + 1)
-                    ),
-                ).props("flat")
-                ui.button("末页", on_click=lambda: on_page_change(total_pages)).props(
-                    "flat"
+                    with ui.row().classes("items-center gap-2"):
+                        user_id_val = user.get("id")
+                        user_status_val = user.get("status")
+
+                        edit_btn = (
+                            ui.button()
+                            .classes(
+                                "text-[#6b7280] hover:text-[#10b981] hover:bg-[#ecfdf5] rounded p-1 transition-colors"
+                            )
+                            .props("flat dense")
+                        )
+                        edit_btn.on_click(
+                            lambda _, uid=user_id_val: show_user_detail(uid)
+                        )
+                        with edit_btn:
+                            ui.icon("edit").classes("text-base")
+
+                        status_btn = (
+                            ui.button()
+                            .classes(
+                                "text-[#6b7280] hover:text-amber-500 hover:bg-amber-50 rounded p-1 transition-colors"
+                            )
+                            .props("flat dense")
+                        )
+                        status_btn.on_click(
+                            lambda _,
+                            uid=user_id_val,
+                            st=user_status_val: toggle_user_status(uid, st)
+                        )
+                        with status_btn:
+                            icon_name = (
+                                "block" if user_status_val == 0 else "check_circle"
+                            )
+                            ui.icon(icon_name).classes("text-base")
+
+                        delete_btn = (
+                            ui.button()
+                            .classes(
+                                "text-[#6b7280] hover:text-[#ef4444] hover:bg-[#fef2f2] rounded p-1 transition-colors"
+                            )
+                            .props("flat dense")
+                        )
+                    delete_btn.on_click(lambda _, uid=user_id_val: delete_user(uid))
+                    with delete_btn:
+                        ui.icon("delete").classes("text-base")
+
+    total_pages = max(
+        1, (users_data["total"] + page_size["value"] - 1) // page_size["value"]
+    )
+
+    with ui.row().classes("items-center justify-between mt-6"):
+        ui.label(
+            f"共 {users_data['total']} 条记录，第 {current_page['value']}/{total_pages} 页"
+        ).classes("text-sm text-[#6b7280]")
+
+        with ui.row().classes("items-center gap-2"):
+            prev_btn = (
+                ui.button()
+                .classes(
+                    "px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-[#6b7280] "
+                    "hover:bg-gray-50"
                 )
+                .props("flat")
+            )
+            prev_btn.on_click(
+                lambda _: on_page_change(max(1, current_page["value"] - 1))
+            )
+            with prev_btn:
+                ui.icon("chevron_left").classes("text-base")
+
+            for page_num in range(1, min(total_pages + 1, 6)):
+                is_active = page_num == current_page["value"]
+                active_class = (
+                    "bg-[#10b981] text-white"
+                    if is_active
+                    else "border border-gray-200 text-[#6b7280] hover:bg-gray-50"
+                )
+                page_btn = (
+                    ui.button()
+                    .classes(
+                        f"px-3 py-1.5 rounded-lg text-sm font-medium {active_class}"
+                    )
+                    .props("flat")
+                )
+                page_btn.on_click(lambda _, p=page_num: on_page_change(p))
+                with page_btn:
+                    ui.label(str(page_num)).classes("text-sm")
+
+            next_btn = (
+                ui.button()
+                .classes(
+                    "px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-[#6b7280] "
+                    "hover:bg-gray-50"
+                )
+                .props("flat")
+            )
+            next_btn.on_click(
+                lambda _: on_page_change(min(total_pages, current_page["value"] + 1))
+            )
+            with next_btn:
+                ui.icon("chevron_right").classes("text-base")
 
 
 def render():

@@ -174,50 +174,75 @@ def create_announcements_page():
                 "color=primary"
             )
 
-    # Announcements table
-    with ui.card().classes("p-4"):
-        # Table header
-        with ui.row().classes("font-bold border-b pb-2 mb-2"):
-            with ui.column().classes("w-16"):
-                ui.label("ID")
-            with ui.column().classes("flex-1"):
-                ui.label("标题")
-            with ui.column().classes("w-24"):
-                ui.label("阅读数")
-            with ui.column().classes("w-32"):
-                ui.label("创建时间")
-            with ui.column().classes("w-32"):
-                ui.label("更新时间")
-            with ui.column().classes("w-32"):
-                ui.label("操作")
+    with ui.card().classes("rounded-2xl p-6 shadow-sm bg-white flex flex-col"):
+        with ui.row().classes(
+            "grid grid-cols-6 gap-4 pb-4 border-b border-gray-100 mb-4 shrink-0"
+        ):
+            ui.label("ID").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("标题").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("阅读数").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("创建时间").classes(
+                "text-xs font-semibold text-[#6b7280] uppercase"
+            )
+            ui.label("更新时间").classes(
+                "text-xs font-semibold text-[#6b7280] uppercase"
+            )
+            ui.label("操作").classes("text-xs font-semibold text-[#6b7280] uppercase")
 
-        # Table rows
-        for ann in announcements_data["data"]:
-            with ui.row().classes("border-b py-2 hover:bg-gray-50 items-center"):
-                with ui.column().classes("w-16"):
-                    ui.label(str(ann.get("id", "")))
-                with ui.column().classes("flex-1"):
-                    ui.label(str(ann.get("title", ""))[:50])
-                with ui.column().classes("w-24"):
-                    ui.label(str(ann.get("read_count", 0)))
-                with ui.column().classes("w-32"):
-                    ui.label(str(ann.get("created_at", ""))[:19])
-                with ui.column().classes("w-32"):
-                    ui.label(str(ann.get("updated_at", ""))[:19])
-                with ui.column().classes("w-32"):
-                    with ui.row().classes("gap-1"):
-                        ui.button(
-                            "编辑",
-                            on_click=lambda a=ann: edit_announcement(
-                                a.get("id"), a.get("title"), a.get("content")
-                            ),
-                            icon="edit",
-                        ).props("flat dense size=sm")
-                        ui.button(
-                            "删除",
-                            on_click=lambda a=ann: delete_announcement(a.get("id")),
-                            icon="delete",
-                        ).props("flat dense size=sm color=negative")
+        with ui.element("div").classes("overflow-y-auto max-h-[calc(100vh-380px)]"):
+            for idx, ann in enumerate(announcements_data["data"]):
+                row_bg = "bg-[#f9fafb]" if idx % 2 == 1 else "bg-white"
+
+                with ui.row().classes(
+                    f"grid grid-cols-6 gap-4 py-4 {row_bg} items-center"
+                ):
+                    ui.label(str(ann.get("id", ""))).classes("text-sm text-[#1f2937]")
+                    ui.label(str(ann.get("title", ""))[:50]).classes(
+                        "text-sm text-[#1f2937]"
+                    )
+                    ui.label(str(ann.get("read_count", 0))).classes(
+                        "text-sm text-[#6b7280]"
+                    )
+                    ui.label(str(ann.get("created_at", ""))[:19]).classes(
+                        "text-sm text-[#6b7280]"
+                    )
+                    ui.label(str(ann.get("updated_at", ""))[:19]).classes(
+                        "text-sm text-[#6b7280]"
+                    )
+
+                    with ui.row().classes("items-center gap-1"):
+                        ann_id = ann.get("id")
+                        ann_title = ann.get("title")
+                        ann_content = ann.get("content")
+
+                        edit_btn = (
+                            ui.button()
+                            .classes(
+                                "text-[#6b7280] hover:text-blue-500 hover:bg-blue-50 rounded p-1 transition-colors"
+                            )
+                            .props("flat dense")
+                        )
+                        edit_btn.on_click(
+                            lambda _,
+                            aid=ann_id,
+                            at=ann_title,
+                            ac=ann_content: edit_announcement(aid, at, ac)
+                        )
+                        with edit_btn:
+                            ui.icon("edit").classes("text-base")
+
+                        delete_btn = (
+                            ui.button()
+                            .classes(
+                                "text-[#6b7280] hover:text-red-500 hover:bg-red-50 rounded p-1 transition-colors"
+                            )
+                            .props("flat dense")
+                        )
+                        delete_btn.on_click(
+                            lambda _, aid=ann_id: delete_announcement(aid)
+                        )
+                        with delete_btn:
+                            ui.icon("delete").classes("text-base")
 
         # Pagination
         total_pages = max(

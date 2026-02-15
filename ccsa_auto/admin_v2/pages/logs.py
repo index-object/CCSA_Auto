@@ -149,58 +149,69 @@ def create_logs_page():
                 "flat color=positive"
             )
 
-    # Logs table
-    with ui.card().classes("p-4"):
-        # Table header
-        with ui.row().classes("font-bold border-b pb-2 mb-2"):
-            with ui.column().classes("w-16"):
-                ui.label("ID")
-            with ui.column().classes("w-24"):
-                ui.label("类型")
-            with ui.column().classes("w-32"):
-                ui.label("操作")
-            with ui.column().classes("flex-1"):
-                ui.label("内容")
-            with ui.column().classes("w-20"):
-                ui.label("用户")
-            with ui.column().classes("w-16"):
-                ui.label("状态")
-            with ui.column().classes("w-32"):
-                ui.label("时间")
+    with ui.card().classes("rounded-2xl p-6 shadow-sm bg-white flex flex-col"):
+        with ui.row().classes(
+            "grid grid-cols-7 gap-4 pb-4 border-b border-gray-100 mb-4 shrink-0"
+        ):
+            ui.label("ID").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("类型").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("操作").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("内容").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("用户").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("状态").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("时间").classes("text-xs font-semibold text-[#6b7280] uppercase")
 
-        # Table rows
-        for log in logs_data["data"]:
-            with ui.row().classes("border-b py-2 hover:bg-gray-50 items-center"):
-                with ui.column().classes("w-16"):
-                    ui.label(str(log.get("id", "")))
-                with ui.column().classes("w-24"):
+        with ui.element("div").classes("overflow-y-auto max-h-[calc(100vh-380px)]"):
+            for idx, log in enumerate(logs_data["data"]):
+                row_bg = "bg-[#f9fafb]" if idx % 2 == 1 else "bg-white"
+                with ui.row().classes(
+                    f"grid grid-cols-7 gap-4 py-4 {row_bg} items-center"
+                ):
+                    ui.label(str(log.get("id", ""))).classes("text-sm text-[#1f2937]")
+
                     log_type = log.get("log_type", "")
                     type_colors = {
-                        "operation": "info",
-                        "task": "purple",
-                        "auth": "warning",
-                        "error": "negative",
-                        "system": "grey",
+                        "operation": ("bg-blue-100", "text-blue-700"),
+                        "task": ("bg-purple-100", "text-purple-700"),
+                        "auth": ("bg-amber-100", "text-amber-700"),
+                        "error": ("bg-red-100", "text-red-700"),
+                        "system": ("bg-gray-100", "text-gray-600"),
                     }
-                    ui.badge(log_type, color=type_colors.get(log_type, "grey"))
-                with ui.column().classes("w-32"):
-                    ui.label(str(log.get("operation", ""))[:15])
-                with ui.column().classes("flex-1"):
-                    ui.label(str(log.get("content", ""))[:60])
-                with ui.column().classes("w-20"):
-                    ui.label(str(log.get("user_id") or "-"))
-                with ui.column().classes("w-16"):
+                    bg_color, text_color = type_colors.get(
+                        log_type, ("bg-gray-100", "text-gray-600")
+                    )
+                    with ui.element("span").classes(
+                        f"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {bg_color} {text_color} w-fit"
+                    ):
+                        ui.label(log_type)
+
+                    ui.label(str(log.get("operation", ""))[:15]).classes(
+                        "text-sm text-[#1f2937]"
+                    )
+                    ui.label(str(log.get("content", ""))[:60]).classes(
+                        "text-sm text-[#6b7280]"
+                    )
+                    ui.label(str(log.get("user_id") or "-")).classes(
+                        "text-sm text-[#6b7280]"
+                    )
+
                     status = log.get("status", "")
                     if status == "success":
-                        ui.badge("成功", color="positive")
+                        with ui.element("span").classes(
+                            "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 w-fit"
+                        ):
+                            ui.label("成功")
                     else:
-                        ui.badge("失败", color="negative")
-                with ui.column().classes("w-32"):
+                        with ui.element("span").classes(
+                            "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 w-fit"
+                        ):
+                            ui.label("失败")
+
                     created_at = log.get("created_at", "")
                     if created_at and isinstance(created_at, str):
-                        ui.label(created_at[:19])
+                        ui.label(created_at[:19]).classes("text-sm text-[#6b7280]")
                     else:
-                        ui.label("-")
+                        ui.label("-").classes("text-sm text-[#6b7280]")
 
         # Pagination
         total_pages = max(
