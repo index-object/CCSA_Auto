@@ -99,8 +99,9 @@ def create_tasks_page():
                     "搜索任务名称",
                     value=keyword["value"],
                     on_change=lambda e: keyword.update(value=e.value),
-                    on_enter=on_search,
-                ).props("outlined dense clearable").classes("w-64")
+                ).props("outlined dense clearable").classes("w-64").on(
+                    "keydown.enter", on_search
+                )
                 ui.button("搜索", on_click=on_search).props("flat color=primary")
 
             # Task type filters
@@ -273,13 +274,23 @@ def create_tasks_page():
                     "text-sm text-gray-500"
                 )
 
-            pagination = ui.pagination(
-                current_page["value"],
-                1,
-                total_pages,
-                on_change=lambda e: on_page_change(e.value),
-            )
-            pagination.props("boundary-links")
+            total_pages = max(1, (tasks_data["total"] + 19) // 20)
+            with ui.row().classes("items-center gap-2"):
+                ui.button("首页", on_click=lambda: on_page_change(1)).props("flat")
+                ui.button(
+                    "上一页",
+                    on_click=lambda: on_page_change(max(1, current_page["value"] - 1)),
+                ).props("flat")
+                ui.label(f"{current_page['value']} / {total_pages}").classes("px-3")
+                ui.button(
+                    "下一页",
+                    on_click=lambda: on_page_change(
+                        min(total_pages, current_page["value"] + 1)
+                    ),
+                ).props("flat")
+                ui.button("末页", on_click=lambda: on_page_change(total_pages)).props(
+                    "flat"
+                )
 
 
 def render():

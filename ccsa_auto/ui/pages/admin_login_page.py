@@ -221,12 +221,10 @@ def create_admin_login_page(navigate_to):
                     print(
                         f"管理员 {result['user']['username']} 登录成功，会话ID: {session_id}"
                     )
-                    print(f"[管理员登录] 重定向到 /admin?session_id={session_id}")
+                    print(f"[管理员登录] 重定向到 /admin_v2?session_id={session_id}")
                     ui.notify("管理员登录成功", type="positive")
 
-                    # 使用 NiceGUI 导航跳转，URL 中携带 session_id 参数
-                    # 认证中间件会从 URL 参数获取 session_id
-                    ui.navigate.to(f"/admin?session_id={session_id}")
+                    ui.navigate.to(f"/admin_v2?session_id={session_id}")
                 else:
                     login_btn.props("loading=False")
                     ui.notify(message, type="negative")

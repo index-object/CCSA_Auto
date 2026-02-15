@@ -1,6 +1,8 @@
 import logging
 from typing import Dict, Any, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+from sqlalchemy import func
 
 from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import User, Task, Announcement
@@ -19,11 +21,11 @@ class DashboardService:
         try:
             now = get_current_time()
             today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            today_start_utc = today_start.astimezone(timedelta(hours=0))
+            today_start_utc = today_start.astimezone(timezone.utc)
             week_start = today_start - timedelta(days=7)
-            week_start_utc = week_start.astimezone(timedelta(hours=0))
+            week_start_utc = week_start.astimezone(timezone.utc)
             month_start = today_start - timedelta(days=30)
-            month_start_utc = month_start.astimezone(timedelta(hours=0))
+            month_start_utc = month_start.astimezone(timezone.utc)
 
             # User statistics
             total_users = db.query(User).count()
@@ -122,7 +124,7 @@ class DashboardService:
         try:
             now = get_current_time()
             start_date = now - timedelta(days=days)
-            start_date_utc = start_date.astimezone(timedelta(hours=0))
+            start_date_utc = start_date.astimezone(timezone.utc)
 
             users = (
                 db.query(User)
@@ -169,7 +171,7 @@ class DashboardService:
         try:
             now = get_current_time()
             start_date = now - timedelta(days=days)
-            start_date_utc = start_date.astimezone(timedelta(hours=0))
+            start_date_utc = start_date.astimezone(timezone.utc)
 
             # Get completed tasks
             completed = {}
@@ -220,7 +222,7 @@ class DashboardService:
         db = SessionLocal()
         try:
             statuses = (
-                db.query(Task.execution_status, db.func.count(Task.id))
+                db.query(Task.execution_status, func.count(Task.id))
                 .group_by(Task.execution_status)
                 .all()
             )
@@ -253,9 +255,7 @@ class DashboardService:
         db = SessionLocal()
         try:
             statuses = (
-                db.query(User.status, db.func.count(User.id))
-                .group_by(User.status)
-                .all()
+                db.query(User.status, func.count(User.id)).group_by(User.status).all()
             )
 
             total = sum(count for _, count in statuses)

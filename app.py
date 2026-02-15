@@ -52,6 +52,15 @@ def startup_cleanup():
 threading.Thread(target=startup_cleanup, daemon=True).start()
 
 unrestricted_page_routes = {"/login", "/admin_login"}
+admin_page_routes = {
+    "/admin",
+    "/admin_v2",
+    "/admin_v2/users",
+    "/admin_v2/tasks",
+    "/admin_v2/announcements",
+    "/admin_v2/logs",
+    "/admin_v2/settings",
+}
 
 
 def get_session_from_request(request: Request):
@@ -131,10 +140,17 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 request.url.path in page_routes
                 and request.url.path not in unrestricted_page_routes
             ):
-                print(f"[认证中间件] 需要认证的页面，重定向到 /login")
-                if session_id:
-                    UserStateService.set_referrer_path(session_id, request.url.path)
-                return RedirectResponse("/login")
+                # 管理员页面重定向到 admin_login，普通页面重定向到 login
+                if request.url.path in admin_page_routes:
+                    print(f"[认证中间件] 需要管理员认证的页面，重定向到 /admin_login")
+                    if session_id:
+                        UserStateService.set_referrer_path(session_id, request.url.path)
+                    return RedirectResponse("/admin_login")
+                else:
+                    print(f"[认证中间件] 需要认证的页面，重定向到 /login")
+                    if session_id:
+                        UserStateService.set_referrer_path(session_id, request.url.path)
+                    return RedirectResponse("/login")
             print(f"[认证中间件] 放行请求: {request.url.path}")
             return await call_next(request)
 
@@ -182,7 +198,7 @@ def admin_login_page():
     """管理员登录页面"""
 
     def navigate_to_admin(page=None):
-        ui.navigate.to("/admin")
+        ui.navigate.to("/admin_v2")
 
     create_admin_login_page(navigate_to_admin)
 
@@ -208,8 +224,8 @@ def main_page():
     print(f"主页面: is_admin={user_info.get('is_admin')}")
 
     if user_info.get("is_admin"):
-        print("检测到管理员，重定向到/admin")
-        ui.navigate.to("/admin")
+        print("检测到管理员，重定向到/admin_v2")
+        ui.navigate.to("/admin_v2")
         return
 
     def navigate_to(page):
@@ -442,4 +458,5 @@ if __name__ in {"__main__", "__mp_main__"}:
     ui.run(
         title="用户答题托管平台",
         port=8082,
+        storage_secret="ccsa-auto-secret-key-2024",
     )

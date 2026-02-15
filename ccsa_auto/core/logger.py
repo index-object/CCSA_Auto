@@ -111,12 +111,15 @@ class SafeTimedRotatingFileHandler(TimedRotatingFileHandler):
             pass
 
     def shouldRollover(self, record):
-        """检查是否需要轮转（添加额外保护）"""
-        with self._write_lock:
-            try:
-                return super().shouldRollover(record)
-            except Exception:
-                return False
+        """检查是否需要轮转（添加额外保护）
+
+        注意：此方法在 emit() 内部被调用，emit() 已经持有 _write_lock，
+        所以这里不能再获取锁，否则会导致死锁
+        """
+        try:
+            return super().shouldRollover(record)
+        except Exception:
+            return False
 
 
 def setup_logger(name: str | None = None) -> logging.Logger:
@@ -125,6 +128,17 @@ def setup_logger(name: str | None = None) -> logging.Logger:
     日志格式: %(asctime)s - %(levelname)s - %(name)s:%(lineno)d - %(message)s
     日志文件: logs/app.log (按天自动轮转，保留60天)
     """
+    # 获取根 logger，确保所有子 logger 都能正确写入
+    root_logger = logging.getLogger()
+
+    # 检查根 logger 是否已有 handler（全局配置）
+    if root_logger.handlers:
+        # 使用根 logger 或基于根 logger 配置
+        logger = logging.getLogger(name or "ccsa_auto")
+        logger.setLevel(getattr(logging, Config.LOG_LEVEL, logging.INFO))
+        logger.propagate = True
+        return logger
+
     logger = logging.getLogger(name or "ccsa_auto")
     logger.setLevel(getattr(logging, Config.LOG_LEVEL, logging.INFO))
 
@@ -152,5 +166,8 @@ def setup_logger(name: str | None = None) -> logging.Logger:
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
+
+    # 设置 propagate，确保子 logger 能将日志传播到父 logger
+    logger.propagate = True
 
     return logger
