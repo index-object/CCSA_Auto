@@ -15,4 +15,5 @@ dependencies = [
     "python-jose[cryptography]>=3.5.0",
     "requests>=2.32.5",
     "sqlalchemy>=2.0.45",
+    "loguru>=0.7.0",
 ]
