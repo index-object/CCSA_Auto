@@ -106,9 +106,18 @@ class TaskService:
                     from ccsa_auto.modules.task.score_tracker import ScoreTracker
                     from ccsa_auto.modules.task.score_strategy import ScoreStrategy
 
-                    score_strategy = ScoreStrategy.calculate_strategy(
-                        user_id, "daily", 0, 0.0
-                    )
+                    if Config.SCORE_STRATEGY_ENABLED:
+                        score_strategy = ScoreStrategy.calculate_strategy(
+                            user_id, "daily", 0, 0.0
+                        )
+                    else:
+                        score_strategy = {
+                            "score": 0,
+                            "max_score": 0,
+                            "correct_questions": 0,
+                            "wrong_questions": 0,
+                            "reason": "控分策略已关闭",
+                        }
 
                     ScoreTracker.record_score(
                         user_id=user_id,
@@ -148,9 +157,20 @@ class TaskService:
 
             from ccsa_auto.modules.task.score_strategy import ScoreStrategy
 
-            questions, score_strategy = ScoreStrategy.modify_answers_for_score_control(
-                questions, "daily", user_id
-            )
+            if Config.SCORE_STRATEGY_ENABLED:
+                questions, score_strategy = (
+                    ScoreStrategy.modify_answers_for_score_control(
+                        questions, "daily", user_id
+                    )
+                )
+            else:
+                score_strategy = {
+                    "score": sum(q.get("questionPoint", 0) for q in questions),
+                    "max_score": sum(q.get("questionPoint", 0) for q in questions),
+                    "correct_questions": len(questions),
+                    "wrong_questions": 0,
+                    "reason": "控分策略已关闭，全部满分",
+                }
             logger.info(
                 f"每日一题获取{len(questions)}道试题，控分策略：{score_strategy['score']}/{score_strategy['max_score']}，用户：{user_name}({user_id})"
             )
@@ -597,9 +617,18 @@ class TaskService:
                     from ccsa_auto.modules.task.score_strategy import ScoreStrategy
 
                     # 获取控分策略
-                    score_strategy = ScoreStrategy.calculate_strategy(
-                        user_id, "monthly", 0, 0.0
-                    )
+                    if Config.SCORE_STRATEGY_ENABLED:
+                        score_strategy = ScoreStrategy.calculate_strategy(
+                            user_id, "monthly", 0, 0.0
+                        )
+                    else:
+                        score_strategy = {
+                            "score": 0,
+                            "max_score": 0,
+                            "correct_questions": 0,
+                            "wrong_questions": 0,
+                            "reason": "控分策略已关闭",
+                        }
 
                     ScoreTracker.record_score(
                         user_id=user_id,
@@ -642,9 +671,20 @@ class TaskService:
             # 应用控分策略
             from ccsa_auto.modules.task.score_strategy import ScoreStrategy
 
-            questions, score_strategy = ScoreStrategy.modify_answers_for_score_control(
-                questions, "monthly", user_id
-            )
+            if Config.SCORE_STRATEGY_ENABLED:
+                questions, score_strategy = (
+                    ScoreStrategy.modify_answers_for_score_control(
+                        questions, "monthly", user_id
+                    )
+                )
+            else:
+                score_strategy = {
+                    "score": sum(q.get("questionPoint", 0) for q in questions),
+                    "max_score": sum(q.get("questionPoint", 0) for q in questions),
+                    "correct_questions": len(questions),
+                    "wrong_questions": 0,
+                    "reason": "控分策略已关闭，全部满分",
+                }
             logger.info(
                 f"控分策略: {score_strategy['reason']}, 预期得分: {score_strategy['score']}/{score_strategy['max_score']}"
             )
