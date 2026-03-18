@@ -34,7 +34,6 @@ from ccsa_auto.admin_v2.components.layout.admin_layout import AdminLayout
 
 create_tables()
 init_admin()
-init_scheduler()
 
 # 运行数据库表结构迁移
 from ccsa_auto.modules.auth.session_manager import migrate_auth_session_schema
@@ -42,14 +41,18 @@ from ccsa_auto.modules.auth.session_manager import migrate_auth_session_schema
 migrate_auth_session_schema()
 
 
-def startup_cleanup():
-    session_manager = get_session_manager()
-    count = session_manager.cleanup_expired_sessions()
-    if count > 0:
-        print(f"启动时已清理 {count} 个过期会话")
+@app.on_startup
+def on_startup():
+    """应用启动时的初始化"""
+    init_scheduler()
 
+    def startup_cleanup():
+        session_manager = get_session_manager()
+        count = session_manager.cleanup_expired_sessions()
+        if count > 0:
+            print(f"启动时已清理 {count} 个过期会话")
 
-threading.Thread(target=startup_cleanup, daemon=True).start()
+    threading.Thread(target=startup_cleanup, daemon=True).start()
 
 unrestricted_page_routes = {"/login", "/admin_login"}
 admin_page_routes = {
