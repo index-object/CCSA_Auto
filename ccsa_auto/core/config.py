@@ -92,5 +92,9 @@ class Config:
     TASK_FIXER_ENABLED = True  # 是否启用任务修复器
     TASK_FIXER_CRON = "0 2 * * *"  # 每天凌晨2点执行
 
-    # 控分策略配置
+# 控分策略配置
     SCORE_STRATEGY_ENABLED = False  # 是否启用控分策略，False则全部满分
+    SCORE_TARGET = 650  # 目标分数
+    SCORE_THRESHOLD = 20  # 接近阈值
+    SCORE_RANDOM_MIN = 0.30  # 随机分数下限
+    SCORE_RANDOM_MAX = 1.00  # 随机分数上限

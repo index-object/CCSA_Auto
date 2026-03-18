@@ -1,11 +1,11 @@
 from nicegui import ui
 
 from ccsa_auto.core.config import Config
+from ccsa_auto.core.system_config import SystemConfigService
 
 
 def create_settings_page():
     """Create the settings page"""
-    # Settings state
     settings_data = {
         "task_fixer_enabled": Config.TASK_FIXER_ENABLED,
         "log_level": Config.LOG_LEVEL,
@@ -14,30 +14,42 @@ def create_settings_page():
         "session_absolute_timeout": Config.SESSION_ABSOLUTE_TIMEOUT,
     }
 
-    # Task schedule settings
+    score_config = {
+        "target": SystemConfigService.get_score_target(),
+        "threshold": SystemConfigService.get_score_threshold(),
+        "random_min": SystemConfigService.get("score_random_min", 0.30),
+        "random_max": SystemConfigService.get("score_random_max", 1.00),
+        "enabled": SystemConfigService.is_score_strategy_enabled(),
+    }
+
     task_details = Config.TASK_DETAILS
     daily_hours = task_details.get("DAILY", {}).get("hour_range", (7, 11))
     weekly_hours = task_details.get("WEEKLY", {}).get("hour_range", (8, 11))
     monthly_hours = task_details.get("MONTHLY", {}).get("hour_range", (9, 15))
 
     def save_task_fixer_setting(enabled: bool):
-        """Save task fixer setting"""
         settings_data["task_fixer_enabled"] = enabled
         ui.notify(
             "任务修复器设置已保存（注意：部分设置需要重启服务生效）", type="positive"
         )
 
     def save_log_setting(level: str, retention: int):
-        """Save log settings"""
         settings_data["log_level"] = level
         settings_data["log_retention_days"] = retention
         ui.notify("日志设置已保存", type="positive")
 
     def save_session_setting(timeout: int, absolute_timeout: int):
-        """Save session settings"""
         settings_data["session_timeout"] = timeout
         settings_data["session_absolute_timeout"] = absolute_timeout
         ui.notify("会话设置已保存", type="positive")
+
+    def save_score_config():
+        SystemConfigService.set("score_target", score_config["target"], "int")
+        SystemConfigService.set("score_threshold", score_config["threshold"], "int")
+        SystemConfigService.set("score_random_min", score_config["random_min"], "float")
+        SystemConfigService.set("score_random_max", score_config["random_max"], "float")
+        SystemConfigService.set("score_strategy_enabled", score_config["enabled"], "bool")
+        ui.notify("控分策略配置已保存", type="positive")
 
     ui.label("系统设置").classes("text-2xl font-bold mb-6 text-[#1f2937]")
 
@@ -81,6 +93,63 @@ def create_settings_page():
 
             ui.label(
                 "任务修复器会在每天凌晨自动检查并修复过期的任务，确保任务能够正常执行"
+            ).classes("text-sm text-[#9ca3af] mt-2")
+
+        with ui.card().classes("p-6 mb-6 rounded-2xl shadow-sm bg-white"):
+            ui.label("控分策略配置").classes("text-xl font-semibold mb-4 text-[#1f2937]")
+
+            with ui.row().classes("items-center gap-4 w-full mb-4"):
+                ui.label("启用控分策略:").classes("w-40 text-[#6b7280]")
+                ui.switch(
+                    value=score_config["enabled"],
+                    on_change=lambda e: (
+                        score_config.update({"enabled": e.value}),
+                        save_score_config(),
+                    ),
+                ).props("color=positive")
+
+            with ui.row().classes("items-center gap-4 w-full mb-4"):
+                ui.label("目标分数:").classes("w-40 text-[#6b7280]")
+                ui.number(
+                    value=score_config["target"],
+                    on_change=lambda e: score_config.update({"target": int(e.value)}),
+                    format="%.0f",
+                ).props("outlined dense").classes("w-24")
+                ui.label("分").classes("text-[#6b7280]")
+
+            with ui.row().classes("items-center gap-4 w-full mb-4"):
+                ui.label("接近阈值:").classes("w-40 text-[#6b7280]")
+                ui.number(
+                    value=score_config["threshold"],
+                    on_change=lambda e: score_config.update({"threshold": int(e.value)}),
+                    format="%.0f",
+                ).props("outlined dense").classes("w-24")
+                ui.label("分").classes("text-[#6b7280]")
+
+            with ui.row().classes("items-center gap-4 w-full mb-4"):
+                ui.label("随机分数范围:").classes("w-40 text-[#6b7280]")
+                ui.number(
+                    value=score_config["random_min"],
+                    on_change=lambda e: score_config.update({"random_min": e.value}),
+                    format="%.2f",
+                    min=0,
+                    max=1,
+                ).props("outlined dense").classes("w-20")
+                ui.label(" ~ ").classes("text-[#6b7280]")
+                ui.number(
+                    value=score_config["random_max"],
+                    on_change=lambda e: score_config.update({"random_max": e.value}),
+                    format="%.2f",
+                    min=0,
+                    max=1,
+                ).props("outlined dense").classes("w-20")
+
+            ui.button("保存配置", on_click=save_score_config).props(
+                "flat color=primary"
+            ).classes("mt-2")
+
+            ui.label(
+                "策略说明: 当前分数 < 目标-阈值 时满分；达到阈值后随机得分"
             ).classes("text-sm text-[#9ca3af] mt-2")
 
         with ui.card().classes("p-6 mb-6 rounded-2xl shadow-sm bg-white"):

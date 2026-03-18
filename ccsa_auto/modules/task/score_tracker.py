@@ -233,50 +233,33 @@ class ScoreTracker:
     def get_score_control_status(user_id: int) -> Dict[str, Any]:
         """
         获取控分策略状态信息
-
-        Args:
-            user_id: 用户ID
-
-        Returns:
-            Dict: {
-                "current_monthly_score": 当前月度得分,
-                "target_monthly_score": 目标月度得分,
-                "remaining_potential": 剩余可能得分,
-                "progress_percentage": 进度百分比,
-                "status": 状态（ahead, on_track, behind）
-            }
         """
+        from ccsa_auto.core.system_config import SystemConfigService
+
         now = get_current_time()
+        year, month = now.year, now.month
+
         try:
-            from ccsa_auto.modules.task.score_strategy import ScoreStrategy
-
-            current_scores = ScoreTracker.get_current_month_scores(user_id)
+            current_scores = ScoreTracker.calculate_monthly_total(user_id, year, month)
             current_total = current_scores["total"]
-            target = ScoreStrategy.TARGET_MONTHLY_SCORE
+            target = SystemConfigService.get_score_target()
+            threshold = SystemConfigService.get_score_threshold()
 
-            year, month = now.year, now.month
-            remaining_potential = ScoreStrategy.calculate_remaining_potential(
-                user_id, year, month, now
-            )
-
-            total_potential = current_total + remaining_potential["total"]
             progress_percentage = (current_total / target) * 100 if target > 0 else 0
 
             if current_total >= target:
                 status = "ahead"
                 status_text = "已达标"
-            elif total_potential >= target:
+            elif current_total >= target - threshold:
                 status = "on_track"
-                status_text = "正常进行中"
+                status_text = "接近目标"
             else:
                 status = "behind"
-                status_text = "需要追赶"
+                status_text = "追赶中"
 
             return {
                 "current_monthly_score": round(current_total, 2),
                 "target_monthly_score": target,
-                "remaining_potential": remaining_potential["total"],
-                "total_potential": total_potential,
                 "progress_percentage": round(progress_percentage, 1),
                 "status": status,
                 "status_text": status_text,
@@ -290,25 +273,15 @@ class ScoreTracker:
             }
         except Exception as e:
             logger.error(f"获取控分策略状态失败: {e}")
-            year, month = now.year, now.month
-            # 延迟导入避免循环依赖
-            from ccsa_auto.modules.task.score_strategy import ScoreStrategy
-
             return {
                 "current_monthly_score": 0,
-                "target_monthly_score": ScoreStrategy.TARGET_MONTHLY_SCORE,
-                "remaining_potential": 0,
-                "total_potential": 0,
+                "target_monthly_score": SystemConfigService.get_score_target(),
                 "progress_percentage": 0,
                 "status": "unknown",
                 "status_text": "未知状态",
                 "year": year,
                 "month": month,
-                "breakdown": {
-                    "daily": 0,
-                    "weekly": 0,
-                    "monthly": 0,
-                },
+                "breakdown": {"daily": 0, "weekly": 0, "monthly": 0},
             }
 
     @staticmethod

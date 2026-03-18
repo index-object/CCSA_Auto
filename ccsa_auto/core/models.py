@@ -256,7 +256,7 @@ class AuthSession(Base):
 
         return datetime.utcnow() > self.expires_at
 
-    def is_inactive_expired(self, timeout_seconds=3600):
+def is_inactive_expired(self, timeout_seconds=3600):
         """检查会话是否因无活动而过期"""
         from datetime import datetime
 
@@ -265,3 +265,27 @@ class AuthSession(Base):
         return (
             datetime.utcnow() - self.last_activity
         ).total_seconds() > timeout_seconds
+
+
+class SystemConfig(Base):
+    """系统配置模型"""
+
+    __tablename__ = "system_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    config_key = Column(String(100), unique=True, nullable=False, index=True)
+    config_value = Column(Text, nullable=False)
+    config_type = Column(String(20), default="string")
+    description = Column(String(255))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "config_key": self.config_key,
+            "config_value": self.config_value,
+            "config_type": self.config_type,
+            "description": self.description,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }

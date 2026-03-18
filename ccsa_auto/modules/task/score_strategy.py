@@ -5,6 +5,7 @@ import random
 from datetime import datetime
 from typing import Dict, Tuple, Optional, Any
 
+from ccsa_auto.core.system_config import SystemConfigService
 from ccsa_auto.modules.task.score_tracker import ScoreTracker
 from ccsa_auto.utils.timezone import get_current_time, SHANGHAI_TZ
 
@@ -13,14 +14,6 @@ logger = logging.getLogger(__name__)
 
 class ScoreStrategy:
     """分数控制策略服务"""
-
-    TARGET_MONTHLY_SCORE = 650
-    MIN_SCORE_RATIO = 0.50
-    MAX_SCORE_RATIO = 1.00
-    USER_VARIATION_STD = 0.08
-    DAILY_ALLOCATE_RATIO = 0.80
-    MONTHLY_ALLOCATE_RATIO = 0.25
-    MONTHLY_BASE_SCORE = 100  # 每月一考满分100分
 
     @staticmethod
     def is_weekend_or_holiday(date: datetime) -> bool:
@@ -41,270 +34,13 @@ class ScoreStrategy:
             return date.weekday() >= 5
 
     @staticmethod
-    def get_saturdays_in_month(year: int, month: int) -> list[datetime]:
-        """
-        获取指定月份中属于当月的周六列表
-
-        Args:
-            year: 年份
-            month: 月份
-
-        Returns:
-            list[datetime]: 当月周六列表
-        """
-        if month == 12:
-            next_month_year = year + 1
-            next_month = 1
-        else:
-            next_month_year = year
-            next_month = month + 1
-
-        from datetime import timedelta
-
-        first_day = datetime(year, month, 1).replace(tzinfo=SHANGHAI_TZ)
-        last_day = datetime(next_month_year, next_month, 1).replace(
-            tzinfo=SHANGHAI_TZ
-        ) - timedelta(seconds=1)
-
-        saturdays = []
-        current = first_day
-        while current <= last_day:
-            if current.weekday() == 5:
-                saturday = current.replace(hour=0, minute=0, second=0)
-                saturdays.append(saturday)
-            current += timedelta(days=1)
-
-        if not saturdays:
-            return []
-
-        first_saturday = saturdays[0]
-        if first_saturday.day <= 3 and first_saturday.weekday() == 5:
-            is_first_belong_to_prev_month = (
-                first_saturday.day == 1 or first_saturday.weekday() == 5
-            )
-            if is_first_belong_to_prev_month:
-                saturdays = saturdays[1:]
-
-        if len(saturdays) >= 2:
-            last_saturday = saturdays[-1]
-            next_day = last_saturday + timedelta(days=1)
-            if next_day.month != month:
-                saturdays = saturdays[:-1]
-
-        return saturdays
-
-    @staticmethod
-    def get_working_days_in_month(year: int, month: int) -> int:
-        """
-        获取指定月份的工作日数量（周一到周五，排除节假日）
-
-        Args:
-            year: 年份
-            month: 月份
-
-        Returns:
-            int: 工作日数量
-        """
-        if month == 12:
-            next_month_year = year + 1
-            next_month = 1
-        else:
-            next_month_year = year
-            next_month = month + 1
-
-        from datetime import timedelta
-
-        first_day = datetime(year, month, 1).replace(tzinfo=SHANGHAI_TZ)
-        last_day = datetime(next_month_year, next_month, 1).replace(
-            tzinfo=SHANGHAI_TZ
-        ) - timedelta(seconds=1)
-
-        working_days = 0
-        current = first_day
-        while current <= last_day:
-            if not ScoreStrategy.is_weekend_or_holiday(current):
-                working_days += 1
-            current += timedelta(days=1)
-
-        return working_days
-
-    @staticmethod
-    def get_remaining_working_days_in_month(
-        year: int, month: int, current_date: datetime
-    ) -> int:
-        """
-        获取指定月份剩余的工作日数量（包括当前日期）
-
-        Args:
-            year: 年份
-            month: 月份
-            current_date: 当前日期（上海时区）
-
-        Returns:
-            int: 剩余工作日数量
-        """
-        if month == 12:
-            next_month_year = year + 1
-            next_month = 1
-        else:
-            next_month_year = year
-            next_month = month + 1
-
-        from datetime import timedelta
-
-        first_day = datetime(year, month, 1).replace(tzinfo=SHANGHAI_TZ)
-        last_day = datetime(next_month_year, next_month, 1).replace(
-            tzinfo=SHANGHAI_TZ
-        ) - timedelta(seconds=1)
-
-        remaining_days = 0
-        current = max(first_day, current_date.replace(hour=0, minute=0, second=0))
-        while current <= last_day:
-            if not ScoreStrategy.is_weekend_or_holiday(current):
-                remaining_days += 1
-            current += timedelta(days=1)
-
-        return remaining_days
-
-    @staticmethod
-    def get_weekly_lessons_info(user_id: int, year: int, month: int) -> Dict[str, Any]:
-        """
-        获取本月每周一课信息
-
-        Args:
-            user_id: 用户ID
-            year: 年份
-            month: 月份
-
-        Returns:
-            Dict: {
-                "total_sessions": 本月每周一课总次数,
-                "full_score": 本月每周一课满分,
-                "actual_score": 本月已完成得分,
-                "remaining_sessions": 剩余次数,
-                "remaining_score": 剩余可得分,
-                "sessions_completed": 已完成次数
-            }
-        """
-        saturdays = ScoreStrategy.get_saturdays_in_month(year, month)
-        total_sessions = len(saturdays)
-        full_score = total_sessions * 50
-
-        actual_score = ScoreTracker.get_monthly_weekly_score(user_id, year, month)
-        sessions_completed = actual_score // 50
-        remaining_sessions = max(0, total_sessions - sessions_completed)
-        remaining_score = remaining_sessions * 50
-
-        return {
-            "total_sessions": total_sessions,
-            "full_score": full_score,
-            "actual_score": actual_score,
-            "remaining_sessions": remaining_sessions,
-            "remaining_score": remaining_score,
-            "sessions_completed": sessions_completed,
-        }
-
-    @staticmethod
-    def get_task_execution_status(user_id: int) -> Optional[Dict[str, bool]]:
-        """
-        从外部API获取三个任务的执行状态
-
-        Args:
-            user_id: 用户ID
-
-        Returns:
-            Dict: {
-                "daily_completed": True/False,   # 今日是否已完成
-                "weekly_completed": True/False,  # 本周是否已完成
-                "monthly_completed": True/False  # 本月是否已完成
-            }
-            如果API调用失败返回None
-        """
-        try:
-            from ccsa_auto.modules.auth.service import AuthService
-
-            result = AuthService.get_task_status_with_retry(user_id)
-            if result:
-                return {
-                    "daily_completed": result["daily"]["status"] == "已完成",
-                    "weekly_completed": result["weekly"]["status"] == "已完成",
-                    "monthly_completed": result["monthly"]["status"] == "已完成",
-                }
-            else:
-                logger.warning(f"[控分策略] 用户{user_id} 获取任务执行状态API返回失败")
-                return None
-        except Exception as e:
-            logger.error(f"[控分策略] 用户{user_id} 获取任务执行状态失败: {e}")
-            return None
-
-    @staticmethod
-    def get_monthly_exam_info(user_id: int, year: int, month: int) -> Dict[str, Any]:
-        """
-        获取本月每月一考信息
-
-        Args:
-            user_id: 用户ID
-            year: 年份
-            month: 月份
-
-        Returns:
-            Dict: {
-                "executed": 是否已执行,
-                "score": 已得分数,
-                "remaining_score": 剩余可得分(如果未执行)
-            }
-        """
-        from ccsa_auto.modules.task.score_tracker import ScoreTracker
-
-        records = ScoreTracker.get_monthly_scores(user_id, year, month)
-
-        monthly_score = 0
-        executed = False
-        for record in records:
-            if record.task_type == "monthly":
-                monthly_score = record.score
-                executed = True
-                break
-
-        return {
-            "executed": executed,
-            "score": monthly_score,
-            "remaining_score": 0 if executed else ScoreStrategy.MONTHLY_BASE_SCORE,
-        }
-
-    @staticmethod
-    def apply_user_variation(user_id: int, date: datetime, base_ratio: float) -> float:
-        """
-        应用用户差异化随机波动
-
-        Args:
-            user_id: 用户ID
-            date: 日期
-            base_ratio: 基础得分率
-
-        Returns:
-            float: 差异化后的得分率
-        """
-        seed = user_id * 10000 + date.toordinal()
-        random.seed(seed)
-
-        variation = random.normalvariate(0, ScoreStrategy.USER_VARIATION_STD)
-        ratio = base_ratio + variation
-
-        ratio = max(ScoreStrategy.MIN_SCORE_RATIO, ratio)
-        ratio = min(ScoreStrategy.MAX_SCORE_RATIO, ratio)
-
-        return ratio
-
-    @staticmethod
     def calculate_strategy(
         user_id: int, task_type: str, total_questions: int, score_per_question: float
     ) -> Dict[str, Any]:
         """
-        计算控分策略（动态版本）
-        - 保证月度目标 >= 570分
-        - 同时尽量逼近570分，避免过高
-        - 每周一课只能是50或0，无法控分
+        计算控分策略（简化版本）
+        - 未接近目标分数：满分
+        - 接近或超过目标分数：随机分数
 
         Args:
             user_id: 用户ID
@@ -321,191 +57,58 @@ class ScoreStrategy:
                 "reason": 策略说明
             }
         """
-        now = get_current_time()
-        year, month = now.year, now.month
-
         max_score = total_questions * score_per_question
 
         if task_type == "weekly":
-            logger.info(f"[控分策略] 用户{user_id} 每周一课: 必须满分{max_score}分")
+            logger.info(f"[控分策略] 用户{user_id} 每周一课: 满分{max_score}分")
             return {
                 "correct_questions": total_questions,
                 "score": max_score,
                 "max_score": max_score,
                 "score_ratio": 1.0,
-                "reason": "每周一课无法控分，必须满分",
+                "reason": "每周一课满分",
             }
 
-        # 【修复】不再从已完成分数计算剩余需达分数
-        # 改为从"理论上本月还能得多少分"计算
+        now = get_current_time()
 
-        weekly_info = ScoreStrategy.get_weekly_lessons_info(user_id, year, month)
-        weekly_remaining = weekly_info["remaining_sessions"]
-        weekly_remaining_score = weekly_remaining * 50
-
-        remaining_days = ScoreStrategy.get_remaining_working_days_in_month(
-            year, month, now
-        )
-
-        daily_available = remaining_days * 20
-
-        monthly_info = ScoreStrategy.get_monthly_exam_info(user_id, year, month)
-        monthly_remaining_score = (
-            0 if monthly_info["executed"] else ScoreStrategy.MONTHLY_BASE_SCORE
-        )
-
-        target = ScoreStrategy.TARGET_MONTHLY_SCORE
-
-        # 计算理论上本月各任务最多还能得多少分
-        theoretical_max = (
-            daily_available + weekly_remaining_score + monthly_remaining_score
-        )
-
-        logger.info(
-            f"[控分策略] 用户{user_id} 理论上限: {theoretical_max:.0f}分 (每日:{daily_available}, 每周一课:{weekly_remaining_score}, 每月一考:{monthly_remaining_score}), 剩余工作日: {remaining_days}天"
-        )
-
-        if task_type == "daily":
-            if ScoreStrategy.is_weekend_or_holiday(now):
-                logger.info(f"[控分策略] 用户{user_id} 周末/节假日不得分")
-                return {
-                    "correct_questions": total_questions,
-                    "score": 0,
-                    "max_score": max_score,
-                    "score_ratio": 1.0,
-                    "reason": "周末或节假日每日一题不得分",
-                }
-
-            if remaining_days <= 0:
-                logger.info(f"[控分策略] 用户{user_id} 本月无剩余工作日")
-                return {
-                    "correct_questions": 1,
-                    "score": score_per_question,
-                    "max_score": max_score,
-                    "score_ratio": 1.0 / total_questions,
-                    "reason": "本月无剩余工作日",
-                }
-
-            # 【修复】根据理论上限决定得分率
-            if theoretical_max >= target:
-                # 理论上限已经超过目标，可以控最低分
-                base_ratio = ScoreStrategy.MIN_SCORE_RATIO
-                reason = "理论上限达标，得最低分"
-                logger.info(
-                    f"[控分策略] 用户{user_id} 理论上限({theoretical_max:.0f})>=目标({target}), 得最低分{base_ratio * 100:.1f}%"
-                )
-            else:
-                # 需要算出每日任务需要承担多少分差
-                gap = target - theoretical_max
-                daily_target = gap  # 每日任务需要承担全部缺口
-
-                if daily_target <= daily_available * ScoreStrategy.MIN_SCORE_RATIO:
-                    base_ratio = ScoreStrategy.MIN_SCORE_RATIO
-                    reason = f"缺口{daily_target:.0f}分, 只需控最低分"
-                    logger.info(
-                        f"[控分策略] 用户{user_id} 只需控最低分, 得分率{base_ratio * 100:.1f}%"
-                    )
-                elif daily_target >= daily_available * ScoreStrategy.MAX_SCORE_RATIO:
-                    base_ratio = ScoreStrategy.MAX_SCORE_RATIO
-                    reason = f"缺口{daily_target:.0f}分, 需拿高分"
-                    logger.info(
-                        f"[控分策略] 用户{user_id} 需拿高分, 得分率{base_ratio * 100:.1f}%"
-                    )
-                else:
-                    base_ratio = daily_target / daily_available
-                    reason = f"缺口{daily_target:.0f}分, 日均目标{daily_target / remaining_days:.1f}分"
-                    logger.info(
-                        f"[控分策略] 用户{user_id} 日均目标{daily_target / remaining_days:.1f}分, 得分率{base_ratio * 100:.1f}%"
-                    )
-
-            ratio = ScoreStrategy.apply_user_variation(user_id, now, base_ratio)
-            correct_count = max(1, min(total_questions, int(total_questions * ratio)))
-            actual_score = correct_count * score_per_question
-
-            logger.info(
-                f"[控分策略] 用户{user_id} 每日一题: 得分{actual_score:.0f}分({correct_count}题), 得分率{ratio * 100:.1f}%"
-            )
-
+        if task_type == "daily" and ScoreStrategy.is_weekend_or_holiday(now):
+            logger.info(f"[控分策略] 用户{user_id} 周末/节假日不得分")
             return {
-                "correct_questions": correct_count,
-                "score": actual_score,
+                "correct_questions": total_questions,
+                "score": 0,
                 "max_score": max_score,
-                "score_ratio": actual_score / max_score if max_score > 0 else 0.0,
-                "reason": f"{reason}, 得分率{ratio * 100:.1f}%",
+                "score_ratio": 0.0,
+                "reason": "周末或节假日每日一题不得分",
             }
 
-        elif task_type == "monthly":
-            # 【修复】先从API检查本月是否已完成，再检查数据库
-            task_status = ScoreStrategy.get_task_execution_status(user_id)
+        year, month = now.year, now.month
+        current_scores = ScoreTracker.calculate_monthly_total(user_id, year, month)
+        current_total = current_scores["total"]
 
-            if task_status and task_status["monthly_completed"]:
-                logger.info(f"[控分策略] 用户{user_id} 本月每月一考API显示已完成，跳过")
-                return {
-                    "correct_questions": 0,
-                    "score": 0,
-                    "max_score": 100,
-                    "score_ratio": 0.0,
-                    "reason": "本月每月一考已完成，跳过",
-                }
+        target = SystemConfigService.get_score_target()
+        threshold = SystemConfigService.get_score_threshold()
+        random_min, random_max = SystemConfigService.get_score_random_range()
 
-            # API未完成或API调用失败时，查询数据库确认
-            if monthly_info["executed"]:
-                logger.info(
-                    f"[控分策略] 用户{user_id} 本月每月一考数据库显示已执行，跳过"
-                )
-                return {
-                    "correct_questions": 0,
-                    "score": 0,
-                    "max_score": 100,
-                    "score_ratio": 0.0,
-                    "reason": "本月每月一考已执行，跳过",
-                }
-
-            # 未执行时，根据理论上限计算得分
-            # 每月一考的任务是承担剩余分差中的一部分
-            daily_reserve = daily_available * ScoreStrategy.MIN_SCORE_RATIO
-
-            if theoretical_max >= target:
-                # 理论上限已达标，每月一考得保底分
-                monthly_target = ScoreStrategy.MONTHLY_BASE_SCORE
-                base_ratio = monthly_target / 100
-                reason = "理论上限达标，每月一考得保底分"
-                logger.info(
-                    f"[控分策略] 用户{user_id} 每月一考得保底{monthly_target}分"
-                )
-            else:
-                # 需要算出每月一考需要承担多少分差
-                gap = target - theoretical_max
-                monthly_target = max(gap, ScoreStrategy.MONTHLY_BASE_SCORE)
-                monthly_target = min(100, monthly_target)
-                base_ratio = monthly_target / 100
-                reason = f"缺口{gap:.0f}分，每月一考承担{monthly_target:.0f}分"
-                logger.info(
-                    f"[控分策略] 用户{user_id} 每月一考分配{monthly_target:.0f}分, 得分率{base_ratio * 100:.1f}%"
-                )
-
-            ratio = ScoreStrategy.apply_user_variation(user_id, now, base_ratio)
-            correct_count = max(1, min(total_questions, int(total_questions * ratio)))
+        if current_total < target - threshold:
+            correct_count = total_questions
+            actual_score = max_score
+            ratio = 1.0
+            reason = f"当前{current_total:.0f}分 < 目标{target}分-{threshold}分，满分"
+            logger.info(f"[控分策略] 用户{user_id} {reason}")
+        else:
+            random_ratio = random.uniform(random_min, random_max)
+            correct_count = max(1, int(total_questions * random_ratio))
             actual_score = correct_count * score_per_question
-
-            logger.info(
-                f"[控分策略] 用户{user_id} 每月一考: 得分{actual_score:.0f}分({correct_count}题), 得分率{ratio * 100:.1f}%"
-            )
-
-            return {
-                "correct_questions": correct_count,
-                "score": actual_score,
-                "max_score": max_score,
-                "score_ratio": actual_score / max_score if max_score > 0 else 0.0,
-                "reason": f"{reason}, 得分率{ratio * 100:.1f}%",
-            }
+            ratio = actual_score / max_score if max_score > 0 else 0.0
+            reason = f"当前{current_total:.0f}分 >= 目标{target}分-{threshold}分，随机{ratio*100:.0f}%"
+            logger.info(f"[控分策略] 用户{user_id} {reason}")
 
         return {
-            "correct_questions": total_questions,
-            "score": max_score,
+            "correct_questions": correct_count,
+            "score": actual_score,
             "max_score": max_score,
-            "score_ratio": 1.0,
-            "reason": "未知任务类型",
+            "score_ratio": ratio,
+            "reason": reason,
         }
 
     @staticmethod
