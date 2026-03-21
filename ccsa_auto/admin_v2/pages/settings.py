@@ -20,6 +20,9 @@ def create_settings_page():
         "random_min": SystemConfigService.get("score_random_min", 0.30),
         "random_max": SystemConfigService.get("score_random_max", 1.00),
         "enabled": SystemConfigService.is_score_strategy_enabled(),
+        "daily_deduction_enabled": SystemConfigService.is_daily_deduction_enabled(),
+        "daily_deduction_min": SystemConfigService.get("daily_deduction_min", 1),
+        "daily_deduction_max": SystemConfigService.get("daily_deduction_max", 2),
     }
 
     task_details = Config.TASK_DETAILS
@@ -49,6 +52,9 @@ def create_settings_page():
         SystemConfigService.set("score_random_min", score_config["random_min"], "float")
         SystemConfigService.set("score_random_max", score_config["random_max"], "float")
         SystemConfigService.set("score_strategy_enabled", score_config["enabled"], "bool")
+        SystemConfigService.set("daily_deduction_enabled", score_config["daily_deduction_enabled"], "bool")
+        SystemConfigService.set("daily_deduction_min", score_config["daily_deduction_min"], "int")
+        SystemConfigService.set("daily_deduction_max", score_config["daily_deduction_max"], "int")
         ui.notify("控分策略配置已保存", type="positive")
 
     ui.label("系统设置").classes("text-2xl font-bold mb-6 text-[#1f2937]")
@@ -150,6 +156,44 @@ def create_settings_page():
 
             ui.label(
                 "策略说明: 当前分数 < 目标-阈值 时满分；达到阈值后随机得分"
+            ).classes("text-sm text-[#9ca3af] mt-2")
+
+            # 分隔线
+            ui.separator().classes("my-4")
+
+            ui.label("每日一题随机扣分").classes("text-lg font-semibold mb-3 text-[#1f2937]")
+
+            with ui.row().classes("items-center gap-4 w-full mb-4"):
+                ui.label("启用随机扣分:").classes("w-40 text-[#6b7280]")
+                ui.switch(
+                    value=score_config["daily_deduction_enabled"],
+                    on_change=lambda e: (
+                        score_config.update({"daily_deduction_enabled": e.value}),
+                        save_score_config(),
+                    ),
+                ).props("color=positive")
+
+            with ui.row().classes("items-center gap-4 w-full mb-4"):
+                ui.label("随机答错题数:").classes("w-40 text-[#6b7280]")
+                ui.number(
+                    value=score_config["daily_deduction_min"],
+                    on_change=lambda e: score_config.update({"daily_deduction_min": int(e.value)}),
+                    format="%.0f",
+                    min=0,
+                    max=10,
+                ).props("outlined dense").classes("w-20")
+                ui.label(" ~ ").classes("text-[#6b7280]")
+                ui.number(
+                    value=score_config["daily_deduction_max"],
+                    on_change=lambda e: score_config.update({"daily_deduction_max": int(e.value)}),
+                    format="%.0f",
+                    min=0,
+                    max=10,
+                ).props("outlined dense").classes("w-20")
+                ui.label("题").classes("text-[#6b7280]")
+
+            ui.label(
+                "说明: 启用后，每日一题在未达到目标分数前也会随机答错1-2题（扣2-4分）"
             ).classes("text-sm text-[#9ca3af] mt-2")
 
         with ui.card().classes("p-6 mb-6 rounded-2xl shadow-sm bg-white"):

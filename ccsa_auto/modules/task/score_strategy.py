@@ -88,13 +88,24 @@ class ScoreStrategy:
         target = SystemConfigService.get_score_target()
         threshold = SystemConfigService.get_score_threshold()
         random_min, random_max = SystemConfigService.get_score_random_range()
+        daily_deduction_enabled = SystemConfigService.is_daily_deduction_enabled()
+        daily_deduction_min, daily_deduction_max = SystemConfigService.get_daily_deduction_range()
 
         if current_total < target - threshold:
-            correct_count = total_questions
-            actual_score = max_score
-            ratio = 1.0
-            reason = f"当前{current_total:.0f}分 < 目标{target}分-{threshold}分，满分"
-            logger.info(f"[控分策略] 用户{user_id} {reason}")
+            # 每日一题特殊处理：默认也随机扣分
+            if task_type == "daily" and daily_deduction_enabled:
+                wrong_count = random.randint(daily_deduction_min, daily_deduction_max)
+                correct_count = max(1, total_questions - wrong_count)
+                actual_score = correct_count * score_per_question
+                ratio = actual_score / max_score if max_score > 0 else 0.0
+                reason = f"当前{current_total:.0f}分 < 目标{target}分-{threshold}分，随机答错{wrong_count}题"
+                logger.info(f"[控分策略] 用户{user_id} {reason}")
+            else:
+                correct_count = total_questions
+                actual_score = max_score
+                ratio = 1.0
+                reason = f"当前{current_total:.0f}分 < 目标{target}分-{threshold}分，满分"
+                logger.info(f"[控分策略] 用户{user_id} {reason}")
         else:
             random_ratio = random.uniform(random_min, random_max)
             correct_count = max(1, int(total_questions * random_ratio))

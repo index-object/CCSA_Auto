@@ -12,6 +12,9 @@ DEFAULT_CONFIGS = {
     "score_random_min": {"value": "0.30", "type": "float", "description": "随机分数下限"},
     "score_random_max": {"value": "1.00", "type": "float", "description": "随机分数上限"},
     "score_strategy_enabled": {"value": "true", "type": "bool", "description": "是否启用控分策略"},
+    "daily_deduction_enabled": {"value": "true", "type": "bool", "description": "每日一题是否启用随机扣分"},
+    "daily_deduction_min": {"value": "1", "type": "int", "description": "每日一题最少答错题数"},
+    "daily_deduction_max": {"value": "2", "type": "int", "description": "每日一题最多答错题数"},
 }
 
 
@@ -130,6 +133,18 @@ class SystemConfigService:
     def is_score_strategy_enabled() -> bool:
         """是否启用控分策略"""
         return SystemConfigService.get("score_strategy_enabled", True)
+
+    @staticmethod
+    def is_daily_deduction_enabled() -> bool:
+        """每日一题是否启用随机扣分"""
+        return SystemConfigService.get("daily_deduction_enabled", True)
+
+    @staticmethod
+    def get_daily_deduction_range() -> tuple[int, int]:
+        """获取每日一题随机扣分范围（答错题数）"""
+        min_val = SystemConfigService.get("daily_deduction_min", 1)
+        max_val = SystemConfigService.get("daily_deduction_max", 2)
+        return (min_val, max_val)
 
     @staticmethod
     def _parse_value(value: str, value_type: str) -> Any:
