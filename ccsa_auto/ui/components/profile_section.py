@@ -185,7 +185,7 @@ def create_profile_section():
                     with ui.row().classes("w-full mt-6"):
                         if status == "ahead":
                             ui.label(
-                                "已达到本月目标，后续任务将保持最低得分比例（50%）"
+                                "已达到本月目标，后续任务将保持最低得分比例（30%）"
                             ).classes(
                                 "text-sm text-green-700 bg-green-50 px-4 py-2 rounded-lg"
                             )

@@ -51,10 +51,18 @@ def create_settings_page():
         SystemConfigService.set("score_threshold", score_config["threshold"], "int")
         SystemConfigService.set("score_random_min", score_config["random_min"], "float")
         SystemConfigService.set("score_random_max", score_config["random_max"], "float")
-        SystemConfigService.set("score_strategy_enabled", score_config["enabled"], "bool")
-        SystemConfigService.set("daily_deduction_enabled", score_config["daily_deduction_enabled"], "bool")
-        SystemConfigService.set("daily_deduction_min", score_config["daily_deduction_min"], "int")
-        SystemConfigService.set("daily_deduction_max", score_config["daily_deduction_max"], "int")
+        SystemConfigService.set(
+            "score_strategy_enabled", score_config["enabled"], "bool"
+        )
+        SystemConfigService.set(
+            "daily_deduction_enabled", score_config["daily_deduction_enabled"], "bool"
+        )
+        SystemConfigService.set(
+            "daily_deduction_min", score_config["daily_deduction_min"], "int"
+        )
+        SystemConfigService.set(
+            "daily_deduction_max", score_config["daily_deduction_max"], "int"
+        )
         ui.notify("控分策略配置已保存", type="positive")
 
     ui.label("系统设置").classes("text-2xl font-bold mb-6 text-[#1f2937]")
@@ -102,7 +110,9 @@ def create_settings_page():
             ).classes("text-sm text-[#9ca3af] mt-2")
 
         with ui.card().classes("p-6 mb-6 rounded-2xl shadow-sm bg-white"):
-            ui.label("控分策略配置").classes("text-xl font-semibold mb-4 text-[#1f2937]")
+            ui.label("控分策略配置").classes(
+                "text-xl font-semibold mb-4 text-[#1f2937]"
+            )
 
             with ui.row().classes("items-center gap-4 w-full mb-4"):
                 ui.label("启用控分策略:").classes("w-40 text-[#6b7280]")
@@ -127,7 +137,9 @@ def create_settings_page():
                 ui.label("接近阈值:").classes("w-40 text-[#6b7280]")
                 ui.number(
                     value=score_config["threshold"],
-                    on_change=lambda e: score_config.update({"threshold": int(e.value)}),
+                    on_change=lambda e: score_config.update(
+                        {"threshold": int(e.value)}
+                    ),
                     format="%.0f",
                 ).props("outlined dense").classes("w-24")
                 ui.label("分").classes("text-[#6b7280]")
@@ -155,13 +167,15 @@ def create_settings_page():
             ).classes("mt-2")
 
             ui.label(
-                "策略说明: 当前分数 < 目标-阈值 时满分；达到阈值后随机得分"
+                "策略说明: 当月总分低于目标减阈值时，每日一题和每月一考按策略得分；达到阈值后，每日一题和每月一考按随机比例（30%-100%）得分。每周一课固定满分。周末/节假日每日一题不得分。"
             ).classes("text-sm text-[#9ca3af] mt-2")
 
             # 分隔线
             ui.separator().classes("my-4")
 
-            ui.label("每日一题随机扣分").classes("text-lg font-semibold mb-3 text-[#1f2937]")
+            ui.label("每日一题随机扣分").classes(
+                "text-lg font-semibold mb-3 text-[#1f2937]"
+            )
 
             with ui.row().classes("items-center gap-4 w-full mb-4"):
                 ui.label("启用随机扣分:").classes("w-40 text-[#6b7280]")
@@ -177,7 +191,9 @@ def create_settings_page():
                 ui.label("随机答错题数:").classes("w-40 text-[#6b7280]")
                 ui.number(
                     value=score_config["daily_deduction_min"],
-                    on_change=lambda e: score_config.update({"daily_deduction_min": int(e.value)}),
+                    on_change=lambda e: score_config.update(
+                        {"daily_deduction_min": int(e.value)}
+                    ),
                     format="%.0f",
                     min=0,
                     max=10,
@@ -185,7 +201,9 @@ def create_settings_page():
                 ui.label(" ~ ").classes("text-[#6b7280]")
                 ui.number(
                     value=score_config["daily_deduction_max"],
-                    on_change=lambda e: score_config.update({"daily_deduction_max": int(e.value)}),
+                    on_change=lambda e: score_config.update(
+                        {"daily_deduction_max": int(e.value)}
+                    ),
                     format="%.0f",
                     min=0,
                     max=10,
@@ -193,7 +211,7 @@ def create_settings_page():
                 ui.label("题").classes("text-[#6b7280]")
 
             ui.label(
-                "说明: 启用后，每日一题在未达到目标分数前也会随机答错1-2题（扣2-4分）"
+                "说明: 启用后，每日一题在未达到目标减阈值前，也会随机答错1-2题（扣2-4分）。周末和法定节假日每日一题不得分。"
             ).classes("text-sm text-[#9ca3af] mt-2")
 
         with ui.card().classes("p-6 mb-6 rounded-2xl shadow-sm bg-white"):
