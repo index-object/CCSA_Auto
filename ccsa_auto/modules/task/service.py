@@ -4,6 +4,7 @@ import time
 from datetime import datetime, timedelta
 
 from ccsa_auto.core.config import Config
+from ccsa_auto.core.system_config import SystemConfigService
 from ccsa_auto.modules.auth.service import AuthService
 from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import Task
@@ -106,7 +107,7 @@ class TaskService:
                     from ccsa_auto.modules.task.score_tracker import ScoreTracker
                     from ccsa_auto.modules.task.score_strategy import ScoreStrategy
 
-                    if Config.SCORE_STRATEGY_ENABLED:
+                    if SystemConfigService.is_score_strategy_enabled():
                         score_strategy = ScoreStrategy.calculate_strategy(
                             user_id, "daily", 0, 0.0
                         )
@@ -157,7 +158,7 @@ class TaskService:
 
             from ccsa_auto.modules.task.score_strategy import ScoreStrategy
 
-            if Config.SCORE_STRATEGY_ENABLED:
+            if SystemConfigService.is_score_strategy_enabled():
                 questions, score_strategy = (
                     ScoreStrategy.modify_answers_for_score_control(
                         questions, "daily", user_id
@@ -617,7 +618,7 @@ class TaskService:
                     from ccsa_auto.modules.task.score_strategy import ScoreStrategy
 
                     # 获取控分策略
-                    if Config.SCORE_STRATEGY_ENABLED:
+                    if SystemConfigService.is_score_strategy_enabled():
                         score_strategy = ScoreStrategy.calculate_strategy(
                             user_id, "monthly", 0, 0.0
                         )
@@ -671,7 +672,7 @@ class TaskService:
             # 应用控分策略
             from ccsa_auto.modules.task.score_strategy import ScoreStrategy
 
-            if Config.SCORE_STRATEGY_ENABLED:
+            if SystemConfigService.is_score_strategy_enabled():
                 questions, score_strategy = (
                     ScoreStrategy.modify_answers_for_score_control(
                         questions, "monthly", user_id
