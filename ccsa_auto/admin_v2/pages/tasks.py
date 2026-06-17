@@ -110,7 +110,7 @@ def create_tasks_page():
         if not ids:
             ui.notify("请先选择要执行的任务", type="warning")
             return
-        batch_btn.props("disabled")
+        batch_btn.props("loading")
         try:
             result = TaskManagementService.batch_execute_tasks(ids)
             selected_ids["value"] = []
@@ -126,7 +126,7 @@ def create_tasks_page():
         except Exception as e:
             ui.notify(f"批量执行失败: {str(e)}", type="negative")
         finally:
-            batch_btn.props(remove="disabled")
+            batch_btn.props(remove="loading")
 
     def render_task_type_badge(task_type: str) -> str:
         """Render task type badge with color"""
