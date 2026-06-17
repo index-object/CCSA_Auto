@@ -141,10 +141,11 @@ def create_users_page():
 
     with ui.card().classes("rounded-2xl p-6 shadow-sm bg-white flex flex-col"):
         with ui.row().classes(
-            "grid grid-cols-6 gap-4 pb-4 border-b border-gray-100 mb-4 shrink-0"
+            "grid grid-cols-7 gap-4 pb-4 border-b border-gray-100 mb-4 shrink-0"
         ):
             ui.label("用户ID").classes("text-xs font-semibold text-[#6b7280] uppercase")
             ui.label("用户名").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("姓名").classes("text-xs font-semibold text-[#6b7280] uppercase")
             ui.label("邮箱").classes("text-xs font-semibold text-[#6b7280] uppercase")
             ui.label("状态").classes("text-xs font-semibold text-[#6b7280] uppercase")
             ui.label("注册时间").classes(
@@ -157,13 +158,16 @@ def create_users_page():
                 row_bg = "bg-[#f9fafb]" if idx % 2 == 1 else "bg-white"
 
                 with ui.row().classes(
-                    f"grid grid-cols-6 gap-4 py-4 {row_bg} items-center"
+                    f"grid grid-cols-7 gap-4 py-4 {row_bg} items-center"
                 ):
                     ui.label(str(user.get("id", ""))).classes(
                         "text-sm text-[#1f2937] font-medium"
                     )
                     ui.label(str(user.get("username", ""))).classes(
                         "text-sm text-[#1f2937]"
+                    )
+                    ui.label(str(user.get("name") or "-")).classes(
+                        "text-sm text-[#6b7280]"
                     )
                     ui.label(str(user.get("email") or "-")).classes(
                         "text-sm text-[#6b7280]"
