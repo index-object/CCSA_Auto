@@ -31,6 +31,7 @@ def create_tasks_page():
             tasks_data["total"] = result.get("total", 0)
         else:
             ui.notify(f"加载任务失败: {result.get('message')}", type="negative")
+        task_table.refresh()
 
     def on_search():
         """Handle search"""
@@ -90,6 +91,7 @@ def create_tasks_page():
         else:
             page_ids = {task["id"] for task in tasks_data["data"]}
             selected_ids["value"] = [tid for tid in selected_ids["value"] if tid not in page_ids]
+        task_table.refresh()
 
     def on_select_task(task_id: int, checked: bool):
         """勾选/取消勾选单个任务"""
@@ -98,11 +100,13 @@ def create_tasks_page():
                 selected_ids["value"] = selected_ids["value"] + [task_id]
         else:
             selected_ids["value"] = [tid for tid in selected_ids["value"] if tid != task_id]
+        task_table.refresh()
 
     def on_batch_execute():
         """批量执行选中任务"""
         ids = list(selected_ids["value"])
         if not ids:
+            ui.notify("请先选择要执行的任务", type="warning")
             return
         batch_btn.props("disabled")
         is_executing["value"] = True
@@ -218,195 +222,201 @@ def create_tasks_page():
                     on_click=on_batch_execute,
                 ).props("color=primary")
 
-    with ui.card().classes("rounded-2xl p-6 shadow-sm bg-white flex flex-col"):
-        with ui.row().classes(
-            "grid grid-cols-10 gap-4 pb-4 border-b border-gray-100 mb-4 shrink-0"
-        ):
-            with ui.element("div").classes("flex items-center"):
-                all_check = ui.checkbox(on_change=lambda e: on_select_all(e.value))
-            ui.label("ID").classes("text-xs font-semibold text-[#6b7280] uppercase")
-            ui.label("用户").classes("text-xs font-semibold text-[#6b7280] uppercase")
-            ui.label("类型").classes("text-xs font-semibold text-[#6b7280] uppercase")
-            ui.label("任务名称").classes(
-                "text-xs font-semibold text-[#6b7280] uppercase"
-            )
-            ui.label("启用").classes("text-xs font-semibold text-[#6b7280] uppercase")
-            ui.label("执行状态").classes(
-                "text-xs font-semibold text-[#6b7280] uppercase"
-            )
-            ui.label("外部状态").classes(
-                "text-xs font-semibold text-[#6b7280] uppercase"
-            )
-            ui.label("下次运行").classes(
-                "text-xs font-semibold text-[#6b7280] uppercase"
-            )
-            ui.label("操作").classes("text-xs font-semibold text-[#6b7280] uppercase")
+    @ui.refreshable
+    def task_table():
+        """渲染任务表格"""
+        with ui.card().classes("rounded-2xl p-6 shadow-sm bg-white flex flex-col"):
+            with ui.row().classes(
+                "grid grid-cols-10 gap-4 pb-4 border-b border-gray-100 mb-4 shrink-0"
+            ):
+                with ui.element("div").classes("flex items-center"):
+                    all_check = ui.checkbox(on_change=lambda e: on_select_all(e.value))
+                ui.label("ID").classes("text-xs font-semibold text-[#6b7280] uppercase")
+                ui.label("用户").classes("text-xs font-semibold text-[#6b7280] uppercase")
+                ui.label("类型").classes("text-xs font-semibold text-[#6b7280] uppercase")
+                ui.label("任务名称").classes(
+                    "text-xs font-semibold text-[#6b7280] uppercase"
+                )
+                ui.label("启用").classes("text-xs font-semibold text-[#6b7280] uppercase")
+                ui.label("执行状态").classes(
+                    "text-xs font-semibold text-[#6b7280] uppercase"
+                )
+                ui.label("外部状态").classes(
+                    "text-xs font-semibold text-[#6b7280] uppercase"
+                )
+                ui.label("下次运行").classes(
+                    "text-xs font-semibold text-[#6b7280] uppercase"
+                )
+                ui.label("操作").classes("text-xs font-semibold text-[#6b7280] uppercase")
 
-        with ui.element("div").classes("overflow-y-auto max-h-[calc(100vh-380px)]"):
-            for idx, task in enumerate(tasks_data["data"]):
-                row_bg = "bg-[#f9fafb]" if idx % 2 == 1 else "bg-white"
-                with ui.row().classes(
-                    f"grid grid-cols-10 gap-4 py-4 {row_bg} items-center"
-                ):
-                    with ui.element("div").classes("flex items-center"):
-                        ui.checkbox(
-                            value=task.get("id") in selected_ids["value"],
-                            on_change=lambda e, tid=task.get("id"): on_select_task(tid, e.value),
+            with ui.element("div").classes("overflow-y-auto max-h-[calc(100vh-380px)]"):
+                for idx, task in enumerate(tasks_data["data"]):
+                    row_bg = "bg-[#f9fafb]" if idx % 2 == 1 else "bg-white"
+                    with ui.row().classes(
+                        f"grid grid-cols-10 gap-4 py-4 {row_bg} items-center"
+                    ):
+                        with ui.element("div").classes("flex items-center"):
+                            ui.checkbox(
+                                value=task.get("id") in selected_ids["value"],
+                                on_change=lambda e, tid=task.get("id"): on_select_task(tid, e.value),
+                            )
+                        ui.label(str(task.get("id", ""))).classes("text-sm text-[#1f2937]")
+                        ui.label(str(task.get("username", ""))[:10]).classes(
+                            "text-sm text-[#1f2937]"
                         )
-                    ui.label(str(task.get("id", ""))).classes("text-sm text-[#1f2937]")
-                    ui.label(str(task.get("username", ""))[:10]).classes(
-                        "text-sm text-[#1f2937]"
-                    )
 
-                    task_type = task.get("task_type", "")
-                    type_badge = {
-                        "daily": "每日",
-                        "weekly": "每周",
-                        "monthly": "每月",
-                    }.get(task_type, task_type)
-                    with ui.element("div"):
-                        if task_type == "daily":
+                        task_type = task.get("task_type", "")
+                        type_badge = {
+                            "daily": "每日",
+                            "weekly": "每周",
+                            "monthly": "每月",
+                        }.get(task_type, task_type)
+                        with ui.element("div"):
+                            if task_type == "daily":
+                                with ui.element("span").classes(
+                                    "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 w-fit"
+                                ):
+                                    ui.label(type_badge)
+                            elif task_type == "weekly":
+                                with ui.element("span").classes(
+                                    "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 w-fit"
+                                ):
+                                    ui.label(type_badge)
+                            elif task_type == "monthly":
+                                with ui.element("span").classes(
+                                    "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 w-fit"
+                                ):
+                                    ui.label(type_badge)
+                            else:
+                                ui.label(type_badge).classes("text-sm text-[#6b7280]")
+
+                        ui.label(str(task.get("task_name") or "-")).classes(
+                            "text-sm text-[#1f2937]"
+                        )
+
+                        if task.get("is_active"):
                             with ui.element("span").classes(
-                                "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 w-fit"
+                                "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 w-fit"
                             ):
-                                ui.label(type_badge)
-                        elif task_type == "weekly":
-                            with ui.element("span").classes(
-                                "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 w-fit"
-                            ):
-                                ui.label(type_badge)
-                        elif task_type == "monthly":
-                            with ui.element("span").classes(
-                                "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 w-fit"
-                            ):
-                                ui.label(type_badge)
+                                ui.label("启用")
                         else:
-                            ui.label(type_badge).classes("text-sm text-[#6b7280]")
+                            with ui.element("span").classes(
+                                "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 w-fit"
+                            ):
+                                ui.label("禁用")
 
-                    ui.label(str(task.get("task_name") or "-")).classes(
-                        "text-sm text-[#1f2937]"
-                    )
-
-                    if task.get("is_active"):
+                        status = task.get("execution_status", "")
+                        status_colors_bg = {
+                            "pending": "bg-gray-100 text-gray-600",
+                            "running": "bg-amber-100 text-amber-700",
+                            "completed": "bg-green-100 text-green-700",
+                            "failed": "bg-red-100 text-red-700",
+                        }
+                        status_labels = {
+                            "pending": "待执行",
+                            "running": "执行中",
+                            "completed": "已完成",
+                            "failed": "失败",
+                        }
+                        badge_class = status_colors_bg.get(
+                            status, "bg-gray-100 text-gray-600"
+                        )
                         with ui.element("span").classes(
-                            "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 w-fit"
+                            f"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {badge_class} w-fit"
                         ):
-                            ui.label("启用")
-                    else:
+                            ui.label(status_labels.get(status, status))
+
+                        ext_status = task.get("external_status", "")
+                        ext_colors = {
+                            "success": ("bg-green-100", "text-green-700"),
+                            "failed": ("bg-red-100", "text-red-700"),
+                            "unknown": ("bg-gray-100", "text-gray-600"),
+                        }
+                        ext_bg, ext_text = ext_colors.get(
+                            ext_status, ("bg-gray-100", "text-gray-600")
+                        )
                         with ui.element("span").classes(
-                            "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 w-fit"
+                            f"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {ext_bg} {ext_text} w-fit"
                         ):
-                            ui.label("禁用")
+                            ui.label(ext_status)
 
-                    status = task.get("execution_status", "")
-                    status_colors_bg = {
-                        "pending": "bg-gray-100 text-gray-600",
-                        "running": "bg-amber-100 text-amber-700",
-                        "completed": "bg-green-100 text-green-700",
-                        "failed": "bg-red-100 text-red-700",
-                    }
-                    status_labels = {
-                        "pending": "待执行",
-                        "running": "执行中",
-                        "completed": "已完成",
-                        "failed": "失败",
-                    }
-                    badge_class = status_colors_bg.get(
-                        status, "bg-gray-100 text-gray-600"
+                        ui.label(str(task.get("next_run_time") or "-")).classes(
+                            "text-sm text-[#6b7280]"
+                        )
+
+                        with ui.row().classes("items-center gap-1"):
+                            task_id = task.get("id")
+                            is_active = task.get("is_active")
+
+                            trigger_btn = (
+                                ui.button()
+                                .classes(
+                                    "text-[#6b7280] hover:text-blue-500 hover:bg-blue-50 rounded p-1 transition-colors"
+                                )
+                                .props("flat dense")
+                            )
+                            trigger_btn.on_click(lambda _, tid=task_id: trigger_task(tid))
+                            with trigger_btn:
+                                ui.icon("play_arrow").classes("text-base")
+
+                            toggle_text = "禁用" if is_active else "启用"
+                            toggle_btn = (
+                                ui.button()
+                                .classes(
+                                    "text-[#6b7280] hover:text-amber-500 hover:bg-amber-50 rounded p-1 transition-colors"
+                                )
+                                .props("flat dense")
+                            )
+                            toggle_btn.on_click(
+                                lambda _, tid=task_id, st=is_active: toggle_task_status(
+                                    tid, st
+                                )
+                            )
+                            with toggle_btn:
+                                toggle_icon = "toggle_on" if is_active else "toggle_off"
+                                ui.icon(toggle_icon).classes("text-base")
+
+                            delete_btn = (
+                                ui.button()
+                                .classes(
+                                    "text-[#6b7280] hover:text-red-500 hover:bg-red-50 rounded p-1 transition-colors"
+                                )
+                                .props("flat dense")
+                            )
+                            delete_btn.on_click(lambda _, tid=task_id: delete_task(tid))
+                            with delete_btn:
+                                ui.icon("delete").classes("text-base")
+
+            # Pagination
+            total_pages = max(
+                1, (tasks_data["total"] + page_size["value"] - 1) // page_size["value"]
+            )
+            with ui.row().classes("items-center justify-between w-full mt-4"):
+                with ui.row().classes("items-center gap-2"):
+                    ui.label(f"共 {tasks_data['total']} 条").classes(
+                        "text-sm text-gray-500"
                     )
-                    with ui.element("span").classes(
-                        f"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {badge_class} w-fit"
-                    ):
-                        ui.label(status_labels.get(status, status))
 
-                    ext_status = task.get("external_status", "")
-                    ext_colors = {
-                        "success": ("bg-green-100", "text-green-700"),
-                        "failed": ("bg-red-100", "text-red-700"),
-                        "unknown": ("bg-gray-100", "text-gray-600"),
-                    }
-                    ext_bg, ext_text = ext_colors.get(
-                        ext_status, ("bg-gray-100", "text-gray-600")
-                    )
-                    with ui.element("span").classes(
-                        f"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {ext_bg} {ext_text} w-fit"
-                    ):
-                        ui.label(ext_status)
-
-                    ui.label(str(task.get("next_run_time") or "-")).classes(
-                        "text-sm text-[#6b7280]"
+                total_pages = max(1, (tasks_data["total"] + 19) // 20)
+                with ui.row().classes("items-center gap-2"):
+                    ui.button("首页", on_click=lambda: on_page_change(1)).props("flat")
+                    ui.button(
+                        "上一页",
+                        on_click=lambda: on_page_change(max(1, current_page["value"] - 1)),
+                    ).props("flat")
+                    ui.label(f"{current_page['value']} / {total_pages}").classes("px-3")
+                    ui.button(
+                        "下一页",
+                        on_click=lambda: on_page_change(
+                            min(total_pages, current_page["value"] + 1)
+                        ),
+                    ).props("flat")
+                    ui.button("末页", on_click=lambda: on_page_change(total_pages)).props(
+                        "flat"
                     )
 
-                    with ui.row().classes("items-center gap-1"):
-                        task_id = task.get("id")
-                        is_active = task.get("is_active")
-
-                        trigger_btn = (
-                            ui.button()
-                            .classes(
-                                "text-[#6b7280] hover:text-blue-500 hover:bg-blue-50 rounded p-1 transition-colors"
-                            )
-                            .props("flat dense")
-                        )
-                        trigger_btn.on_click(lambda _, tid=task_id: trigger_task(tid))
-                        with trigger_btn:
-                            ui.icon("play_arrow").classes("text-base")
-
-                        toggle_text = "禁用" if is_active else "启用"
-                        toggle_btn = (
-                            ui.button()
-                            .classes(
-                                "text-[#6b7280] hover:text-amber-500 hover:bg-amber-50 rounded p-1 transition-colors"
-                            )
-                            .props("flat dense")
-                        )
-                        toggle_btn.on_click(
-                            lambda _, tid=task_id, st=is_active: toggle_task_status(
-                                tid, st
-                            )
-                        )
-                        with toggle_btn:
-                            toggle_icon = "toggle_on" if is_active else "toggle_off"
-                            ui.icon(toggle_icon).classes("text-base")
-
-                        delete_btn = (
-                            ui.button()
-                            .classes(
-                                "text-[#6b7280] hover:text-red-500 hover:bg-red-50 rounded p-1 transition-colors"
-                            )
-                            .props("flat dense")
-                        )
-                        delete_btn.on_click(lambda _, tid=task_id: delete_task(tid))
-                        with delete_btn:
-                            ui.icon("delete").classes("text-base")
-
-        # Pagination
-        total_pages = max(
-            1, (tasks_data["total"] + page_size["value"] - 1) // page_size["value"]
-        )
-        with ui.row().classes("items-center justify-between w-full mt-4"):
-            with ui.row().classes("items-center gap-2"):
-                ui.label(f"共 {tasks_data['total']} 条").classes(
-                    "text-sm text-gray-500"
-                )
-
-            total_pages = max(1, (tasks_data["total"] + 19) // 20)
-            with ui.row().classes("items-center gap-2"):
-                ui.button("首页", on_click=lambda: on_page_change(1)).props("flat")
-                ui.button(
-                    "上一页",
-                    on_click=lambda: on_page_change(max(1, current_page["value"] - 1)),
-                ).props("flat")
-                ui.label(f"{current_page['value']} / {total_pages}").classes("px-3")
-                ui.button(
-                    "下一页",
-                    on_click=lambda: on_page_change(
-                        min(total_pages, current_page["value"] + 1)
-                    ),
-                ).props("flat")
-                ui.button("末页", on_click=lambda: on_page_change(total_pages)).props(
-                    "flat"
-                )
+    # 初始渲染表格
+    task_table()
 
 
 def render():
