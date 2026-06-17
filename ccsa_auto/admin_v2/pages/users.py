@@ -26,6 +26,8 @@ def create_users_page():
         if result.get("success"):
             users_data["data"] = result.get("data", [])
             users_data["total"] = result.get("total", 0)
+            render_user_table.refresh()
+            render_pagination.refresh()
         else:
             ui.notify(f"加载用户失败: {result.get('message')}", type="negative")
 
@@ -109,50 +111,8 @@ def create_users_page():
         else:
             ui.notify(f"操作失败: {result.get('message')}", type="negative")
 
-    load_users()
-
-    with ui.row().classes("items-center justify-between w-full mb-6"):
-        ui.label("用户管理").classes("text-2xl font-semibold text-[#1f2937]")
-
-        with ui.row().classes("items-center gap-3"):
-            with ui.element("div").classes(
-                "flex items-center gap-2 bg-white rounded-lg px-4 py-2 border border-gray-200"
-            ):
-                ui.icon("search").classes("text-[#9ca3af]")
-                search_input = ui.input(placeholder="搜索用户...")
-                search_input.classes(
-                    "border-none outline-none bg-transparent text-sm w-48"
-                )
-                search_input.bind_value(keyword, "value")
-                search_input.on("keydown.enter", on_search)
-
-            add_btn = (
-                ui.button()
-                .classes(
-                    "bg-[#10b981] hover:bg-[#059669] text-white rounded-lg px-4 py-2 "
-                    "flex items-center gap-2 transition-colors"
-                )
-                .props("flat no-caps")
-            )
-            add_btn.on_click(lambda _: ui.notify("添加用户功能开发中", type="info"))
-            with add_btn:
-                ui.icon("add").classes("text-white")
-                ui.label("添加用户").classes("text-sm font-medium text-white")
-
-    with ui.card().classes("rounded-2xl p-6 shadow-sm bg-white flex flex-col"):
-        with ui.row().classes(
-            "grid grid-cols-7 gap-4 pb-4 border-b border-gray-100 mb-4 shrink-0"
-        ):
-            ui.label("用户ID").classes("text-xs font-semibold text-[#6b7280] uppercase")
-            ui.label("用户名").classes("text-xs font-semibold text-[#6b7280] uppercase")
-            ui.label("姓名").classes("text-xs font-semibold text-[#6b7280] uppercase")
-            ui.label("邮箱").classes("text-xs font-semibold text-[#6b7280] uppercase")
-            ui.label("状态").classes("text-xs font-semibold text-[#6b7280] uppercase")
-            ui.label("注册时间").classes(
-                "text-xs font-semibold text-[#6b7280] uppercase"
-            )
-            ui.label("操作").classes("text-xs font-semibold text-[#6b7280] uppercase")
-
+    @ui.refreshable
+    def render_user_table():
         with ui.element("div").classes("overflow-y-auto max-h-[calc(100vh-380px)]"):
             for idx, user in enumerate(users_data["data"]):
                 row_bg = "bg-[#f9fafb]" if idx % 2 == 1 else "bg-white"
@@ -230,65 +190,118 @@ def create_users_page():
                             )
                             .props("flat dense")
                         )
-                    delete_btn.on_click(lambda _, uid=user_id_val: delete_user(uid))
-                    with delete_btn:
-                        ui.icon("delete").classes("text-base")
+                        delete_btn.on_click(
+                            lambda _, uid=user_id_val: delete_user(uid)
+                        )
+                        with delete_btn:
+                            ui.icon("delete").classes("text-base")
 
-    total_pages = max(
-        1, (users_data["total"] + page_size["value"] - 1) // page_size["value"]
-    )
+    @ui.refreshable
+    def render_pagination():
+        total_pages = max(
+            1, (users_data["total"] + page_size["value"] - 1) // page_size["value"]
+        )
 
-    with ui.row().classes("items-center justify-between mt-6"):
-        ui.label(
-            f"共 {users_data['total']} 条记录，第 {current_page['value']}/{total_pages} 页"
-        ).classes("text-sm text-[#6b7280]")
+        with ui.row().classes("items-center justify-between mt-6"):
+            ui.label(
+                f"共 {users_data['total']} 条记录，第 {current_page['value']}/{total_pages} 页"
+            ).classes("text-sm text-[#6b7280]")
 
-        with ui.row().classes("items-center gap-2"):
-            prev_btn = (
-                ui.button()
-                .classes(
-                    "px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-[#6b7280] "
-                    "hover:bg-gray-50"
-                )
-                .props("flat")
-            )
-            prev_btn.on_click(
-                lambda _: on_page_change(max(1, current_page["value"] - 1))
-            )
-            with prev_btn:
-                ui.icon("chevron_left").classes("text-base")
-
-            for page_num in range(1, min(total_pages + 1, 6)):
-                is_active = page_num == current_page["value"]
-                active_class = (
-                    "bg-[#10b981] text-white"
-                    if is_active
-                    else "border border-gray-200 text-[#6b7280] hover:bg-gray-50"
-                )
-                page_btn = (
+            with ui.row().classes("items-center gap-2"):
+                prev_btn = (
                     ui.button()
                     .classes(
-                        f"px-3 py-1.5 rounded-lg text-sm font-medium {active_class}"
+                        "px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-[#6b7280] "
+                        "hover:bg-gray-50"
                     )
                     .props("flat")
                 )
-                page_btn.on_click(lambda _, p=page_num: on_page_change(p))
-                with page_btn:
-                    ui.label(str(page_num)).classes("text-sm")
+                prev_btn.on_click(
+                    lambda _: on_page_change(max(1, current_page["value"] - 1))
+                )
+                with prev_btn:
+                    ui.icon("chevron_left").classes("text-base")
 
-            next_btn = (
+                for page_num in range(1, min(total_pages + 1, 6)):
+                    is_active = page_num == current_page["value"]
+                    active_class = (
+                        "bg-[#10b981] text-white"
+                        if is_active
+                        else "border border-gray-200 text-[#6b7280] hover:bg-gray-50"
+                    )
+                    page_btn = (
+                        ui.button()
+                        .classes(
+                            f"px-3 py-1.5 rounded-lg text-sm font-medium {active_class}"
+                        )
+                        .props("flat")
+                    )
+                    page_btn.on_click(lambda _, p=page_num: on_page_change(p))
+                    with page_btn:
+                        ui.label(str(page_num)).classes("text-sm")
+
+                next_btn = (
+                    ui.button()
+                    .classes(
+                        "px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-[#6b7280] "
+                        "hover:bg-gray-50"
+                    )
+                    .props("flat")
+                )
+                next_btn.on_click(
+                    lambda _: on_page_change(
+                        min(total_pages, current_page["value"] + 1)
+                    )
+                )
+                with next_btn:
+                    ui.icon("chevron_right").classes("text-base")
+
+    load_users()
+
+    with ui.row().classes("items-center justify-between w-full mb-6"):
+        ui.label("用户管理").classes("text-2xl font-semibold text-[#1f2937]")
+
+        with ui.row().classes("items-center gap-3"):
+            with ui.element("div").classes(
+                "flex items-center gap-2 bg-white rounded-lg px-4 py-2 border border-gray-200"
+            ):
+                ui.icon("search").classes("text-[#9ca3af]")
+                search_input = ui.input(placeholder="搜索用户...")
+                search_input.classes(
+                    "border-none outline-none bg-transparent text-sm w-48"
+                )
+                search_input.bind_value(keyword, "value")
+                search_input.on("keydown.enter", on_search)
+
+            add_btn = (
                 ui.button()
                 .classes(
-                    "px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-[#6b7280] "
-                    "hover:bg-gray-50"
+                    "bg-[#10b981] hover:bg-[#059669] text-white rounded-lg px-4 py-2 "
+                    "flex items-center gap-2 transition-colors"
                 )
-                .props("flat")
+                .props("flat no-caps")
             )
-            next_btn.on_click(
-                lambda _: on_page_change(min(total_pages, current_page["value"] + 1))
+            add_btn.on_click(lambda _: ui.notify("添加用户功能开发中", type="info"))
+            with add_btn:
+                ui.icon("add").classes("text-white")
+                ui.label("添加用户").classes("text-sm font-medium text-white")
+
+    with ui.card().classes("rounded-2xl p-6 shadow-sm bg-white flex flex-col"):
+        with ui.row().classes(
+            "grid grid-cols-7 gap-4 pb-4 border-b border-gray-100 mb-4 shrink-0"
+        ):
+            ui.label("用户ID").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("用户名").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("姓名").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("邮箱").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("状态").classes("text-xs font-semibold text-[#6b7280] uppercase")
+            ui.label("注册时间").classes(
+                "text-xs font-semibold text-[#6b7280] uppercase"
             )
-            with next_btn:
-                ui.icon("chevron_right").classes("text-base")
+            ui.label("操作").classes("text-xs font-semibold text-[#6b7280] uppercase")
+
+        render_user_table()
+        render_pagination()
 
 
 def render():
