@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from ccsa_auto.core.config import Config
 
 # 数据库配置
-engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
+engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, connect_args={"timeout": 5})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

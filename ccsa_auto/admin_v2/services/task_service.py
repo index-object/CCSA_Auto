@@ -6,6 +6,7 @@ from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import Task, User
 from ccsa_auto.utils.timezone import format_datetime_for_display
 from ccsa_auto.modules.task.service import TaskService as BaseTaskService
+from ccsa_auto.modules.logging.service import LoggingService
 from ccsa_auto.modules.task.scheduler import (
     add_task_to_scheduler,
     remove_task_from_scheduler,
@@ -216,12 +217,6 @@ class TaskManagementService:
                 "results": [],
             }
 
-        from ccsa_auto.core.database import SessionLocal
-        from ccsa_auto.core.models import Task, User
-        from ccsa_auto.modules.task.service import TaskService
-        from ccsa_auto.modules.logging.service import LoggingService
-        from datetime import datetime
-
         results = []
         success_count = 0
         failed_count = 0
@@ -240,11 +235,12 @@ class TaskManagementService:
                 if not task.is_active:
                     return {"task_id": tid, "success": False, "message": "任务未激活"}
 
+                from datetime import datetime
                 task.execution_status = "running"
                 task.updated_at = datetime.utcnow()
                 db.commit()
 
-                exec_result = TaskService.execute_task(task, user)
+                exec_result = BaseTaskService.execute_task(task, user)
 
                 task.execution_status = "completed" if exec_result.get("success") else "failed"
                 task.external_status = "success" if exec_result.get("success") else "failed"
@@ -267,6 +263,7 @@ class TaskManagementService:
                     "message": exec_result.get("message", ""),
                 }
             except Exception as e:
+                logger.exception(f"批量执行任务 {tid} 异常")
                 try:
                     db.rollback()
                     task = db.query(Task).filter_by(id=tid).first()
@@ -276,6 +273,14 @@ class TaskManagementService:
                         task.result = f"批量执行异常: {str(e)}"
                         task.updated_at = datetime.utcnow()
                         db.commit()
+
+                    LoggingService.log_task_execution(
+                        task_id=tid,
+                        user_id=task.user_id if task else 0,
+                        task_type=task.task_type if task else "unknown",
+                        status="failed",
+                        message=f"批量执行异常: {str(e)}",
+                    )
                 except Exception:
                     pass
                 return {"task_id": tid, "success": False, "message": str(e)}
