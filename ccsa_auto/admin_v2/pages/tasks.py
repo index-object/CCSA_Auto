@@ -14,6 +14,8 @@ def create_tasks_page():
     current_page = {"value": 1}
     page_size = {"value": 20}
     tasks_data = {"data": [], "total": 0}
+    selected_ids = {"value": []}
+    is_executing = {"value": False}
 
     def load_tasks():
         """Load tasks data"""
@@ -77,6 +79,50 @@ def create_tasks_page():
             load_tasks()
         else:
             ui.notify(f"删除失败: {result.get('message')}", type="negative")
+
+    def on_select_all(checked: bool):
+        """全选/取消全选当前页"""
+        if checked:
+            for task in tasks_data["data"]:
+                tid = task["id"]
+                if tid not in selected_ids["value"]:
+                    selected_ids["value"] = selected_ids["value"] + [tid]
+        else:
+            page_ids = {task["id"] for task in tasks_data["data"]}
+            selected_ids["value"] = [tid for tid in selected_ids["value"] if tid not in page_ids]
+
+    def on_select_task(task_id: int, checked: bool):
+        """勾选/取消勾选单个任务"""
+        if checked:
+            if task_id not in selected_ids["value"]:
+                selected_ids["value"] = selected_ids["value"] + [task_id]
+        else:
+            selected_ids["value"] = [tid for tid in selected_ids["value"] if tid != task_id]
+
+    def on_batch_execute():
+        """批量执行选中任务"""
+        ids = list(selected_ids["value"])
+        if not ids:
+            return
+        batch_btn.props("disabled")
+        is_executing["value"] = True
+        try:
+            result = TaskManagementService.batch_execute_tasks(ids)
+            selected_ids["value"] = []
+            load_tasks()
+            if result.get("success"):
+                ui.notify(result.get("message", "批量执行完成"), type="positive")
+            else:
+                failed = result.get("failed_count", 0)
+                if failed > 0:
+                    ui.notify(result.get("message", "批量执行完成"), type="warning")
+                else:
+                    ui.notify(result.get("message", "批量执行完成"), type="positive")
+        except Exception as e:
+            ui.notify(f"批量执行失败: {str(e)}", type="negative")
+        finally:
+            batch_btn.props(remove="disabled")
+            is_executing["value"] = False
 
     def render_task_type_badge(task_type: str) -> str:
         """Render task type badge with color"""
@@ -164,10 +210,20 @@ def create_tasks_page():
                     f"flat {'color=negative' if status_filter['value'] == 'failed' else ''}"
                 )
 
+            # Batch execute
+            with ui.row().classes("items-center gap-2 ml-auto"):
+                batch_btn = ui.button(
+                    "批量执行",
+                    icon="playlist_play",
+                    on_click=on_batch_execute,
+                ).props("color=primary")
+
     with ui.card().classes("rounded-2xl p-6 shadow-sm bg-white flex flex-col"):
         with ui.row().classes(
-            "grid grid-cols-9 gap-4 pb-4 border-b border-gray-100 mb-4 shrink-0"
+            "grid grid-cols-10 gap-4 pb-4 border-b border-gray-100 mb-4 shrink-0"
         ):
+            with ui.element("div").classes("flex items-center"):
+                all_check = ui.checkbox(on_change=lambda e: on_select_all(e.value))
             ui.label("ID").classes("text-xs font-semibold text-[#6b7280] uppercase")
             ui.label("用户").classes("text-xs font-semibold text-[#6b7280] uppercase")
             ui.label("类型").classes("text-xs font-semibold text-[#6b7280] uppercase")
@@ -190,8 +246,13 @@ def create_tasks_page():
             for idx, task in enumerate(tasks_data["data"]):
                 row_bg = "bg-[#f9fafb]" if idx % 2 == 1 else "bg-white"
                 with ui.row().classes(
-                    f"grid grid-cols-9 gap-4 py-4 {row_bg} items-center"
+                    f"grid grid-cols-10 gap-4 py-4 {row_bg} items-center"
                 ):
+                    with ui.element("div").classes("flex items-center"):
+                        ui.checkbox(
+                            value=task.get("id") in selected_ids["value"],
+                            on_change=lambda e, tid=task.get("id"): on_select_task(tid, e.value),
+                        )
                     ui.label(str(task.get("id", ""))).classes("text-sm text-[#1f2937]")
                     ui.label(str(task.get("username", ""))[:10]).classes(
                         "text-sm text-[#1f2937]"
