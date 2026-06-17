@@ -30,7 +30,10 @@ def create_tasks_page():
             tasks_data["total"] = result.get("total", 0)
         else:
             ui.notify(f"加载任务失败: {result.get('message')}", type="negative")
-        task_table.refresh()
+        try:
+            task_table.refresh()
+        except NameError:
+            pass
 
     def on_search():
         """Handle search"""
