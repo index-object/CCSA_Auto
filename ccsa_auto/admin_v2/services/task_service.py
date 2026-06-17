@@ -1,4 +1,5 @@
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Any, List, Optional
 
 from ccsa_auto.core.database import SessionLocal
@@ -193,6 +194,117 @@ class TaskManagementService:
         except Exception as e:
             logger.exception("Failed to trigger task")
             return {"success": False, "message": str(e)}
+
+    @staticmethod
+    def batch_execute_tasks(task_ids: List[int]) -> Dict[str, Any]:
+        """
+        批量执行任务（并行）
+
+        Args:
+            task_ids: 任务ID列表
+
+        Returns:
+            dict: {success, message, success_count, failed_count, total, results}
+        """
+        if not task_ids:
+            return {
+                "success": False,
+                "message": "未选择任务",
+                "success_count": 0,
+                "failed_count": 0,
+                "total": 0,
+                "results": [],
+            }
+
+        from ccsa_auto.core.database import SessionLocal
+        from ccsa_auto.core.models import Task, User
+        from ccsa_auto.modules.task.service import TaskService
+        from ccsa_auto.modules.logging.service import LoggingService
+        from datetime import datetime
+
+        results = []
+        success_count = 0
+        failed_count = 0
+
+        def _execute_single(tid: int) -> dict:
+            db = SessionLocal()
+            try:
+                task = db.query(Task).filter_by(id=tid).first()
+                if not task:
+                    return {"task_id": tid, "success": False, "message": "任务不存在"}
+
+                user = db.query(User).filter_by(id=task.user_id).first()
+                if not user:
+                    return {"task_id": tid, "success": False, "message": "用户不存在"}
+
+                if not task.is_active:
+                    return {"task_id": tid, "success": False, "message": "任务未激活"}
+
+                task.execution_status = "running"
+                task.updated_at = datetime.utcnow()
+                db.commit()
+
+                exec_result = TaskService.execute_task(task, user)
+
+                task.execution_status = "completed" if exec_result.get("success") else "failed"
+                task.external_status = "success" if exec_result.get("success") else "failed"
+                task.result = str(exec_result)
+                task.executed_at = datetime.utcnow()
+                task.updated_at = datetime.utcnow()
+                db.commit()
+
+                LoggingService.log_task_execution(
+                    task_id=tid,
+                    user_id=task.user_id,
+                    task_type=task.task_type,
+                    status="success" if exec_result.get("success") else "failed",
+                    message=exec_result.get("message", str(exec_result)),
+                )
+
+                return {
+                    "task_id": tid,
+                    "success": exec_result.get("success", False),
+                    "message": exec_result.get("message", ""),
+                }
+            except Exception as e:
+                try:
+                    db.rollback()
+                    task = db.query(Task).filter_by(id=tid).first()
+                    if task:
+                        task.execution_status = "failed"
+                        task.external_status = "failed"
+                        task.result = f"批量执行异常: {str(e)}"
+                        task.updated_at = datetime.utcnow()
+                        db.commit()
+                except Exception:
+                    pass
+                return {"task_id": tid, "success": False, "message": str(e)}
+            finally:
+                db.close()
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {executor.submit(_execute_single, tid): tid for tid in task_ids}
+            for future in as_completed(futures):
+                try:
+                    result = future.result()
+                    results.append(result)
+                    if result.get("success"):
+                        success_count += 1
+                    else:
+                        failed_count += 1
+                except Exception as e:
+                    tid = futures[future]
+                    results.append({"task_id": tid, "success": False, "message": str(e)})
+                    failed_count += 1
+
+        return {
+            "success": failed_count == 0,
+            "message": f"批量执行完成：成功 {success_count} 条，失败 {failed_count} 条",
+            "success_count": success_count,
+            "failed_count": failed_count,
+            "total": len(task_ids),
+            "results": results,
+        }
 
     @staticmethod
     def delete_task(task_id: int) -> Dict[str, Any]:
