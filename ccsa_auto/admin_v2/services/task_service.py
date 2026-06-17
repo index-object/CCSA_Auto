@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Any, List, Optional
 
@@ -235,7 +236,6 @@ class TaskManagementService:
                 if not task.is_active:
                     return {"task_id": tid, "success": False, "message": "任务未激活"}
 
-                from datetime import datetime
                 task.execution_status = "running"
                 task.updated_at = datetime.utcnow()
                 db.commit()

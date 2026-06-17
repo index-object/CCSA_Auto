@@ -15,7 +15,6 @@ def create_tasks_page():
     page_size = {"value": 20}
     tasks_data = {"data": [], "total": 0}
     selected_ids = {"value": []}
-    is_executing = {"value": False}
 
     def load_tasks():
         """Load tasks data"""
@@ -109,7 +108,6 @@ def create_tasks_page():
             ui.notify("请先选择要执行的任务", type="warning")
             return
         batch_btn.props("disabled")
-        is_executing["value"] = True
         try:
             result = TaskManagementService.batch_execute_tasks(ids)
             selected_ids["value"] = []
@@ -126,7 +124,6 @@ def create_tasks_page():
             ui.notify(f"批量执行失败: {str(e)}", type="negative")
         finally:
             batch_btn.props(remove="disabled")
-            is_executing["value"] = False
 
     def render_task_type_badge(task_type: str) -> str:
         """Render task type badge with color"""
@@ -388,16 +385,12 @@ def create_tasks_page():
                                 ui.icon("delete").classes("text-base")
 
             # Pagination
-            total_pages = max(
-                1, (tasks_data["total"] + page_size["value"] - 1) // page_size["value"]
-            )
+            total_pages = max(1, (tasks_data["total"] + page_size["value"] - 1) // page_size["value"])
             with ui.row().classes("items-center justify-between w-full mt-4"):
                 with ui.row().classes("items-center gap-2"):
                     ui.label(f"共 {tasks_data['total']} 条").classes(
                         "text-sm text-gray-500"
                     )
-
-                total_pages = max(1, (tasks_data["total"] + 19) // 20)
                 with ui.row().classes("items-center gap-2"):
                     ui.button("首页", on_click=lambda: on_page_change(1)).props("flat")
                     ui.button(
