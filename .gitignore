@@ -1,4 +1,7 @@
-my_code/
 __pycache__/
 *.py[cod]
 *$py.class
+.trae/
+my_code/
+logs/
+.worktrees/
