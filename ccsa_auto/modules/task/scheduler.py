@@ -1,3 +1,4 @@
+import sys
 import threading
 import time
 
@@ -28,6 +29,17 @@ logger = setup_logger(__name__)
 
 # 全局初始化标记，防止热重载导致重复初始化
 _scheduler_initialized = False
+
+
+def _get_scheduler():
+    key = '__ccsa_scheduler_instance'
+    if key in sys.modules:
+        s = sys.modules[key]
+        if s.running:
+            return s
+    s = BackgroundScheduler()
+    sys.modules[key] = s
+    return s
 
 
 def cleanup_expired_sessions_job():
@@ -119,8 +131,8 @@ def fix_stale_tasks_job():
         db.close()
 
 
-# 创建后台调度器实例
-scheduler = BackgroundScheduler()
+# 创建后台调度器实例（通过 sys.modules 持久引用，防止热重载时创建重复实例）
+scheduler = _get_scheduler()
 
 
 def execute_user_task(task_id):
