@@ -9,6 +9,7 @@ from ccsa_auto.core.models import (
     AnnouncementRead,
     OperationLog,
     AuthSession,
+    QuestionBank,
 )
 
 

@@ -45,6 +45,9 @@ class Config:
             # 用户信息相关
             "GET_USER_INFO": "https://edu.axdxa.cn/prod-api/system/app/userExtend/v2/getUserInfo",
             "GET_SCORES": "https://edu.axdxa.cn/prod-api/progress/app/regularStudyRecord/getRegularFractionInfo",
+            # 答题记录查询（只读，用于采集答案库）
+            "GET_EXAM_RECORDS": "https://edu.axdxa.cn/prod-api/progress/app/regularExamRecord/list",
+            "GET_EXAM_DETAIL": "https://edu.axdxa.cn/prod-api/progress/app/regularExamRecord/getRegularStudyExamInfo",
         },
     }
 
