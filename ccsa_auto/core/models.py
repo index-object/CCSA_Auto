@@ -289,3 +289,31 @@ class SystemConfig(Base):
             "description": self.description,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+
+class QuestionBank(Base):
+    """题目答案缓存库"""
+
+    __tablename__ = "question_bank"
+
+    id = Column(Integer, primary_key=True, index=True)
+    question_id = Column(String(50), unique=True, nullable=False, index=True)
+    question_type = Column(Integer, nullable=False)
+    question_point = Column(Integer, default=2)
+    question_answer = Column(String(100), nullable=False)
+    question_title = Column(Text)
+    question_options = Column(Text)
+    source_record_id = Column(String(50))
+    source_exam_type = Column(Integer, default=1)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "question_id": self.question_id,
+            "question_type": self.question_type,
+            "question_point": self.question_point,
+            "question_answer": self.question_answer,
+            "source_record_id": self.source_record_id,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }

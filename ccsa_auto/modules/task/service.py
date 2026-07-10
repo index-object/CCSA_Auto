@@ -143,18 +143,33 @@ class TaskService:
                         "message": f"获取试题信息失败：{error_msg}",
                     }
 
-            question_data = question_response_json.get("data", {})
-            question_list = question_data.get("questionList", [])
+            # 从 question_bank 随机取题（忽略API返回的题目列表，其答案已被服务端隐藏）
+            from ccsa_auto.core.database import SessionLocal
+            from ccsa_auto.core.models import QuestionBank
+            from sqlalchemy import func
 
-            questions = [
-                {
-                    "id": question.get("id"),
-                    "questionType": question.get("questionType"),
-                    "questionPoint": question.get("questionPoint"),
-                    "questionAnswer": question.get("questionAnswera", "").strip('"'),
-                }
-                for question in question_list
-            ]
+            db = SessionLocal()
+            try:
+                q1 = db.query(QuestionBank).filter_by(question_type=1, source_exam_type=1).order_by(func.random()).limit(5).all()
+                q2 = db.query(QuestionBank).filter_by(question_type=2, source_exam_type=1).order_by(func.random()).limit(2).all()
+                q3 = db.query(QuestionBank).filter_by(question_type=3, source_exam_type=1).order_by(func.random()).limit(3).all()
+                bank_questions = q1 + q2 + q3
+                random.shuffle(bank_questions)
+
+                if len(bank_questions) < 10:
+                    raise ValueError(f"题库不足: 仅 {len(bank_questions)} 题，需要 10 题")
+
+                questions = [
+                    {
+                        "id": q.question_id,
+                        "questionType": q.question_type,
+                        "questionPoint": q.question_point,
+                        "questionAnswer": q.question_answer,
+                    }
+                    for q in bank_questions
+                ]
+            finally:
+                db.close()
 
             from ccsa_auto.modules.task.score_strategy import ScoreStrategy
 
@@ -653,21 +668,43 @@ class TaskService:
                         "message": f"获取试题信息失败: {error_msg}",
                     }
 
-            # 封装试题数据
-            question_data = question_response_json.get("data", {})
-            question_list = question_data.get("questionList", [])
+            # 保留API题目结构，从 question_bank 补全答案
+            from ccsa_auto.core.database import SessionLocal
+            from ccsa_auto.core.models import QuestionBank
+            from sqlalchemy import func
 
-            questions = [
-                {
-                    "id": question.get("id"),
-                    "questionType": question.get("questionType"),
-                    "questionPoint": question.get("questionPoint"),
-                    "questionAnswer": question.get("questionAnswera", "").strip(
-                        '"'
-                    ),  # 去掉答案的引号
-                }
-                for question in question_list
-            ]
+            db = SessionLocal()
+            try:
+                question_list = question_response_json.get("data", {}).get("questionList", [])
+                questions = []
+                for q in question_list:
+                    qid = q["id"]
+                    qtype = q["questionType"]
+                    qpoint = q.get("questionPoint", 5)
+
+                    bank_q = db.query(QuestionBank).filter_by(question_id=qid).first()
+                    if bank_q:
+                        answer = bank_q.question_answer
+                    else:
+                        sub = db.query(QuestionBank).filter_by(
+                            question_type=qtype, source_exam_type=2
+                        ).order_by(func.random()).first()
+                        if not sub:
+                            continue
+                        qid = sub.question_id
+                        answer = sub.question_answer
+
+                    questions.append({
+                        "id": qid,
+                        "questionType": qtype,
+                        "questionPoint": qpoint,
+                        "questionAnswer": answer,
+                    })
+            finally:
+                db.close()
+
+            if len(questions) != len(question_list):
+                logger.warning(f"每月一考题量变化: API {len(question_list)} 题, 实际 {len(questions)} 题, 用户：{user_name}({user_id})")
 
             # 应用控分策略
             from ccsa_auto.modules.task.score_strategy import ScoreStrategy
@@ -691,7 +728,8 @@ class TaskService:
             )
 
             # 3. 准备提交数据
-            use_time = random.randint(300, 500)  # 随机生成答题时间
+            use_time = random.randint(300, 500)
+            total_point = sum(q.get("questionPoint", 0) for q in questions)
             payload = {
                 "practiceRegularId": month_id,
                 "regularType": 2,
@@ -700,7 +738,7 @@ class TaskService:
                 "examType": 2,
                 "isRepair": None,
                 "courseExamAnswerInfoBos": questions,
-                "fullPoint": 100,
+                "fullPoint": total_point,
                 "examDuration": 80,
             }
 
