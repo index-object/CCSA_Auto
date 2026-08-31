@@ -25,6 +25,8 @@ from ccsa_auto.utils.timezone import (
     ensure_utc_timezone,
 )
 
+from ccsa_auto.core.email_sender import send_email
+
 logger = setup_logger(__name__)
 
 # 全局初始化标记，防止热重载导致重复初始化
@@ -103,14 +105,16 @@ def fix_stale_tasks_job():
                 existing_job = scheduler.get_job(job_id)
                 if existing_job:
                     scheduler.remove_job(job_id)
-                    scheduler.add_job(
-                        func=execute_user_task,
-                        args=[task.id],
-                        trigger=DateTrigger(new_run_time),
-                        id=job_id,
-                        name=f"{task.task_name} (用户{task.user_id})",
-                        replace_existing=True,
-                    )
+                # 必须无条件重注册：Job 可能已从调度器丢失，此时 get_job 返回 None，
+                # 若只在 existing_job 存在时才 add_job，丢失的 Job 永远不会被补回
+                scheduler.add_job(
+                    func=execute_user_task,
+                    args=[task.id],
+                    trigger=DateTrigger(new_run_time),
+                    id=job_id,
+                    name=f"{task.task_name} (用户{task.user_id})",
+                    replace_existing=True,
+                )
 
                 fixed_count += 1
                 logger.info(
@@ -145,6 +149,8 @@ def execute_user_task(task_id):
     db = SessionLocal()
     thread_id = threading.current_thread().ident
     job_id = f"user_task_{task_id}"
+    user_name = "未知"
+    task_name = f"task_{task_id}"
 
     try:
         task = db.query(Task).filter_by(id=task_id).first()
@@ -231,6 +237,17 @@ def execute_user_task(task_id):
             logger.error(
                 f"[任务调度] 任务执行失败 | task_id={task_id} | task_name={task.task_name} | user={user_name}({task.user_id}) | error={result.get('message')} | thread_id={thread_id}"
             )
+            threading.Thread(
+                target=send_email,
+                args=(
+                    f"[任务失败] {task.task_name} - {user_name}",
+                    f"任务ID: {task_id}\n"
+                    f"任务类型: {task.task_type}\n"
+                    f"用户: {user_name}({task.user_id})\n"
+                    f"失败原因: {result.get('message')}",
+                ),
+                daemon=True,
+            ).start()
 
         LoggingService.log_task_execution(
             task_id=task_id,
@@ -244,6 +261,17 @@ def execute_user_task(task_id):
         logger.exception(
             f"[任务调度] 执行任务异常 | task_id={task_id} | error={str(e)} | thread_id={thread_id}"
         )
+        threading.Thread(
+            target=send_email,
+            args=(
+                f"[任务异常] {task_name} - {user_name}",
+                f"任务ID: {task_id}\n"
+                f"任务: {task_name}\n"
+                f"用户: {user_name}\n"
+                f"异常信息: {str(e)}",
+            ),
+            daemon=True,
+        ).start()
 
         # 更新任务状态为失败
         try:
