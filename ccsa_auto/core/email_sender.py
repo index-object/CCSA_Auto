@@ -18,7 +18,17 @@ def _load_config():
     try:
         with open(_CONFIG_PATH, "r", encoding="utf-8") as f:
             cfg = json.load(f)
-        if not (cfg.get("smtp_user") and cfg.get("smtp_auth_code") and cfg.get("to")):
+        to_list = cfg.get("to")
+        valid_to = isinstance(to_list, list) and all(
+            isinstance(x, str) and x for x in to_list
+        )
+        if not (
+            cfg.get("smtp_host")
+            and cfg.get("smtp_port")
+            and cfg.get("smtp_user")
+            and cfg.get("smtp_auth_code")
+            and valid_to
+        ):
             return None
         return cfg
     except Exception:
