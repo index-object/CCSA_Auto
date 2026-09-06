@@ -1,7 +1,11 @@
 """每用户控分策略配置读取/保存"""
 
+import logging
+
 from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import User
+
+logger = logging.getLogger(__name__)
 
 # 与 models.User 对应列的默认值保持一致
 DEFAULT_SCORE_CONFIG = {
@@ -42,6 +46,7 @@ def set_user_score_config(user_id: int, config: dict) -> bool:
         db.commit()
         return True
     except Exception:
+        logger.exception("设置用户控分配置失败: user_id=%s", user_id)
         db.rollback()
         return False
     finally:
