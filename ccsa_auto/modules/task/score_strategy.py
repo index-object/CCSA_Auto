@@ -5,7 +5,7 @@ import random
 from datetime import datetime
 from typing import Dict, Tuple, Optional, Any
 
-from ccsa_auto.core.system_config import SystemConfigService
+from ccsa_auto.core.user_score_config import get_user_score_config
 from ccsa_auto.modules.task.score_tracker import ScoreTracker
 from ccsa_auto.utils.timezone import get_current_time, SHANGHAI_TZ
 
@@ -32,6 +32,11 @@ class ScoreStrategy:
             return calendar.is_holiday(date)
         except Exception:
             return date.weekday() >= 5
+
+    @staticmethod
+    def is_enabled_for(user_id: int) -> bool:
+        """该用户是否启用控分策略"""
+        return get_user_score_config(user_id)["score_strategy_enabled"]
 
     @staticmethod
     def calculate_strategy(
@@ -85,11 +90,14 @@ class ScoreStrategy:
         current_scores = ScoreTracker.calculate_monthly_total(user_id, year, month)
         current_total = current_scores["total"]
 
-        target = SystemConfigService.get_score_target()
-        threshold = SystemConfigService.get_score_threshold()
-        random_min, random_max = SystemConfigService.get_score_random_range()
-        daily_deduction_enabled = SystemConfigService.is_daily_deduction_enabled()
-        daily_deduction_min, daily_deduction_max = SystemConfigService.get_daily_deduction_range()
+        user_config = get_user_score_config(user_id)
+        target = user_config["score_target"]
+        threshold = user_config["score_threshold"]
+        random_min = user_config["score_random_min"]
+        random_max = user_config["score_random_max"]
+        daily_deduction_enabled = user_config["daily_deduction_enabled"]
+        daily_deduction_min = user_config["daily_deduction_min"]
+        daily_deduction_max = user_config["daily_deduction_max"]
 
         if current_total < target - threshold:
             # 每日一题特殊处理：默认也随机扣分
