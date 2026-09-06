@@ -2,6 +2,7 @@ from nicegui import ui
 from typing import List, Optional, Dict, Any
 
 from ccsa_auto.admin_v2.services.user_service import UserService
+from ccsa_auto.core.user_score_config import get_user_score_config
 from ccsa_auto.admin_v2.stores.admin_store import AdminStore
 
 
@@ -30,6 +31,99 @@ def create_users_page():
             render_pagination.refresh()
         else:
             ui.notify(f"加载用户失败: {result.get('message')}", type="negative")
+
+    def open_score_config_dialog(user_id: int, username: str):
+        cfg = get_user_score_config(user_id)
+
+        def set_val(key, value):
+            cfg[key] = value
+
+        def save():
+            if cfg["score_random_min"] > cfg["score_random_max"]:
+                ui.notify("随机分数范围：下限不能大于上限", type="warning")
+                return
+            if cfg["daily_deduction_min"] > cfg["daily_deduction_max"]:
+                ui.notify("随机答错题数：下限不能大于上限", type="warning")
+                return
+            result = UserService.update_score_config(user_id, cfg)
+            ui.notify(result.get("message", "保存结果未知"),
+                      type="positive" if result.get("success") else "negative")
+            dialog.close()
+
+        dialog = ui.dialog()
+        with dialog, ui.card().classes("p-6 w-[520px] max-w-[90vw] rounded-2xl"):
+            ui.label(f"控分策略配置 — {username}").classes(
+                "text-xl font-semibold mb-4 text-[#1f2937]"
+            )
+
+            with ui.row().classes("items-center gap-4 w-full mb-4"):
+                ui.label("启用控分策略:").classes("w-40 text-[#6b7280]")
+                ui.switch(
+                    value=cfg["score_strategy_enabled"],
+                    on_change=lambda e: set_val("score_strategy_enabled", e.value),
+                ).props("color=positive")
+
+            with ui.row().classes("items-center gap-4 w-full mb-4"):
+                ui.label("目标分数:").classes("w-40 text-[#6b7280]")
+                ui.number(
+                    value=cfg["score_target"],
+                    on_change=lambda e: set_val("score_target", int(e.value)),
+                    format="%.0f",
+                ).props("outlined dense").classes("w-24")
+                ui.label("分").classes("text-[#6b7280]")
+
+            with ui.row().classes("items-center gap-4 w-full mb-4"):
+                ui.label("接近阈值:").classes("w-40 text-[#6b7280]")
+                ui.number(
+                    value=cfg["score_threshold"],
+                    on_change=lambda e: set_val("score_threshold", int(e.value)),
+                    format="%.0f",
+                ).props("outlined dense").classes("w-24")
+                ui.label("分").classes("text-[#6b7280]")
+
+            with ui.row().classes("items-center gap-4 w-full mb-4"):
+                ui.label("随机分数范围:").classes("w-40 text-[#6b7280]")
+                ui.number(
+                    value=cfg["score_random_min"],
+                    on_change=lambda e: set_val("score_random_min", e.value),
+                    format="%.2f", min=0, max=1,
+                ).props("outlined dense").classes("w-20")
+                ui.label(" ~ ").classes("text-[#6b7280]")
+                ui.number(
+                    value=cfg["score_random_max"],
+                    on_change=lambda e: set_val("score_random_max", e.value),
+                    format="%.2f", min=0, max=1,
+                ).props("outlined dense").classes("w-20")
+
+            ui.separator().classes("my-2")
+
+            with ui.row().classes("items-center gap-4 w-full mb-4"):
+                ui.label("每日一题随机扣分:").classes("w-40 text-[#6b7280]")
+                ui.switch(
+                    value=cfg["daily_deduction_enabled"],
+                    on_change=lambda e: set_val("daily_deduction_enabled", e.value),
+                ).props("color=positive")
+
+            with ui.row().classes("items-center gap-4 w-full mb-4"):
+                ui.label("随机答错题数:").classes("w-40 text-[#6b7280]")
+                ui.number(
+                    value=cfg["daily_deduction_min"],
+                    on_change=lambda e: set_val("daily_deduction_min", int(e.value)),
+                    format="%.0f", min=0, max=10,
+                ).props("outlined dense").classes("w-20")
+                ui.label(" ~ ").classes("text-[#6b7280]")
+                ui.number(
+                    value=cfg["daily_deduction_max"],
+                    on_change=lambda e: set_val("daily_deduction_max", int(e.value)),
+                    format="%.0f", min=0, max=10,
+                ).props("outlined dense").classes("w-20")
+                ui.label("题").classes("text-[#6b7280]")
+
+            with ui.row().classes("w-full justify-end gap-3 mt-4"):
+                ui.button("取消", on_click=dialog.close).props("flat").classes("text-[#6b7280]")
+                ui.button("保存", on_click=save).props("color=positive").classes("text-white")
+
+        dialog.open()
 
     def on_search():
         """Handle search"""
@@ -151,6 +245,21 @@ def create_users_page():
                     with ui.row().classes("items-center gap-2"):
                         user_id_val = user.get("id")
                         user_status_val = user.get("status")
+
+                        score_btn = (
+                            ui.button()
+                            .classes(
+                                "text-[#6b7280] hover:text-[#3b82f6] hover:bg-[#eff6ff] rounded p-1 transition-colors"
+                            )
+                            .props("flat dense")
+                        )
+                        score_btn.on_click(
+                            lambda _,
+                            uid=user_id_val,
+                            uname=user.get("username", ""): open_score_config_dialog(uid, uname)
+                        )
+                        with score_btn:
+                            ui.icon("tune").classes("text-base")
 
                         edit_btn = (
                             ui.button()
