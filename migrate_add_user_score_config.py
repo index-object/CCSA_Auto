@@ -49,7 +49,8 @@ def migrate():
             conn.execute(text(f"ALTER TABLE users ADD COLUMN {col} {col_def}"))
             print(f"  ✓ 已添加列: {col}")
 
-        # 按旧全局配置回填（有旧值则覆盖默认，否则保持默认）
+        # 按旧全局配置回填全部行（SQLite ALTER ADD COLUMN 会给既有行填充非 NULL 默认值，
+        # 故不能用 IS NULL 守卫；仅当旧键存在时覆盖为旧值，其余行保持列默认值）
         for col, col_def, default, key in COLUMNS:
             row = conn.execute(
                 text("SELECT config_value FROM system_configs WHERE config_key = :k"),
@@ -58,7 +59,7 @@ def migrate():
             if not row:
                 continue
             value = _coerce(row[0], default)
-            conn.execute(text(f"UPDATE users SET {col} = :v WHERE {col} IS NULL"), {"v": value})
+            conn.execute(text(f"UPDATE users SET {col} = :v"), {"v": value})
             print(f"  ✓ 已按旧全局配置回填: {col}={value}")
 
         conn.commit()
