@@ -5,6 +5,7 @@ from sqlalchemy import (
     Boolean,
     Text,
     DateTime,
+    Float,
     ForeignKey,
     UniqueConstraint,
 )
@@ -34,6 +35,15 @@ class User(Base):
     token_expires_at = Column(DateTime)  # 令牌过期时间
     token_refresh_token = Column(Text)  # 刷新令牌（如果支持）
     last_token_refresh = Column(DateTime)  # 最后刷新时间
+    # 控分策略配置（每用户独立）
+    score_strategy_enabled = Column(Boolean, default=True)
+    score_target = Column(Integer, default=650)
+    score_threshold = Column(Integer, default=20)
+    score_random_min = Column(Float, default=0.30)
+    score_random_max = Column(Float, default=1.00)
+    daily_deduction_enabled = Column(Boolean, default=True)
+    daily_deduction_min = Column(Integer, default=1)
+    daily_deduction_max = Column(Integer, default=2)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
