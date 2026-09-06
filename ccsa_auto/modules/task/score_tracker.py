@@ -230,61 +230,6 @@ class ScoreTracker:
         return scores
 
     @staticmethod
-    def get_score_control_status(user_id: int) -> Dict[str, Any]:
-        """
-        获取控分策略状态信息
-        """
-        from ccsa_auto.core.system_config import SystemConfigService
-
-        now = get_current_time()
-        year, month = now.year, now.month
-
-        try:
-            current_scores = ScoreTracker.calculate_monthly_total(user_id, year, month)
-            current_total = current_scores["total"]
-            target = SystemConfigService.get_score_target()
-            threshold = SystemConfigService.get_score_threshold()
-
-            progress_percentage = (current_total / target) * 100 if target > 0 else 0
-
-            if current_total >= target:
-                status = "ahead"
-                status_text = "已达标"
-            elif current_total >= target - threshold:
-                status = "on_track"
-                status_text = "接近目标"
-            else:
-                status = "behind"
-                status_text = "追赶中"
-
-            return {
-                "current_monthly_score": round(current_total, 2),
-                "target_monthly_score": target,
-                "progress_percentage": round(progress_percentage, 1),
-                "status": status,
-                "status_text": status_text,
-                "year": year,
-                "month": month,
-                "breakdown": {
-                    "daily": round(current_scores["daily"], 2),
-                    "weekly": round(current_scores["weekly"], 2),
-                    "monthly": round(current_scores["monthly"], 2),
-                },
-            }
-        except Exception as e:
-            logger.error(f"获取控分策略状态失败: {e}")
-            return {
-                "current_monthly_score": 0,
-                "target_monthly_score": SystemConfigService.get_score_target(),
-                "progress_percentage": 0,
-                "status": "unknown",
-                "status_text": "未知状态",
-                "year": year,
-                "month": month,
-                "breakdown": {"daily": 0, "weekly": 0, "monthly": 0},
-            }
-
-    @staticmethod
     def get_monthly_weekly_score(user_id: int, year: int, month: int) -> float:
         """
         获取指定月份每周一课的总得分
