@@ -3,6 +3,7 @@ from typing import Dict, Any, List, Optional
 from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import User, Task
 from ccsa_auto.utils.timezone import format_datetime_for_display
+from ccsa_auto.core.user_score_config import get_user_score_config, set_user_score_config
 
 logger = logging.getLogger(__name__)
 
@@ -135,6 +136,18 @@ class UserService:
             return {"success": False, "message": str(e)}
         finally:
             db.close()
+
+    @staticmethod
+    def get_score_config(user_id: int) -> Dict[str, Any]:
+        return {"success": True, "data": get_user_score_config(user_id)}
+
+    @staticmethod
+    def update_score_config(user_id: int, config: Dict[str, Any]) -> Dict[str, Any]:
+        ok = set_user_score_config(user_id, config)
+        return {
+            "success": ok,
+            "message": "控分配置已保存" if ok else "保存失败：用户不存在",
+        }
 
     @staticmethod
     def delete_user(user_id: int) -> Dict[str, Any]:
