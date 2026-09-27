@@ -1,12 +1,40 @@
+import json
+
 import requests
 from refactored_code.logger import Logger
 from refactored_code.config import Config
+
+try:  # 避免包未安装时导入失败，登录时才真正需要
+    from ccsa_auto.utils.crypto import encrypt_payload
+except Exception:  # pragma: no cover
+    encrypt_payload = None
 
 class AuthModule:
     def __init__(self):
         self.session = requests.Session()
         self.logger = Logger("登录模块")
         self.access_token = None
+
+    def _build_login_request(self):
+        """构造登录请求的 body/headers（新版需要加密）。
+
+        Returns:
+            tuple: (body, headers)
+        """
+        headers = dict(Config.HEADERS)
+        payload = dict(Config.LOGIN_DATA)
+
+        if not getattr(Config, "LOGIN_ENCRYPT", False):
+            return json.dumps(payload, ensure_ascii=False), headers
+
+        if encrypt_payload is None:
+            raise RuntimeError("缺少加密依赖 cryptography，无法加密登录请求")
+
+        cipher_text, encrypt_key = encrypt_payload(payload)
+        headers["encrypt-key"] = encrypt_key
+        headers["isencrypt"] = "true"
+        # 与前端 axios 行为一致：base64 密文作为 JSON 字符串发送（带引号）
+        return json.dumps(cipher_text), headers
 
     def login(self, return_error_info=False):
         """
@@ -22,7 +50,10 @@ class AuthModule:
         """
         try:
             self.logger.info("正在尝试登录...")
-            response = self.session.post(Config.LOGIN_URL, json=Config.LOGIN_DATA, headers=Config.HEADERS)
+            body, headers = self._build_login_request()
+            response = self.session.post(
+                Config.LOGIN_URL, data=body, headers=headers
+            )
             response_json = response.json()
             if response_json.get("code") == 200 and "data" in response_json:
                 self.access_token = response_json["data"].get("access_token")

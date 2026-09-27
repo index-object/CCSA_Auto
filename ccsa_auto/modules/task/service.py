@@ -44,175 +44,301 @@ class TaskService:
         return hour, minute
 
     @staticmethod
-    def execute_daily_question(access_token, user_id, user_name="未知"):
-        """
-        执行每日一题
+    def _build_headers(access_token):
+        """构造带鉴权信息的业务请求头。"""
+        return {
+            "Authorization": f"Bearer {access_token}",
+            **Config.EXTERNAL_PLATFORM["HEADERS"],
+        }
 
-        Args:
-            access_token: 访问令牌
-            user_id: 用户ID
-            user_name: 用户姓名
+    @staticmethod
+    def _normalize_question_answer(raw):
+        """将平台返回的 questionAnswera 规范化为提交格式。
+
+        平台返回值可能是 JSON 字符串（如 ``"\\"D\\""``）、列表或紧凑字符串
+        （如 ``"ABD"``）。提交时统一为 ``A`` / ``A,B,C`` 形式，与前端
+        ``answer.join(",")`` 以及本地题库格式保持一致。
         """
+        import json
+        import re
+
+        if raw is None:
+            return None
+
+        value = raw
+        if isinstance(value, str):
+            text = value.strip()
+            if len(text) >= 2 and text[0] == '"' and text[-1] == '"':
+                try:
+                    value = json.loads(text)
+                except Exception:
+                    value = text
+            else:
+                value = text
+
+        if isinstance(value, (list, tuple, set)):
+            letters = [str(item).strip().upper() for item in value if str(item).strip()]
+        elif isinstance(value, str):
+            if re.fullmatch(r"[A-Za-z]+", value):
+                letters = list(value.upper())
+            else:
+                letters = re.findall(r"[A-Za-z]", value)
+        else:
+            return str(value)
+
+        # 去重并按字母排序（多选答案与顺序无关）
+        letters = sorted({letter for letter in letters if letter})
+        return ",".join(letters) if letters else None
+
+    @staticmethod
+    def _build_questions_from_api(question_list, fallback_exam_type):
+        """由平台返回的 questionList 构造提交题目（含 bankId 与标准答案）。
+
+        平台的 ``questionAnswera`` 即标准答案；缺失时回退到本地题库。
+        """
+        from ccsa_auto.core.database import SessionLocal
+        from ccsa_auto.core.models import QuestionBank
+        from sqlalchemy import func
+
+        questions = []
+        db = SessionLocal()
         try:
-            import random
-            import json
+            for q in question_list or []:
+                qid = q.get("id")
+                qtype = q.get("questionType")
+                qpoint = q.get("questionPoint", 0)
+                bank_id = q.get("bankId")
 
-            logger.info(f"每日一题开始执行，用户：{user_name}({user_id})")
-
-            study_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["GET_STUDY_LIST"]
-            study_headers = {
-                "Authorization": f"Bearer {access_token}",
-                **Config.EXTERNAL_PLATFORM["HEADERS"],
-            }
-
-            study_response = requests.get(study_url, headers=study_headers)
-            study_response_json = study_response.json()
-
-            if study_response_json.get("code") != 200:
-                error_msg = f"获取每日一学列表失败：{study_response_json.get('msg', '未知错误')}"
-                logger.error(error_msg)
-                return {"success": False, "message": error_msg}
-
-            study_data = study_response_json.get("data", {})
-            daily_info = study_data.get("regularStudyDayInfo", {})
-            study_id = daily_info.get("id")
-
-            if not study_id:
-                error_msg = "未能获取每日一学ID"
-                logger.error(error_msg)
-                return {"success": False, "message": error_msg}
-
-            # 2. 获取试题信息
-            question_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"][
-                "GET_DAILY_QUESTIONS"
-            ]
-            question_params = {
-                "examAssociationId": study_id,
-                "isReExam": 0,
-                "regularStudyType": 1,
-                "isRepair": 0,
-            }
-
-            question_response = requests.get(
-                question_url, params=question_params, headers=study_headers
-            )
-            question_response_json = question_response.json()
-
-            if question_response_json.get("code") != 200:
-                error_msg = question_response_json.get("msg", "未知错误")
-                if "您已完成此考试！" in error_msg:
-                    logger.info(f"每日一题已完成，用户：{user_name}({user_id})")
-
-                    from ccsa_auto.modules.task.score_tracker import ScoreTracker
-                    from ccsa_auto.modules.task.score_strategy import ScoreStrategy
-
-                    if ScoreStrategy.is_enabled_for(user_id):
-                        score_strategy = ScoreStrategy.calculate_strategy(
-                            user_id, "daily", 0, 0.0
-                        )
+                answer = TaskService._normalize_question_answer(
+                    q.get("questionAnswera")
+                )
+                substituted = False
+                if not answer:
+                    bank_q = db.query(QuestionBank).filter_by(question_id=qid).first()
+                    if bank_q and bank_q.question_answer:
+                        answer = bank_q.question_answer
                     else:
-                        score_strategy = {
-                            "score": 0,
-                            "max_score": 0,
-                            "correct_questions": 0,
-                            "wrong_questions": 0,
-                            "reason": "控分策略已关闭",
-                        }
+                        sub = (
+                            db.query(QuestionBank)
+                            .filter_by(
+                                question_type=qtype,
+                                source_exam_type=fallback_exam_type,
+                            )
+                            .order_by(func.random())
+                            .first()
+                        )
+                        if sub:
+                            qid = sub.question_id
+                            answer = sub.question_answer
+                            substituted = True
 
-                    ScoreTracker.record_score(
-                        user_id=user_id,
-                        task_id=None,
-                        task_type="daily",
-                        total_questions=0,
-                        correct_questions=score_strategy["correct_questions"],
-                        score=score_strategy["score"],
-                        max_score=score_strategy["max_score"],
+                if not qid or not answer:
+                    continue
+
+                item = {
+                    "id": qid,
+                    "questionType": qtype,
+                    "questionPoint": qpoint,
+                    "questionAnswer": answer,
+                }
+                # 替换过题号时不再沿用原 bankId，避免题目与题库不匹配
+                if bank_id and not substituted:
+                    item["bankId"] = bank_id
+                questions.append(item)
+        finally:
+            db.close()
+
+        return questions
+
+    @staticmethod
+    def _fetch_regular_study_info(access_token, endpoint_key, label, user_name, user_id):
+        """获取每日/每月/每周任务信息。
+
+        Returns:
+            dict: 成功时返回 ``{"success": True, "data": {...}}``，
+                  失败时返回 ``{"success": False, "message": ...}``
+        """
+        url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"][endpoint_key]
+        response = requests.get(url, headers=TaskService._build_headers(access_token))
+        response_json = response.json()
+
+        if response_json.get("code") != 200:
+            error_msg = f"获取{label}信息失败：{response_json.get('msg', '未知错误')}"
+            logger.error(f"{error_msg}，用户：{user_name}({user_id})")
+            return {"success": False, "message": error_msg}
+
+        data = response_json.get("data") or {}
+        if not data.get("id"):
+            error_msg = f"未能获取{label}ID"
+            logger.error(f"{error_msg}，用户：{user_name}({user_id}) | data={data}")
+            return {"success": False, "message": error_msg}
+
+        return {"success": True, "data": data}
+
+    @staticmethod
+    def _record_completed_exam(user_id, task_type, label, user_name):
+        """任务已完成时的得分记录与返回结果。"""
+        from ccsa_auto.modules.task.score_strategy import ScoreStrategy
+        from ccsa_auto.modules.task.score_tracker import ScoreTracker
+
+        if ScoreStrategy.is_enabled_for(user_id):
+            score_strategy = ScoreStrategy.calculate_strategy(user_id, task_type, 0, 0.0)
+        else:
+            score_strategy = {
+                "score": 0,
+                "max_score": 0,
+                "correct_questions": 0,
+                "wrong_questions": 0,
+                "reason": "控分策略已关闭",
+            }
+
+        ScoreTracker.record_score(
+            user_id=user_id,
+            task_id=None,
+            task_type=task_type,
+            total_questions=0,
+            correct_questions=score_strategy["correct_questions"],
+            score=score_strategy["score"],
+            max_score=score_strategy["max_score"],
+        )
+
+        logger.info(f"{label}已完成，用户：{user_name}({user_id})")
+        return {
+            "success": True,
+            "message": f"{label}已完成",
+            "result": {},
+            "score_strategy": score_strategy,
+        }
+
+    @staticmethod
+    def _execute_regular_exam(access_token, user_id, task_type, user_name="未知"):
+        """执行每日一题(examType=1) / 每月一考(examType=2) 的通用流程。
+
+        新版平台把每日/每月状态拆分为独立接口，且试题接口直接返回标准答案
+        ``questionAnswera`` 与 ``bankId``。
+        """
+        import json
+        import random
+
+        is_daily = task_type == "daily"
+        label = "每日一题" if is_daily else "每月一考"
+        exam_type = 1 if is_daily else 2
+        regular_study_type = 1 if is_daily else 2
+        info_endpoint = "GET_REGULAR_STUDY_DAY" if is_daily else "GET_REGULAR_STUDY_MONTH"
+        questions_endpoint = "GET_DAILY_QUESTIONS" if is_daily else "GET_MONTHLY_QUESTIONS"
+
+        try:
+            logger.info(f"{label}开始执行，用户：{user_name}({user_id})")
+
+            # 1. 获取任务信息
+            info_result = TaskService._fetch_regular_study_info(
+                access_token, info_endpoint, label, user_name, user_id
+            )
+            if not info_result.get("success"):
+                return info_result
+
+            info = info_result["data"]
+            practice_id = info["id"]
+
+            # studyStatus：1=未完成 2=已完成
+            if info.get("studyStatus") == 2:
+                return TaskService._record_completed_exam(
+                    user_id, task_type, label, user_name
+                )
+
+            # 2. 获取试题（含标准答案）
+            question_params = {
+                "examAssociationId": practice_id,
+                "isReExam": 0,
+                "regularStudyType": regular_study_type,
+                "isRepair": 0,
+                "source": 1,
+            }
+            question_response = requests.get(
+                Config.EXTERNAL_PLATFORM["API_ENDPOINTS"][questions_endpoint],
+                params=question_params,
+                headers=TaskService._build_headers(access_token),
+            )
+            question_json = question_response.json()
+
+            if question_json.get("code") != 200:
+                error_msg = question_json.get("msg", "未知错误")
+                if "您已完成此考试" in error_msg:
+                    return TaskService._record_completed_exam(
+                        user_id, task_type, label, user_name
                     )
+                logger.error(f"获取{label}试题失败：{error_msg}，用户：{user_name}({user_id})")
+                return {"success": False, "message": f"获取试题信息失败：{error_msg}"}
 
-                    return {
-                        "success": True,
-                        "message": f"每日一题已完成：{error_msg}",
-                        "result": question_response_json.get("data", {}),
-                        "score_strategy": score_strategy,
-                    }
-                else:
-                    logger.error(f"获取试题信息失败：{error_msg}")
-                    return {
-                        "success": False,
-                        "message": f"获取试题信息失败：{error_msg}",
-                    }
+            question_data = question_json.get("data") or {}
+            question_list = question_data.get("questionList") or []
+            if not question_list:
+                error_msg = f"{label}未返回任何试题"
+                logger.error(f"{error_msg}，用户：{user_name}({user_id})")
+                return {"success": False, "message": error_msg}
 
-            # 从 question_bank 随机取题（忽略API返回的题目列表，其答案已被服务端隐藏）
-            from ccsa_auto.core.database import SessionLocal
-            from ccsa_auto.core.models import QuestionBank
-            from sqlalchemy import func
+            questions = TaskService._build_questions_from_api(
+                question_list, exam_type
+            )
+            if not questions:
+                error_msg = f"{label}试题缺少答案，无法作答"
+                logger.error(f"{error_msg}，用户：{user_name}({user_id})")
+                return {"success": False, "message": error_msg}
 
-            db = SessionLocal()
-            try:
-                q1 = db.query(QuestionBank).filter_by(question_type=1, source_exam_type=1).order_by(func.random()).limit(5).all()
-                q2 = db.query(QuestionBank).filter_by(question_type=2, source_exam_type=1).order_by(func.random()).limit(2).all()
-                q3 = db.query(QuestionBank).filter_by(question_type=3, source_exam_type=1).order_by(func.random()).limit(3).all()
-                bank_questions = q1 + q2 + q3
-                random.shuffle(bank_questions)
+            if len(questions) != len(question_list):
+                logger.warning(
+                    f"{label}题量变化: API {len(question_list)} 题, 实际 {len(questions)} 题, 用户：{user_name}({user_id})"
+                )
 
-                if len(bank_questions) < 10:
-                    raise ValueError(f"题库不足: 仅 {len(bank_questions)} 题，需要 10 题")
-
-                questions = [
-                    {
-                        "id": q.question_id,
-                        "questionType": q.question_type,
-                        "questionPoint": q.question_point,
-                        "questionAnswer": q.question_answer,
-                    }
-                    for q in bank_questions
-                ]
-            finally:
-                db.close()
-
+            # 3. 应用控分策略
             from ccsa_auto.modules.task.score_strategy import ScoreStrategy
 
             if ScoreStrategy.is_enabled_for(user_id):
                 questions, score_strategy = (
                     ScoreStrategy.modify_answers_for_score_control(
-                        questions, "daily", user_id
+                        questions, task_type, user_id
                     )
                 )
             else:
+                max_score = sum(q.get("questionPoint", 0) for q in questions)
                 score_strategy = {
-                    "score": sum(q.get("questionPoint", 0) for q in questions),
-                    "max_score": sum(q.get("questionPoint", 0) for q in questions),
+                    "score": max_score,
+                    "max_score": max_score,
                     "correct_questions": len(questions),
                     "wrong_questions": 0,
                     "reason": "控分策略已关闭，全部满分",
                 }
+
             logger.info(
-                f"每日一题获取{len(questions)}道试题，控分策略：{score_strategy['score']}/{score_strategy['max_score']}，用户：{user_name}({user_id})"
+                f"{label}获取{len(questions)}道试题，控分策略："
+                f"{score_strategy['score']}/{score_strategy['max_score']}，用户：{user_name}({user_id})"
             )
 
-            # 3. 准备提交数据
-            use_time = random.randint(120, 300)  # 随机生成 2~5 分钟的答题时间
+            # 4. 提交答卷
+            use_time = random.randint(120, 300) if is_daily else random.randint(300, 500)
+            full_point = question_data.get("questionTotalPoint")
+            if full_point is None:
+                full_point = sum(q.get("questionPoint", 0) for q in questions)
+
             payload = {
-                "practiceRegularId": study_id,
+                "practiceRegularId": practice_id,
                 "regularType": 2,
                 "useTime": use_time,
                 "isAgain": 0,
-                "examType": 1,
+                "examType": exam_type,
                 "isRepair": None,
                 "courseExamAnswerInfoBos": questions,
-                "fullPoint": 20,
-                "examDuration": 30,
+                "fullPoint": full_point,
+                "examDuration": question_data.get("examLimitTime", 0) or 0,
+                "scoreSource": 1,
             }
-
-            submit_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["SUBMIT_EXAM"]
-            submit_headers = {
-                "Authorization": f"Bearer {access_token}",
-                **Config.EXTERNAL_PLATFORM["HEADERS"],
-                "Content-Type": "application/json;charset=UTF-8",
-            }
+            if question_data.get("examDetailId"):
+                payload["examDetailId"] = question_data["examDetailId"]
 
             submit_response = requests.post(
-                submit_url, headers=submit_headers, data=json.dumps(payload)
+                Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["SUBMIT_EXAM"],
+                headers=TaskService._build_headers(access_token),
+                data=json.dumps(payload, ensure_ascii=False),
             )
             submit_json = submit_response.json()
 
@@ -222,7 +348,7 @@ class TaskService:
                 ScoreTracker.record_score(
                     user_id=user_id,
                     task_id=None,
-                    task_type="daily",
+                    task_type=task_type,
                     total_questions=len(questions),
                     correct_questions=score_strategy["correct_questions"],
                     score=score_strategy["score"],
@@ -230,47 +356,43 @@ class TaskService:
                 )
 
                 logger.info(
-                    f"每日一题完成，得分：{score_strategy['score']}/{score_strategy['max_score']}，用户：{user_name}({user_id})"
+                    f"{label}完成，得分：{score_strategy['score']}/"
+                    f"{score_strategy['max_score']}，用户：{user_name}({user_id})"
                 )
                 return {
                     "success": True,
-                    "message": "每日一题执行成功",
+                    "message": f"{label}执行成功",
                     "result": submit_json.get("data", {}),
                     "score_strategy": score_strategy,
                 }
-            else:
-                error_msg = submit_json.get("msg", "未知错误")
-                if "您已完成此考试！" in error_msg:
-                    logger.info(f"每日一题已完成，用户：{user_name}({user_id})")
 
-                    from ccsa_auto.modules.task.score_tracker import ScoreTracker
+            error_msg = submit_json.get("msg", "未知错误")
+            if "您已完成此考试" in error_msg:
+                return TaskService._record_completed_exam(
+                    user_id, task_type, label, user_name
+                )
 
-                    ScoreTracker.record_score(
-                        user_id=user_id,
-                        task_id=None,
-                        task_type="daily",
-                        total_questions=len(questions),
-                        correct_questions=score_strategy["correct_questions"],
-                        score=score_strategy["score"],
-                        max_score=score_strategy["max_score"],
-                    )
-
-                    return {
-                        "success": True,
-                        "message": f"每日一题已完成：{error_msg}",
-                        "result": submit_json.get("data", {}),
-                        "score_strategy": score_strategy,
-                    }
-                else:
-                    logger.error(
-                        f"每日一题提交失败：{error_msg}，用户：{user_name}({user_id})"
-                    )
-                    return {"success": False, "message": f"提交答案失败：{error_msg}"}
+            logger.error(f"{label}提交失败：{error_msg}，用户：{user_name}({user_id})")
+            return {"success": False, "message": f"提交答案失败：{error_msg}"}
 
         except Exception as e:
-            error_msg = f"每日一题异常：{str(e)}"
-            logger.exception(error_msg)
+            error_msg = f"{label}异常：{str(e)}"
+            logger.exception(f"{error_msg}，用户：{user_name}({user_id})")
             return {"success": False, "message": error_msg}
+
+    @staticmethod
+    def execute_daily_question(access_token, user_id, user_name="未知"):
+        """
+        执行每日一题
+
+        Args:
+            access_token: 访问令牌
+            user_id: 用户ID
+            user_name: 用户姓名
+        """
+        return TaskService._execute_regular_exam(
+            access_token, user_id, "daily", user_name
+        )
 
     @staticmethod
     def get_weekly_lesson_details(access_token, lesson_id):
@@ -289,10 +411,7 @@ class TaskService:
                 lesson_id=lesson_id
             )
             params = {"id": lesson_id}
-            headers = {
-                "Authorization": f"Bearer {access_token}",
-                **Config.EXTERNAL_PLATFORM["HEADERS"],
-            }
+            headers = TaskService._build_headers(access_token)
 
             response = requests.get(url, headers=headers, params=params)
             response_json = response.json()
@@ -323,44 +442,40 @@ class TaskService:
             return {"success": False, "message": error_msg}
 
     @staticmethod
-    def get_video_url(access_token, vod_id, resource_relation_id):
+    def get_video_url(access_token, lesson_id, vod_id=None, resource_relation_id=None):
         """
-        获取视频链接
+        获取视频播放鉴权信息
+
+        新版接口：GET progress-v2/app/regularCourseWeek/courseWeekPlayAuth/{lesson_id}
+        返回 ``{vodId, playType, previewTime, results}``，其中 results 为播放凭证。
 
         Args:
             access_token: 访问令牌
-            vod_id: 视频ID
-            resource_relation_id: 资源关联ID
+            lesson_id: 每周一课ID（studyAssociationId）
+            vod_id: 兼容旧调用保留，可选
+            resource_relation_id: 兼容旧调用保留，可选
 
         Returns:
-            dict: 视频链接信息
+            dict: 视频鉴权信息
         """
         try:
-            url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["GET_VIDEO_URL"]
-            headers = {
-                "Authorization": f"Bearer {access_token}",
-                **Config.EXTERNAL_PLATFORM["HEADERS"],
-                "Content-Type": "application/json;charset=UTF-8",
-            }
-            payload = {
-                "vodId": vod_id,
-                "getPlayType": 2,
-                "resourceRelationId": resource_relation_id,
-                "courseType": 4,
-            }
+            url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["GET_VIDEO_URL"].format(
+                lesson_id=lesson_id
+            )
+            headers = TaskService._build_headers(access_token)
 
-            response = requests.post(url, headers=headers, json=payload)
+            response = requests.get(url, headers=headers)
             response_json = response.json()
 
             if response_json.get("code") != 200:
-                error_msg = f"获取视频链接失败：{response_json.get('msg', '未知错误')}"
+                error_msg = f"获取视频鉴权失败：{response_json.get('msg', '未知错误')}"
                 logger.error(error_msg)
                 return {"success": False, "message": error_msg}
 
             return {"success": True, "data": response_json.get("data", {})}
 
         except Exception as e:
-            error_msg = f"获取视频链接异常：{str(e)}"
+            error_msg = f"获取视频鉴权异常：{str(e)}"
             logger.exception(error_msg)
             return {"success": False, "message": error_msg}
 
@@ -387,30 +502,30 @@ class TaskService:
                 f"[每周一课] 开始执行 | user={user_name}({user_id}) | thread_id={thread_id} | start_time={start_datetime}"
             )
 
-            study_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["GET_STUDY_LIST"]
-            study_headers = {
-                "Authorization": f"Bearer {access_token}",
-                **Config.EXTERNAL_PLATFORM["HEADERS"],
-            }
+            # 新版接口：GET progress-v2/app/regularStudy/getRegularStudyWeek，data 即周课信息
+            week_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"][
+                "GET_REGULAR_STUDY_WEEK"
+            ]
+            study_headers = TaskService._build_headers(access_token)
 
-            # 请求学习列表
+            # 请求周课信息
             logger.info(
-                f"[每周一课] 请求学习列表 | user={user_id} | url={study_url} | thread_id={thread_id}"
+                f"[每周一课] 请求周课信息 | user={user_id} | url={week_url} | thread_id={thread_id}"
             )
             req_start = time.time()
-            study_response = requests.get(study_url, headers=study_headers)
+            study_response = requests.get(week_url, headers=study_headers)
             req_end = time.time()
             req_duration = req_end - req_start
             study_response_json = study_response.json()
             logger.info(
-                f"[每周一课] 学习列表响应 | user={user_id} | status={study_response.status_code} | duration={req_duration:.3f}s | code={study_response_json.get('code')} | thread_id={thread_id}"
+                f"[每周一课] 周课信息响应 | user={user_id} | status={study_response.status_code} | duration={req_duration:.3f}s | code={study_response_json.get('code')} | thread_id={thread_id}"
             )
             logger.debug(
-                f"[每周一课] 学习列表数据 | user={user_id} | data={study_response_json} | thread_id={thread_id}"
+                f"[每周一课] 周课信息数据 | user={user_id} | data={study_response_json} | thread_id={thread_id}"
             )
 
             if study_response_json.get("code") != 200:
-                error_msg = f"获取每周一课列表失败：{study_response_json.get('msg', '未知错误')}"
+                error_msg = f"获取每周一课信息失败：{study_response_json.get('msg', '未知错误')}"
                 logger.error(
                     f"[每周一课] {error_msg} | user={user_id} | thread_id={thread_id}"
                 )
@@ -419,19 +534,18 @@ class TaskService:
                     "message": error_msg,
                 }
 
-            study_data = study_response_json.get("data", {})
-            week_info = study_data.get("repeatCourseWeekInfo", {})
+            week_info = study_response_json.get("data") or {}
             week_id = week_info.get("id")
 
             if not week_id:
                 error_msg = "未能获取每周一课ID"
                 logger.error(
-                    f"[每周一课] {error_msg} | user={user_id} | study_data={study_data} | thread_id={thread_id}"
+                    f"[每周一课] {error_msg} | user={user_id} | data={week_info} | thread_id={thread_id}"
                 )
                 return {"success": False, "message": error_msg}
 
             logger.info(
-                f"[每周一课] 解析到week_id | user={user_id} | week_id={week_id} | thread_id={thread_id}"
+                f"[每周一课] 解析到week_id | user={user_id} | week_id={week_id} | studyStatus={week_info.get('studyStatus')} | thread_id={thread_id}"
             )
 
             # 获取课程详情
@@ -463,21 +577,20 @@ class TaskService:
             )
 
             if resource_url:
+                # 视频播放鉴权（新版：GET courseWeekPlayAuth/{lesson_id}）
                 logger.info(
-                    f"[每周一课] 请求视频链接 | user={user_id} | resource_url={resource_url} | week_id={week_id} | thread_id={thread_id}"
+                    f"[每周一课] 请求视频鉴权 | user={user_id} | week_id={week_id} | vod_id={resource_url} | thread_id={thread_id}"
                 )
                 video_start = time.time()
-                video_result = TaskService.get_video_url(
-                    access_token, resource_url, week_id
-                )
+                video_result = TaskService.get_video_url(access_token, week_id)
                 video_end = time.time()
                 video_duration = video_end - video_start
                 logger.info(
-                    f"[每周一课] 视频链接响应 | user={user_id} | duration={video_duration:.3f}s | success={video_result.get('success')} | thread_id={thread_id}"
+                    f"[每周一课] 视频鉴权响应 | user={user_id} | duration={video_duration:.3f}s | success={video_result.get('success')} | thread_id={thread_id}"
                 )
 
                 if not video_result.get("success"):
-                    error_msg = f"获取视频链接失败：{video_result.get('message')}"
+                    error_msg = f"获取视频鉴权失败：{video_result.get('message')}"
                     logger.error(
                         f"[每周一课] {error_msg} | user={user_id} | thread_id={thread_id}"
                     )
@@ -489,11 +602,7 @@ class TaskService:
             submit_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"][
                 "SUBMIT_STUDY_SCHEDULE"
             ]
-            submit_headers = {
-                "Authorization": f"Bearer {access_token}",
-                **Config.EXTERNAL_PLATFORM["HEADERS"],
-                "Content-Type": "application/json;charset=UTF-8",
-            }
+            submit_headers = TaskService._build_headers(access_token)
 
             payload = {
                 "studyProgressTime": resource_duration,
@@ -573,240 +682,18 @@ class TaskService:
             return {"success": False, "message": error_msg}
 
     @staticmethod
-    def execute_monthly_exam(access_token, user_id):
+    def execute_monthly_exam(access_token, user_id, user_name="未知"):
         """
         执行每月一考
+
+        Args:
+            access_token: 访问令牌
+            user_id: 用户ID
+            user_name: 用户姓名
         """
-        try:
-            import random
-            import json
-
-            # 1. 获取每月一考列表
-            study_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["GET_STUDY_LIST"]
-            study_headers = {
-                "Authorization": f"Bearer {access_token}",
-                **Config.EXTERNAL_PLATFORM["HEADERS"],
-            }
-
-            study_response = requests.get(study_url, headers=study_headers)
-            study_response_json = study_response.json()
-
-            if study_response_json.get("code") != 200:
-                return {
-                    "success": False,
-                    "message": f"获取每月一考列表失败: {study_response_json.get('msg', '未知错误')}",
-                }
-
-            # 提取每月一考信息
-            study_data = study_response_json.get("data", {})
-            month_info = study_data.get("regularExamMonthInfo", {})
-            month_id = month_info.get("id")
-
-            if not month_id:
-                return {"success": False, "message": "未能获取每月一考ID"}
-
-            # 2. 获取试题信息
-            question_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"][
-                "GET_MONTHLY_QUESTIONS"
-            ]
-            question_params = {
-                "examAssociationId": month_id,
-                "isReExam": 0,
-                "regularStudyType": 2,
-                "isRepair": 0,
-            }
-
-            question_response = requests.get(
-                question_url, params=question_params, headers=study_headers
-            )
-            question_response_json = question_response.json()
-
-            if question_response_json.get("code") != 200:
-                error_msg = question_response_json.get("msg", "未知错误")
-                # 检查是否包含"您已完成此考试！"的消息，如果是则视为成功
-                if "您已完成此考试！" in error_msg:
-                    logger.info(f"检测到已完成考试消息: {error_msg}，视为任务成功")
-
-                    # 记录得分（即使已完成，也记录得分）
-                    from ccsa_auto.modules.task.score_tracker import ScoreTracker
-                    from ccsa_auto.modules.task.score_strategy import ScoreStrategy
-
-                    # 获取控分策略
-                    if ScoreStrategy.is_enabled_for(user_id):
-                        score_strategy = ScoreStrategy.calculate_strategy(
-                            user_id, "monthly", 0, 0.0
-                        )
-                    else:
-                        score_strategy = {
-                            "score": 0,
-                            "max_score": 0,
-                            "correct_questions": 0,
-                            "wrong_questions": 0,
-                            "reason": "控分策略已关闭",
-                        }
-
-                    ScoreTracker.record_score(
-                        user_id=user_id,
-                        task_id=None,
-                        task_type="monthly",
-                        total_questions=0,
-                        correct_questions=score_strategy["correct_questions"],
-                        score=score_strategy["score"],
-                        max_score=score_strategy["max_score"],
-                    )
-
-                    return {
-                        "success": True,
-                        "message": f"每月一考已完成: {error_msg}",
-                        "result": question_response_json.get("data", {}),
-                        "score_strategy": score_strategy,
-                    }
-                else:
-                    return {
-                        "success": False,
-                        "message": f"获取试题信息失败: {error_msg}",
-                    }
-
-            # 保留API题目结构，从 question_bank 补全答案
-            from ccsa_auto.core.database import SessionLocal
-            from ccsa_auto.core.models import QuestionBank
-            from sqlalchemy import func
-
-            db = SessionLocal()
-            try:
-                question_list = question_response_json.get("data", {}).get("questionList", [])
-                questions = []
-                for q in question_list:
-                    qid = q["id"]
-                    qtype = q["questionType"]
-                    qpoint = q.get("questionPoint", 5)
-
-                    bank_q = db.query(QuestionBank).filter_by(question_id=qid).first()
-                    if bank_q:
-                        answer = bank_q.question_answer
-                    else:
-                        sub = db.query(QuestionBank).filter_by(
-                            question_type=qtype, source_exam_type=2
-                        ).order_by(func.random()).first()
-                        if not sub:
-                            continue
-                        qid = sub.question_id
-                        answer = sub.question_answer
-
-                    questions.append({
-                        "id": qid,
-                        "questionType": qtype,
-                        "questionPoint": qpoint,
-                        "questionAnswer": answer,
-                    })
-            finally:
-                db.close()
-
-            if len(questions) != len(question_list):
-                logger.warning(f"每月一考题量变化: API {len(question_list)} 题, 实际 {len(questions)} 题, 用户：{user_name}({user_id})")
-
-            # 应用控分策略
-            from ccsa_auto.modules.task.score_strategy import ScoreStrategy
-
-            if ScoreStrategy.is_enabled_for(user_id):
-                questions, score_strategy = (
-                    ScoreStrategy.modify_answers_for_score_control(
-                        questions, "monthly", user_id
-                    )
-                )
-            else:
-                score_strategy = {
-                    "score": sum(q.get("questionPoint", 0) for q in questions),
-                    "max_score": sum(q.get("questionPoint", 0) for q in questions),
-                    "correct_questions": len(questions),
-                    "wrong_questions": 0,
-                    "reason": "控分策略已关闭，全部满分",
-                }
-            logger.info(
-                f"控分策略: {score_strategy['reason']}, 预期得分: {score_strategy['score']}/{score_strategy['max_score']}"
-            )
-
-            # 3. 准备提交数据
-            use_time = random.randint(300, 500)
-            total_point = sum(q.get("questionPoint", 0) for q in questions)
-            payload = {
-                "practiceRegularId": month_id,
-                "regularType": 2,
-                "useTime": use_time,
-                "isAgain": 0,
-                "examType": 2,
-                "isRepair": None,
-                "courseExamAnswerInfoBos": questions,
-                "fullPoint": total_point,
-                "examDuration": 80,
-            }
-
-            # 4. 提交答案
-            submit_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["SUBMIT_EXAM"]
-            submit_headers = {
-                "Authorization": f"Bearer {access_token}",
-                **Config.EXTERNAL_PLATFORM["HEADERS"],
-                "Content-Type": "application/json;charset=UTF-8",
-            }
-
-            submit_response = requests.post(
-                submit_url, headers=submit_headers, data=json.dumps(payload)
-            )
-            submit_json = submit_response.json()
-
-            if submit_json.get("code") == 200:
-                # 记录得分
-                from ccsa_auto.modules.task.score_tracker import ScoreTracker
-
-                ScoreTracker.record_score(
-                    user_id=user_id,
-                    task_id=None,
-                    task_type="monthly",
-                    total_questions=len(questions),
-                    correct_questions=score_strategy["correct_questions"],
-                    score=score_strategy["score"],
-                    max_score=score_strategy["max_score"],
-                )
-
-                return {
-                    "success": True,
-                    "message": "每月一考执行成功",
-                    "result": submit_json.get("data", {}),
-                    "score_strategy": score_strategy,
-                }
-            else:
-                error_msg = submit_json.get("msg", "未知错误")
-                # 检查是否包含"您已完成此考试！"的消息，如果是则视为成功
-                if "您已完成此考试！" in error_msg:
-                    logger.info(f"检测到已完成考试消息: {error_msg}，视为任务成功")
-
-                    # 记录得分（即使已完成，也记录得分）
-                    from ccsa_auto.modules.task.score_tracker import ScoreTracker
-
-                    ScoreTracker.record_score(
-                        user_id=user_id,
-                        task_id=None,
-                        task_type="monthly",
-                        total_questions=len(questions),
-                        correct_questions=score_strategy["correct_questions"],
-                        score=score_strategy["score"],
-                        max_score=score_strategy["max_score"],
-                    )
-
-                    return {
-                        "success": True,
-                        "message": f"每月一考已完成: {error_msg}",
-                        "result": submit_json.get("data", {}),
-                        "score_strategy": score_strategy,
-                    }
-                else:
-                    return {
-                        "success": False,
-                        "message": f"提交考试答案失败: {error_msg}",
-                    }
-
-        except Exception as e:
-            return {"success": False, "message": f"执行每月一考异常: {str(e)}"}
+        return TaskService._execute_regular_exam(
+            access_token, user_id, "monthly", user_name
+        )
 
     @staticmethod
     def execute_task(task, user, max_retries=2):
@@ -860,7 +747,9 @@ class TaskService:
                         access_token, user.id, user_name
                     )
                 elif task.task_type == "monthly":
-                    result = TaskService.execute_monthly_exam(access_token, user.id)
+                    result = TaskService.execute_monthly_exam(
+                        access_token, user.id, user_name
+                    )
                 else:
                     return {"success": False, "message": "任务类型无效"}
 

@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.abspath("."))
 from refactored_code.auth_module import AuthModule
 from refactored_code.config import Config as RefactoredConfig
 
+from ccsa_auto.core.config import Config
 from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import User
 from ccsa_auto.modules.logging.service import LoggingService
@@ -209,18 +210,23 @@ class AuthService:
                 return False, None, None
 
     @staticmethod
+    def _platform_headers(token):
+        """构造外部平台业务请求头（v2 接口）。"""
+        return {
+            "accept": "application/json, text/plain, */*",
+            "authorization": f"Bearer {token}",
+            "clientid": RefactoredConfig.CLIENT_ID,
+            "content-language": "zh_CN",
+        }
+
+    @staticmethod
     def get_user_info(auth_module):
         """获取用户信息"""
         try:
             # 调用API获取用户信息
-            headers = {
-                "accept": "application/json, text/plain, */*",
-                "authorization": f"Bearer {auth_module.access_token}",
-                "clientid": RefactoredConfig.CLIENT_ID,
-                "content-language": "zh_CN",
-            }
+            headers = AuthService._platform_headers(auth_module.access_token)
             response = requests.get(
-                f"{RefactoredConfig.BASE_URL}/system/app/userExtend/v2/getUserInfo",
+                Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["GET_USER_INFO"],
                 headers=headers,
             )
             response_data = response.json()
@@ -499,14 +505,9 @@ class AuthService:
                     print(f"获取用户 {user_id} 的令牌失败")
                     return None
 
-                headers = {
-                    "accept": "application/json, text/plain, */*",
-                    "authorization": f"Bearer {token}",
-                    "clientid": RefactoredConfig.CLIENT_ID,
-                    "content-language": "zh_CN",
-                }
+                headers = AuthService._platform_headers(token)
                 response = requests.get(
-                    f"{RefactoredConfig.BASE_URL}/progress/app/regularStudyRecord/getRegularFractionInfo",
+                    Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["GET_SCORES"],
                     headers=headers,
                 )
 
@@ -565,14 +566,9 @@ class AuthService:
             dict: 积分信息，如果获取失败返回None
         """
         try:
-            headers = {
-                "accept": "application/json, text/plain, */*",
-                "authorization": f"Bearer {token}",
-                "clientid": RefactoredConfig.CLIENT_ID,
-                "content-language": "zh_CN",
-            }
+            headers = AuthService._platform_headers(token)
             response = requests.get(
-                f"{RefactoredConfig.BASE_URL}/progress/app/regularStudyRecord/getRegularFractionInfo",
+                Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["GET_SCORES"],
                 headers=headers,
             )
 
@@ -596,6 +592,53 @@ class AuthService:
             return None
 
     @staticmethod
+    def _fetch_task_status(token):
+        """获取三个一任务状态（v2 接口已拆分为独立接口）。
+
+        Returns:
+            tuple: (task_status, error_msg, is_auth_error)
+                  成功时 task_status 为 dict、error_msg 为 None；
+                  失败时 task_status 为 None。
+        """
+        headers = AuthService._platform_headers(token)
+        endpoints = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]
+        status_map = {1: "未完成", 2: "已完成"}
+
+        specs = (
+            ("daily", "GET_REGULAR_STUDY_DAY", "每日一题", "studyName"),
+            ("weekly", "GET_REGULAR_STUDY_WEEK", "每周一课", "courseName"),
+            ("monthly", "GET_REGULAR_STUDY_MONTH", "每月一考", "examName"),
+        )
+
+        task_status = {}
+        for key, endpoint_key, default_name, name_field in specs:
+            response = requests.get(endpoints[endpoint_key], headers=headers)
+
+            # 认证失败交由调用方刷新令牌后重试
+            if response.status_code in (401, 403):
+                return None, f"HTTP状态码 {response.status_code}", True
+
+            data = response.json()
+            if not data or data.get("code") != 200:
+                error_msg = (data or {}).get("msg", "未知错误")
+                is_auth_error = (
+                    "认证" in error_msg
+                    or "token" in error_msg.lower()
+                    or "auth" in error_msg.lower()
+                )
+                return None, error_msg, is_auth_error
+
+            info = data.get("data") or {}
+            task_status[key] = {
+                "name": info.get(name_field, default_name),
+                "status": status_map.get(info.get("studyStatus", 1), "未知"),
+                "available_score": info.get("availableScore", 0) or 0,
+                "obtained_score": info.get("obtainedScore", 0) or 0,
+            }
+
+        return task_status, None, False
+
+    @staticmethod
     def get_task_status_with_retry(user_id, max_retries=2):
         """获取任务完成情况（三个一：每日一题、每周一课、每月一考）（带令牌自动刷新重试）
 
@@ -614,84 +657,18 @@ class AuthService:
                     print(f"获取用户 {user_id} 的令牌失败")
                     return None
 
-                headers = {
-                    "accept": "application/json, text/plain, */*",
-                    "authorization": f"Bearer {token}",
-                    "clientid": RefactoredConfig.CLIENT_ID,
-                    "content-language": "zh_CN",
-                }
-                response = requests.get(
-                    f"{RefactoredConfig.BASE_URL}/progress/app/regularStudy/getNewRegularStudyList",
-                    headers=headers,
+                task_status, error_msg, is_auth_error = (
+                    AuthService._fetch_task_status(token)
                 )
+                if task_status is not None:
+                    return task_status
 
-                # 检查响应状态
-                if response.status_code != 200:
-                    print(f"获取任务完成情况失败: HTTP状态码 {response.status_code}")
-                    # 如果是认证失败，尝试刷新令牌
-                    if response.status_code == 401 or response.status_code == 403:
-                        print(f"认证失败，尝试刷新用户 {user_id} 的令牌...")
-                        AuthService.get_valid_external_token(
-                            user_id, force_refresh=True
-                        )
-                        continue
-                    return None
-
-                data = response.json()
-                if data and data.get("code") == 200:
-                    response_data = data.get("data", {})
-
-                    # 解析三个任务的状态
-                    daily_info = response_data.get("regularStudyDayInfo", {})
-                    weekly_info = response_data.get("repeatCourseWeekInfo", {})
-                    monthly_info = response_data.get("regularExamMonthInfo", {})
-
-                    # 状态映射：1=未完成，2=已完成
-                    status_map = {1: "未完成", 2: "已完成"}
-
-                    return {
-                        "daily": {
-                            "name": daily_info.get("studyName", "每日一题"),
-                            "status": status_map.get(
-                                daily_info.get("studyStatus", 1), "未知"
-                            ),
-                            "available_score": daily_info.get("availableScore", 0),
-                            "obtained_score": daily_info.get("obtainedScore", 0),
-                        },
-                        "weekly": {
-                            "name": weekly_info.get("courseName", "每周一课"),
-                            "status": status_map.get(
-                                weekly_info.get("studyStatus", 1), "未知"
-                            ),
-                            "available_score": weekly_info.get("availableScore", 0),
-                            "obtained_score": weekly_info.get("obtainedScore", 0),
-                        },
-                        "monthly": {
-                            "name": monthly_info.get("examName", "每月一考"),
-                            "status": status_map.get(
-                                monthly_info.get("studyStatus", 1), "未知"
-                            ),
-                            "available_score": monthly_info.get("availableScore", 0),
-                            "obtained_score": monthly_info.get("obtainedScore", 0),
-                        },
-                    }
-                else:
-                    error_msg = data.get("msg", "未知错误") if data else "响应数据为空"
-                    print(f"获取任务完成情况失败: {error_msg}")
-
-                    # 检查是否是认证错误
-                    if (
-                        "认证" in error_msg
-                        or "token" in error_msg.lower()
-                        or "auth" in error_msg.lower()
-                    ):
-                        print(f"检测到认证错误，尝试刷新用户 {user_id} 的令牌...")
-                        AuthService.get_valid_external_token(
-                            user_id, force_refresh=True
-                        )
-                        continue
-
-                    return None
+                print(f"获取任务完成情况失败: {error_msg}")
+                if is_auth_error and attempt < max_retries - 1:
+                    print(f"认证失败，尝试刷新用户 {user_id} 的令牌...")
+                    AuthService.get_valid_external_token(user_id, force_refresh=True)
+                    continue
+                return None
             except Exception as e:
                 print(f"调用任务完成情况API时发生异常: {e}")
                 if attempt < max_retries - 1:
@@ -712,64 +689,10 @@ class AuthService:
             dict: 任务完成情况，如果获取失败返回None
         """
         try:
-            headers = {
-                "accept": "application/json, text/plain, */*",
-                "authorization": f"Bearer {token}",
-                "clientid": RefactoredConfig.CLIENT_ID,
-                "content-language": "zh_CN",
-            }
-            response = requests.get(
-                f"{RefactoredConfig.BASE_URL}/progress/app/regularStudy/getNewRegularStudyList",
-                headers=headers,
-            )
-
-            # 检查响应状态
-            if response.status_code != 200:
-                print(f"获取任务完成情况失败: HTTP状态码 {response.status_code}")
-                return None
-
-            data = response.json()
-            if data and data.get("code") == 200:
-                response_data = data.get("data", {})
-
-                # 解析三个任务的状态
-                daily_info = response_data.get("regularStudyDayInfo", {})
-                weekly_info = response_data.get("repeatCourseWeekInfo", {})
-                monthly_info = response_data.get("regularExamMonthInfo", {})
-
-                # 状态映射：1=未完成，2=已完成
-                status_map = {1: "未完成", 2: "已完成"}
-
-                return {
-                    "daily": {
-                        "name": daily_info.get("studyName", "每日一题"),
-                        "status": status_map.get(
-                            daily_info.get("studyStatus", 1), "未知"
-                        ),
-                        "available_score": daily_info.get("availableScore", 0),
-                        "obtained_score": daily_info.get("obtainedScore", 0),
-                    },
-                    "weekly": {
-                        "name": weekly_info.get("courseName", "每周一课"),
-                        "status": status_map.get(
-                            weekly_info.get("studyStatus", 1), "未知"
-                        ),
-                        "available_score": weekly_info.get("availableScore", 0),
-                        "obtained_score": weekly_info.get("obtainedScore", 0),
-                    },
-                    "monthly": {
-                        "name": monthly_info.get("examName", "每月一考"),
-                        "status": status_map.get(
-                            monthly_info.get("studyStatus", 1), "未知"
-                        ),
-                        "available_score": monthly_info.get("availableScore", 0),
-                        "obtained_score": monthly_info.get("obtainedScore", 0),
-                    },
-                }
-            else:
-                error_msg = data.get("msg", "未知错误") if data else "响应数据为空"
+            task_status, error_msg, _ = AuthService._fetch_task_status(token)
+            if task_status is None:
                 print(f"获取任务完成情况失败: {error_msg}")
-                return None
+            return task_status
         except Exception as e:
             print(f"调用任务完成情况API时发生异常: {e}")
             return None

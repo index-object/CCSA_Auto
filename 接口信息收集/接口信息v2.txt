@@ -1,0 +1,39 @@
+登录
+curl --url 'https://edu.axdxa.cn/prod-api/auth-v2/pwdLogin' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'clientid: e5cd7e4891bf95d1d19206ce24a7b32e' \
+  -H 'content-language: zh_CN' \
+  -H 'content-type: application/json;charset=UTF-8' \
+  -b '_c_WBKFRo=u5sGfFw3U43AqXM9YGHrd9ofxak21QJK3r4oeJtV; p_h5_u=598BFCB1-1FFB-4ED5-97E3-6FCA73353952; selectedStreamLevel=FD; selectedCC=off' \
+  -H 'encrypt-key: g6Z9vbk9k06EadCCy3RakWrW49fcHeHGkQ7DJWkHNdN8PkXuLNrTGL7uoDG7ZQgedjkxA9mHkYS/C1ozsPJwOQ==' \
+  -H 'isencrypt: true' \
+  -H 'origin: https://edu.axdxa.cn' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://edu.axdxa.cn/home' \
+  -H 'sec-ch-ua: "Microsoft Edge";v="153", "Not_A Brand";v="8", "Chromium";v="153"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0' \
+  --data-raw '"MDcmfLg7hiF2Fy5C+Q1DmWdIHGWrpya8xBdM2G6oEAjGj6BY/xvmW5gKDVkgGDhh6wip2osxSsir+ZoJWu7y5725vXyWyHZnBg/fXv05vo7TRi5uCvwA1KJxgeWxcdQYfrD8a3XSKUzF5r5zRhhtoEf/6JraNGb8yi9k02DLYvI="'
+
+响应：
+{
+    "code": 200,
+    "msg": "操作成功",
+    "data": {
+        "scope": null,
+        "openid": null,
+        "bindMobile": true,
+        "orderId": null,
+        "user": null,
+        "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiJzeXNfdXNlcjoxOTk4MzIxNzAzMzU5MzA3Nzc4Iiwicm5TdHIiOiIzVU5EdWhsSHp3MEV3OWFxNFBtVTdzdkFaTjRXbTNKcSIsImNsaWVudGlkIjoiZTVjZDdlNDg5MWJmOTVkMWQxOTIwNmNlMjRhN2IzMmUiLCJjaGFuZ2VVc2VyIjpmYWxzZSwidGVuYW50SWQiOiI1MzA4NjUiLCJ1c2VySWQiOjE5OTgzMjE3MDMzNTkzMDc3NzgsInVzZXJOYW1lIjoiMTg2KioqKjM0MTYiLCJkZXB0TmFtZSI6IuajgOS_ruS4reW_g1xc5qOA5L-u6L-Q6KGMICIsImRlcHRDYXRlZ29yeSI6IiJ9.qNowYdZ0hxy6-r3syh_WTOjT04OQBxUCp0YAFv-BhIs",
+        "refresh_token": null,
+        "expire_in": 15551999,
+        "refresh_expire_in": null,
+        "client_id": "e5cd7e4891bf95d1d19206ce24a7b32e"
+    }
+}
