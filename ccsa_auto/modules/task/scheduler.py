@@ -10,7 +10,8 @@ from datetime import datetime, timedelta, timezone
 from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import Task, User, TaskFixLog
 from ccsa_auto.modules.task.service import TaskService
-from ccsa_auto.modules.logging.service import LoggingService
+from ccsa_auto.modules.logging.service import LoggingService, LogType
+from ccsa_auto.modules.logging.models import AppLog
 from ccsa_auto.core.config import Config
 from ccsa_auto.core.logger import setup_logger
 from ccsa_auto.utils.timezone import (
@@ -151,6 +152,7 @@ def execute_user_task(task_id):
     job_id = f"user_task_{task_id}"
     user_name = "未知"
     task_name = f"task_{task_id}"
+    task = None
 
     try:
         task = db.query(Task).filter_by(id=task_id).first()
@@ -237,17 +239,6 @@ def execute_user_task(task_id):
             logger.error(
                 f"[任务调度] 任务执行失败 | task_id={task_id} | task_name={task.task_name} | user={user_name}({task.user_id}) | error={result.get('message')} | thread_id={thread_id}"
             )
-            threading.Thread(
-                target=send_email,
-                args=(
-                    f"[任务失败] {task.task_name} - {user_name}",
-                    f"任务ID: {task_id}\n"
-                    f"任务类型: {task.task_type}\n"
-                    f"用户: {user_name}({task.user_id})\n"
-                    f"失败原因: {result.get('message')}",
-                ),
-                daemon=True,
-            ).start()
 
         LoggingService.log_task_execution(
             task_id=task_id,
@@ -261,17 +252,13 @@ def execute_user_task(task_id):
         logger.exception(
             f"[任务调度] 执行任务异常 | task_id={task_id} | error={str(e)} | thread_id={thread_id}"
         )
-        threading.Thread(
-            target=send_email,
-            args=(
-                f"[任务异常] {task_name} - {user_name}",
-                f"任务ID: {task_id}\n"
-                f"任务: {task_name}\n"
-                f"用户: {user_name}\n"
-                f"异常信息: {str(e)}",
-            ),
-            daemon=True,
-        ).start()
+        LoggingService.log_task_execution(
+            task_id=task_id,
+            user_id=task.user_id if task else None,
+            task_type=task.task_type if task else "unknown",
+            status="failed",
+            message=f"异常: {str(e)}",
+        )
 
         # 更新任务状态为失败
         try:
@@ -291,6 +278,74 @@ def execute_user_task(task_id):
             logger.error(f"更新任务 {task_id} 状态失败: {update_error}")
     finally:
         db.close()
+
+
+# 上次失败日报的截止时间（UTC）。ponytail: 内存态，重启后回看24小时，如需精确去重再落库
+_last_report_utc = datetime.utcnow() - timedelta(hours=24)
+_report_lock = threading.Lock()
+
+
+def daily_failure_report_job():
+    """汇总上次报告以来的任务失败记录，只发一封邮件"""
+    global _last_report_utc
+    with _report_lock:
+        db = SessionLocal()
+        try:
+            now = datetime.utcnow()
+            logs = (
+                db.query(AppLog)
+                .filter(
+                    AppLog.log_type == LogType.TASK,
+                    AppLog.status == "failed",
+                    AppLog.created_at >= _last_report_utc,
+                    AppLog.created_at <= now,
+                )
+                .order_by(AppLog.created_at)
+                .all()
+            )
+            if not logs:
+                logger.info("任务失败日报: 统计期间无失败记录，跳过发送")
+                _last_report_utc = now
+                return
+
+            task_ids = {l.target_id for l in logs if l.target_id}
+            user_ids = {l.user_id for l in logs if l.user_id}
+            tasks = (
+                {t.id: t for t in db.query(Task).filter(Task.id.in_(task_ids)).all()}
+                if task_ids
+                else {}
+            )
+            users = (
+                {u.id: u for u in db.query(User).filter(User.id.in_(user_ids)).all()}
+                if user_ids
+                else {}
+            )
+
+            lines = []
+            for l in logs:
+                t = tasks.get(l.target_id)
+                u = users.get(l.user_id)
+                lines.append(
+                    f"- {format_datetime_short(l.created_at)} | "
+                    f"{t.task_name if t else f'task_{l.target_id}'} | "
+                    f"{u.name if u else l.user_id} | "
+                    f"{l.operation} | "
+                    f"{(l.content or '').strip()[:200]}"
+                )
+
+            subject = f"[任务失败日报] {now.strftime('%Y-%m-%d')} 共{len(logs)}条失败"
+            body = (
+                f"统计区间: {format_datetime_short(_last_report_utc)}"
+                f" ~ {format_datetime_short(now)}（上海时间）\n"
+                f"共 {len(logs)} 条失败记录:\n\n" + "\n".join(lines)
+            )
+            # 发送成功才推进统计窗口，失败则下次重试，避免漏报
+            if send_email(subject, body):
+                _last_report_utc = now
+        except Exception as e:
+            logger.exception(f"任务失败日报生成失败: {e}")
+        finally:
+            db.close()
 
 
 def init_scheduler():
@@ -389,6 +444,16 @@ def init_scheduler():
             replace_existing=True,
         )
         logger.info("已添加清理过期会话定时任务（每小时执行一次）")
+
+        # 添加任务失败日报（每天14:00发送汇总邮件）
+        scheduler.add_job(
+            func=daily_failure_report_job,
+            trigger=CronTrigger(hour=14, minute=0, timezone="Asia/Shanghai"),
+            id="daily_failure_report",
+            name="任务失败日报",
+            replace_existing=True,
+        )
+        logger.info("已添加任务失败日报定时任务（每天14:00）")
 
         if Config.TASK_FIXER_ENABLED:
             scheduler.add_job(
