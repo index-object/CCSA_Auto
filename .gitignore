@@ -6,3 +6,4 @@ my_code/
 logs/
 .worktrees/
 email_config.json
+*.db
