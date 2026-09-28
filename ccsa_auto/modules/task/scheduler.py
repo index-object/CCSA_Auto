@@ -6,9 +6,11 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from datetime import datetime, timedelta, timezone
+from sqlalchemy import func
 
 from ccsa_auto.core.database import SessionLocal
 from ccsa_auto.core.models import Task, User, TaskFixLog
+from ccsa_auto.core.system_config import SystemConfigService
 from ccsa_auto.modules.task.service import TaskService
 from ccsa_auto.modules.logging.service import LoggingService, LogType
 from ccsa_auto.modules.logging.models import AppLog
@@ -280,32 +282,66 @@ def execute_user_task(task_id):
         db.close()
 
 
-# 上次失败日报的截止时间（UTC）。ponytail: 内存态，重启后回看24小时，如需精确去重再落库
-_last_report_utc = datetime.utcnow() - timedelta(hours=24)
+# 失败日报统计水位持久化 key（值为 app_logs.id）。
+# 旧实现用进程内存记录"上次报告时间"，进程每次重启都会把窗口回退 24 小时，
+# 导致重启后把历史失败重新算作本轮新失败并误发邮件。
+_REPORT_WATERMARK_KEY = "task_failure_report_last_log_id"
 _report_lock = threading.Lock()
+
+
+def _get_failure_report_watermark():
+    """读取失败日报统计水位（app_logs.id）；未初始化时返回 None"""
+    value = SystemConfigService.get(_REPORT_WATERMARK_KEY)
+    if value in (None, ""):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        logger.warning(f"任务失败日报: 水位值非法 {value!r}，将重新初始化")
+        return None
+
+
+def _set_failure_report_watermark(log_id):
+    """持久化失败日报统计水位，重启后不回退"""
+    SystemConfigService.set(
+        _REPORT_WATERMARK_KEY,
+        int(log_id),
+        config_type="int",
+        description="任务失败日报已统计到的 app_logs.id（重启后不回退）",
+    )
 
 
 def daily_failure_report_job():
     """汇总上次报告以来的任务失败记录，只发一封邮件"""
-    global _last_report_utc
     with _report_lock:
         db = SessionLocal()
         try:
-            now = datetime.utcnow()
+            latest_id = db.query(func.max(AppLog.id)).scalar() or 0
+            last_id = _get_failure_report_watermark()
+
+            if last_id is None:
+                # 首次启用：以当前最新日志为起点，避免把历史失败当成本轮新失败播报
+                _set_failure_report_watermark(latest_id)
+                logger.info(
+                    f"任务失败日报: 初始化统计水位 last_log_id={latest_id}，本轮不发送"
+                )
+                return
+
             logs = (
                 db.query(AppLog)
                 .filter(
                     AppLog.log_type == LogType.TASK,
                     AppLog.status == "failed",
-                    AppLog.created_at >= _last_report_utc,
-                    AppLog.created_at <= now,
+                    AppLog.id > last_id,
+                    AppLog.id <= latest_id,
                 )
-                .order_by(AppLog.created_at)
+                .order_by(AppLog.id)
                 .all()
             )
+
             if not logs:
+                _set_failure_report_watermark(latest_id)
                 logger.info("任务失败日报: 统计期间无失败记录，跳过发送")
-                _last_report_utc = now
                 return
 
             task_ids = {l.target_id for l in logs if l.target_id}
@@ -333,15 +369,18 @@ def daily_failure_report_job():
                     f"{(l.content or '').strip()[:200]}"
                 )
 
-            subject = f"[任务失败日报] {now.strftime('%Y-%m-%d')} 共{len(logs)}条失败"
+            subject = (
+                f"[任务失败日报] {get_current_time().strftime('%Y-%m-%d')} "
+                f"共{len(logs)}条失败"
+            )
             body = (
-                f"统计区间: {format_datetime_short(_last_report_utc)}"
-                f" ~ {format_datetime_short(now)}（上海时间）\n"
+                f"统计区间: {format_datetime_short(logs[0].created_at)}"
+                f" ~ {format_datetime_short(logs[-1].created_at)}（上海时间）\n"
                 f"共 {len(logs)} 条失败记录:\n\n" + "\n".join(lines)
             )
-            # 发送成功才推进统计窗口，失败则下次重试，避免漏报
+            # 发送成功才推进水位，失败则下次重试，避免漏报
             if send_email(subject, body):
-                _last_report_utc = now
+                _set_failure_report_watermark(latest_id)
         except Exception as e:
             logger.exception(f"任务失败日报生成失败: {e}")
         finally:
