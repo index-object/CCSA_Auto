@@ -1,8 +1,11 @@
 """应用核心模块 - 包含应用的核心逻辑（导航、状态管理、会话管理）"""
 import json
 import os
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.modules.auth.models import auth_state
 from ccsa_auto.modules.auth.session_manager import get_session_manager
+
+logger = get_logger(__name__)
 
 
 # 全局变量
@@ -23,7 +26,7 @@ def load_login_state():
     if session_id:
         # 尝试加载会话
         if session_manager.load_session(session_id):
-            print(f"已从会话ID恢复会话: {session_id}")
+            logger.info("已从会话ID恢复会话: {}", session_id)
     
     # 检查当前用户是否已认证
     if auth_state.is_authenticated:

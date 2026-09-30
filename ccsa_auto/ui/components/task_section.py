@@ -2,6 +2,7 @@
 
 from nicegui import ui
 from ccsa_auto.core.database import SessionLocal
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.core.models import Task
 from ccsa_auto.ui.utils.loading_utils import create_loading_button
 from ccsa_auto.ui.utils.safe_notify import (
@@ -10,9 +11,8 @@ from ccsa_auto.ui.utils.safe_notify import (
     safe_notify_error,
 )
 from ccsa_auto.utils.timezone import format_datetime_short
-import logging
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def create_task_section():

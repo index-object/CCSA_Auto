@@ -42,6 +42,10 @@ def create_log_management():
             "w-36 px-4 py-3 bg-gray-50 border border-gray-200 "
             "rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-lg"
         )
+        log_keyword_input = ui.input("关键词").classes(
+            "w-48 px-4 py-3 bg-gray-50 border border-gray-200 "
+            "rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-lg"
+        )
 
         filter_btn = ui.button("筛选", icon="filter_list").classes(
             "bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 "
@@ -104,6 +108,7 @@ def create_log_management():
                 if log_type_select.value != "all"
                 else None,
                 user_id=int(log_user_input.value) if log_user_input.value else None,
+                keyword=log_keyword_input.value or None,
                 page=current_page[0],
                 page_size=20,
             )
@@ -137,7 +142,8 @@ def create_log_management():
 
     def export_logs():
         result = LoggingService.export_to_xlsx(
-            log_type=log_type_select.value if log_type_select.value != "all" else None
+            log_type=log_type_select.value if log_type_select.value != "all" else None,
+            keyword=log_keyword_input.value or None,
         )
         if result:
             Toast.success("日志导出成功")

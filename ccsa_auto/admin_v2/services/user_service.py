@@ -1,11 +1,11 @@
-import logging
 from typing import Dict, Any, List, Optional
 from ccsa_auto.core.database import SessionLocal
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.core.models import User, Task
 from ccsa_auto.utils.timezone import format_datetime_for_display
 from ccsa_auto.core.user_score_config import get_user_score_config, set_user_score_config
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class UserService:

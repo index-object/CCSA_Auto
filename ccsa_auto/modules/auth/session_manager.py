@@ -9,10 +9,13 @@ from typing import Dict, Optional, Any
 
 from nicegui import ui
 from ccsa_auto.core.database import SessionLocal
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.core.models import User, AuthSession
 from ccsa_auto.core.config import Config
 from ccsa_auto.modules.auth.models import get_auth_state
 from ccsa_auto.modules.auth.user_state import UserStateService
+
+logger = get_logger(__name__)
 
 
 def migrate_auth_session_schema():
@@ -44,15 +47,15 @@ def migrate_auth_session_schema():
                             f"ALTER TABLE auth_sessions ADD COLUMN {col_name} {col_def}"
                         )
                     )
-                    print(f"已添加字段: auth_sessions.{col_name}")
+                    logger.info("已添加字段: auth_sessions.{}", col_name)
                 except Exception as e:
-                    print(f"添加字段 {col_name} 失败（可能已存在）: {e}")
+                    logger.warning("添加字段 {} 失败（可能已存在）: {}", col_name, e)
 
         db.commit()
-        print("AuthSession 表结构迁移完成")
+        logger.info("AuthSession 表结构迁移完成")
     except Exception as e:
         db.rollback()
-        print(f"迁移 AuthSession 表结构失败: {e}")
+        logger.exception("迁移 AuthSession 表结构失败: {}", e)
     finally:
         db.close()
 
@@ -168,6 +171,7 @@ class SessionManager:
 
             db.add(auth_session)
             db.commit()
+            logger.info("已创建会话: session_id={} user_id={}", session_id, user_id)
 
             # 设置当前请求的 session_id
             try:
@@ -178,7 +182,7 @@ class SessionManager:
             return session_id
         except Exception as e:
             db.rollback()
-            print(f"创建数据库会话失败: {e}")
+            logger.exception("创建数据库会话失败: {}", e)
             return None
         finally:
             db.close()
@@ -207,17 +211,21 @@ class SessionManager:
             )
 
             if not session:
+                logger.warning("会话验证失败: 会话不存在或已失效 session_id={}", session_id)
                 return None
 
             if session.is_expired():
+                logger.warning("会话验证失败: 会话已过期 session_id={}", session_id)
                 self.delete_session(session_id)
                 return None
 
             token_hash = hashlib.sha256(access_token.encode()).hexdigest()
             if token_hash != session.token_hash:
+                logger.warning("会话验证失败: 令牌不匹配 session_id={}", session_id)
                 return None
 
             if session.is_inactive_expired(Config.SESSION_TIMEOUT):
+                logger.warning("会话验证失败: 会话长时间未活动 session_id={}", session_id)
                 self.delete_session(session_id)
                 return None
 
@@ -229,7 +237,7 @@ class SessionManager:
                 "expires_at": session.expires_at,
             }
         except Exception as e:
-            print(f"验证会话失败: {e}")
+            logger.exception("验证会话失败: {}", e)
             return None
         finally:
             db.close()
@@ -256,7 +264,7 @@ class SessionManager:
             return False
         except Exception as e:
             db.rollback()
-            print(f"刷新会话失败: {e}")
+            logger.exception("刷新会话失败: {}", e)
             return False
         finally:
             db.close()
@@ -282,7 +290,7 @@ class SessionManager:
             return True
         except Exception as e:
             db.rollback()
-            print(f"删除会话失败: {e}")
+            logger.exception("删除会话失败: {}", e)
             return False
         finally:
             db.close()
@@ -306,7 +314,7 @@ class SessionManager:
             return count
         except Exception as e:
             db.rollback()
-            print(f"删除用户会话失败: {e}")
+            logger.exception("删除用户会话失败: {}", e)
             return 0
         finally:
             db.close()
@@ -327,7 +335,7 @@ class SessionManager:
             return count
         except Exception as e:
             db.rollback()
-            print(f"删除所有会话失败: {e}")
+            logger.exception("删除所有会话失败: {}", e)
             return 0
         finally:
             db.close()
@@ -348,11 +356,11 @@ class SessionManager:
             for session in expired_sessions:
                 db.delete(session)
             db.commit()
-            print(f"已清理 {count} 个过期会话")
+            logger.info("已清理 {} 个过期会话", count)
             return count
         except Exception as e:
             db.rollback()
-            print(f"清理过期会话失败: {e}")
+            logger.exception("清理过期会话失败: {}", e)
             return 0
         finally:
             db.close()
@@ -399,7 +407,7 @@ class SessionManager:
             return True
 
         except Exception as e:
-            print(f"加载会话失败: {e}")
+            logger.exception("加载会话失败: {}", e)
             return False
 
     def get_current_session_id(self) -> Optional[str]:

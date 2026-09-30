@@ -1,10 +1,10 @@
-import logging
 from typing import Any, Optional
 
 from ccsa_auto.core.database import SessionLocal
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.core.models import SystemConfig
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 DEFAULT_CONFIGS = {}
 

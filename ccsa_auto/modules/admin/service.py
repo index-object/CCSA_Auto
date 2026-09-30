@@ -1,14 +1,14 @@
-import logging
 from typing import List, Dict, Any, Optional
 
 from ccsa_auto.core.database import SessionLocal
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.core.models import User, Task, Announcement
 from ccsa_auto.modules.announcement.service import AnnouncementService
 from ccsa_auto.modules.logging.service import LoggingService
 from ccsa_auto.modules.task.scheduler import remove_task_from_scheduler
 from ccsa_auto.utils.timezone import format_datetime_for_display, get_current_time
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class AdminService:
@@ -363,7 +363,7 @@ class AdminService:
                     content=f"手动触发任务 {task.task_name}",
                 )
 
-            execute_user_task(task_id)
+            execute_user_task(task_id, trigger="manual")
 
             return {"success": True, "message": "任务已触发执行"}
         except Exception as e:

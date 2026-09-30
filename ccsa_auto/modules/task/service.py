@@ -12,9 +12,9 @@ from ccsa_auto.utils.timezone import (
     shanghai_to_utc,
     SHANGHAI_TZ,
 )
-from ccsa_auto.core.logger import setup_logger
+from ccsa_auto.core.logger import get_task_logger
 
-logger = setup_logger(__name__)
+logger = get_task_logger(__name__)
 
 
 class TaskService:
@@ -165,13 +165,21 @@ class TaskService:
         if response_json.get("code") != 200:
             error_msg = f"获取{label}信息失败：{response_json.get('msg', '未知错误')}"
             logger.error(f"{error_msg}，用户：{user_name}({user_id})")
-            return {"success": False, "message": error_msg}
+            return {
+                "success": False,
+                "message": error_msg,
+                "error_type": "PlatformApiError",
+            }
 
         data = response_json.get("data") or {}
         if not data.get("id"):
             error_msg = f"未能获取{label}ID"
             logger.error(f"{error_msg}，用户：{user_name}({user_id}) | data={data}")
-            return {"success": False, "message": error_msg}
+            return {
+                "success": False,
+                "message": error_msg,
+                "error_type": "EmptyDataError",
+            }
 
         return {"success": True, "data": data}
 
@@ -268,14 +276,22 @@ class TaskService:
                         user_id, task_type, label, user_name
                     )
                 logger.error(f"获取{label}试题失败：{error_msg}，用户：{user_name}({user_id})")
-                return {"success": False, "message": f"获取试题信息失败：{error_msg}"}
+                return {
+                    "success": False,
+                    "message": f"获取试题信息失败：{error_msg}",
+                    "error_type": "QuestionFetchError",
+                }
 
             question_data = question_json.get("data") or {}
             question_list = question_data.get("questionList") or []
             if not question_list:
                 error_msg = f"{label}未返回任何试题"
                 logger.error(f"{error_msg}，用户：{user_name}({user_id})")
-                return {"success": False, "message": error_msg}
+                return {
+                    "success": False,
+                    "message": error_msg,
+                    "error_type": "EmptyQuestionError",
+                }
 
             questions = TaskService._build_questions_from_api(
                 question_list, exam_type
@@ -283,7 +299,11 @@ class TaskService:
             if not questions:
                 error_msg = f"{label}试题缺少答案，无法作答"
                 logger.error(f"{error_msg}，用户：{user_name}({user_id})")
-                return {"success": False, "message": error_msg}
+                return {
+                    "success": False,
+                    "message": error_msg,
+                    "error_type": "NoAnswerError",
+                }
 
             if len(questions) != len(question_list):
                 logger.warning(
@@ -373,12 +393,20 @@ class TaskService:
                 )
 
             logger.error(f"{label}提交失败：{error_msg}，用户：{user_name}({user_id})")
-            return {"success": False, "message": f"提交答案失败：{error_msg}"}
+            return {
+                "success": False,
+                "message": f"提交答案失败：{error_msg}",
+                "error_type": "SubmitError",
+            }
 
         except Exception as e:
             error_msg = f"{label}异常：{str(e)}"
             logger.exception(f"{error_msg}，用户：{user_name}({user_id})")
-            return {"success": False, "message": error_msg}
+            return {
+                "success": False,
+                "message": error_msg,
+                "error_type": type(e).__name__,
+            }
 
     @staticmethod
     def execute_daily_question(access_token, user_id, user_name="未知"):
@@ -421,7 +449,11 @@ class TaskService:
                     f"获取每周一课详情失败：{response_json.get('msg', '未知错误')}"
                 )
                 logger.error(error_msg)
-                return {"success": False, "message": error_msg}
+                return {
+                    "success": False,
+                    "message": error_msg,
+                    "error_type": "PlatformApiError",
+                }
 
             lesson_info = response_json.get("data", {})
 
@@ -439,7 +471,11 @@ class TaskService:
         except Exception as e:
             error_msg = f"获取每周一课详情异常：{str(e)}"
             logger.exception(error_msg)
-            return {"success": False, "message": error_msg}
+            return {
+                "success": False,
+                "message": error_msg,
+                "error_type": type(e).__name__,
+            }
 
     @staticmethod
     def get_video_url(access_token, lesson_id, vod_id=None, resource_relation_id=None):
@@ -470,14 +506,22 @@ class TaskService:
             if response_json.get("code") != 200:
                 error_msg = f"获取视频鉴权失败：{response_json.get('msg', '未知错误')}"
                 logger.error(error_msg)
-                return {"success": False, "message": error_msg}
+                return {
+                    "success": False,
+                    "message": error_msg,
+                    "error_type": "VideoAuthError",
+                }
 
             return {"success": True, "data": response_json.get("data", {})}
 
         except Exception as e:
             error_msg = f"获取视频鉴权异常：{str(e)}"
             logger.exception(error_msg)
-            return {"success": False, "message": error_msg}
+            return {
+                "success": False,
+                "message": error_msg,
+                "error_type": type(e).__name__,
+            }
 
     @staticmethod
     def execute_weekly_lesson(access_token, user_id, user_name="未知"):
@@ -532,6 +576,7 @@ class TaskService:
                 return {
                     "success": False,
                     "message": error_msg,
+                    "error_type": "PlatformApiError",
                 }
 
             week_info = study_response_json.get("data") or {}
@@ -542,7 +587,11 @@ class TaskService:
                 logger.error(
                     f"[每周一课] {error_msg} | user={user_id} | data={week_info} | thread_id={thread_id}"
                 )
-                return {"success": False, "message": error_msg}
+                return {
+                    "success": False,
+                    "message": error_msg,
+                    "error_type": "EmptyDataError",
+                }
 
             logger.info(
                 f"[每周一课] 解析到week_id | user={user_id} | week_id={week_id} | studyStatus={week_info.get('studyStatus')} | thread_id={thread_id}"
@@ -597,6 +646,7 @@ class TaskService:
                     return {
                         "success": False,
                         "message": error_msg,
+                        "error_type": "VideoAuthError",
                     }
 
             submit_url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"][
@@ -670,6 +720,7 @@ class TaskService:
                 return {
                     "success": False,
                     "message": error_msg,
+                    "error_type": "SubmitError",
                 }
 
         except Exception as e:
@@ -679,7 +730,11 @@ class TaskService:
             logger.exception(
                 f"[每周一课] 执行异常 | user={user_name}({user_id}) | total_duration={total_duration:.3f}s | error={str(e)} | thread_id={thread_id}"
             )
-            return {"success": False, "message": error_msg}
+            return {
+                "success": False,
+                "message": error_msg,
+                "error_type": type(e).__name__,
+            }
 
     @staticmethod
     def execute_monthly_exam(access_token, user_id, user_name="未知"):
@@ -712,7 +767,11 @@ class TaskService:
             try:
                 # 1. 验证外部平台账号
                 if not user.external_username or not user.external_password:
-                    return {"success": False, "message": "未设置外部平台账号信息"}
+                    return {
+                        "success": False,
+                        "message": "未设置外部平台账号信息",
+                        "error_type": "ConfigError",
+                    }
 
                 # 2. 获取有效的外部平台令牌（优先使用已保存的令牌）
                 # 如果是重试且不是第一次尝试，强制刷新令牌
@@ -729,7 +788,11 @@ class TaskService:
                         user.external_username, user.external_password
                     )
                     if not auth_result[0]:  # Check success flag
-                        return {"success": False, "message": "外部平台认证失败"}
+                        return {
+                            "success": False,
+                            "message": "外部平台认证失败",
+                            "error_type": "AuthError",
+                        }
                     access_token = auth_result[2]  # Get token from tuple
 
                     # 保存新获取的令牌
@@ -751,7 +814,11 @@ class TaskService:
                         access_token, user.id, user_name
                     )
                 else:
-                    return {"success": False, "message": "任务类型无效"}
+                    return {
+                        "success": False,
+                        "message": "任务类型无效",
+                        "error_type": "InvalidTaskType",
+                    }
 
                 # 4. 检查结果，如果是认证错误则重试
                 if not result.get("success"):
@@ -796,10 +863,18 @@ class TaskService:
                     if attempt < max_retries - 1:
                         continue  # 继续下一次重试
 
-                return {"success": False, "message": f"执行任务异常: {str(e)}"}
+                return {
+                    "success": False,
+                    "message": f"执行任务异常: {str(e)}",
+                    "error_type": type(e).__name__,
+                }
 
         # 所有重试都失败
-        return {"success": False, "message": f"任务执行失败，已重试{max_retries}次"}
+        return {
+            "success": False,
+            "message": f"任务执行失败，已重试{max_retries}次",
+            "error_type": "RetryExhaustedError",
+        }
 
     @staticmethod
     def create_default_tasks_for_user(user_id):

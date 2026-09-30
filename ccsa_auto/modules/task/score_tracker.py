@@ -1,6 +1,5 @@
 """分数追踪模型"""
 
-import logging
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 
@@ -8,9 +7,10 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, Text
 from sqlalchemy.orm import relationship
 
 from ccsa_auto.core.database import Base, SessionLocal
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.utils.timezone import get_current_time, utc_to_shanghai
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ScoreRecord(Base):

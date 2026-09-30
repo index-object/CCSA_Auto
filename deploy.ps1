@@ -32,10 +32,33 @@ if ($listening) {
     Start-Sleep -Seconds 2
 }
 
+# 日志目录结构：
+#   logs\live\<渠道>.p<pid>_<启动时间>.log  应用运行期按进程、按渠道写入
+#   logs\archive\<YYYY-MM-DD>\<渠道>.log     每天 00:05 归档
+#   logs\console\app.out.log / app.err.log   控制台输出（由本脚本重定向）
+# 应用自身已保证“每进程一个文件”，因此不会出现多进程争抢同一日志文件。
+$logRoot = Join-Path $root 'logs'
+New-Item -ItemType Directory -Force -Path $logRoot | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $logRoot 'live') | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $logRoot 'archive') | Out-Null
+$consoleDir = Join-Path $logRoot 'console'
+New-Item -ItemType Directory -Force -Path $consoleDir | Out-Null
+
+# 每次部署轮转控制台输出，避免单个文件无限增长
+foreach ($name in @('app.out.log', 'app.err.log')) {
+    $path = Join-Path $consoleDir $name
+    if (Test-Path $path) {
+        $stamp = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
+        Move-Item -Force $path (Join-Path $consoleDir "$name.$stamp.bak") -ErrorAction SilentlyContinue
+    }
+}
+
 Write-Host "[$(Get-Date -f 'HH:mm:ss')] start app..."
-New-Item -ItemType Directory -Force -Path "$root\logs" | Out-Null
+$env:CCSA_LOG_DIR = $logRoot
+# 生产环境不做热重载：热重载会派生子进程、重复初始化调度器与日志文件
+$env:CCSA_RELOAD = '0'
 Start-Process -FilePath 'uv' -ArgumentList 'run', 'app.py' `
     -WorkingDirectory $root -WindowStyle Hidden `
-    -RedirectStandardOutput "$root\logs\app.out.log" `
-    -RedirectStandardError "$root\logs\app.err.log"
+    -RedirectStandardOutput (Join-Path $consoleDir 'app.out.log') `
+    -RedirectStandardError (Join-Path $consoleDir 'app.err.log')
 Write-Host "[$(Get-Date -f 'HH:mm:ss')] done"

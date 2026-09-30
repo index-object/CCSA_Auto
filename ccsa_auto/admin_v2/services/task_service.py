@@ -1,9 +1,10 @@
-import logging
+import time
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Any, List, Optional
 
 from ccsa_auto.core.database import SessionLocal
+from ccsa_auto.core.logger import get_logger, log_context, new_trace_id
 from ccsa_auto.core.models import Task, User
 from ccsa_auto.utils.timezone import format_datetime_for_display
 from ccsa_auto.modules.task.service import TaskService as BaseTaskService
@@ -13,7 +14,7 @@ from ccsa_auto.modules.task.scheduler import (
     remove_task_from_scheduler,
 )
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class TaskManagementService:
@@ -189,10 +190,11 @@ class TaskManagementService:
     def trigger_task(task_id: int) -> Dict[str, Any]:
         """Manually trigger a task"""
         try:
-            result = BaseTaskService.execute_task(task_id)
-            if result.get("success"):
-                return {"success": True, "message": "任务已触发执行"}
-            return result
+            from ccsa_auto.modules.task.scheduler import execute_user_task
+
+            # 走调度器入口，保证状态更新、精确运行记录、重新调度与定时触发一致
+            execute_user_task(task_id, trigger="manual")
+            return {"success": True, "message": "任务已触发执行"}
         except Exception as e:
             logger.exception("Failed to trigger task")
             return {"success": False, "message": str(e)}
@@ -224,6 +226,11 @@ class TaskManagementService:
 
         def _execute_single(tid: int) -> dict:
             db = SessionLocal()
+            run_id = None
+            started_at = datetime.utcnow()
+            start_monotonic = time.perf_counter()
+            task = None
+            trace_id = new_trace_id()
             try:
                 task = db.query(Task).filter_by(id=tid).first()
                 if not task:
@@ -236,32 +243,75 @@ class TaskManagementService:
                 if not task.is_active:
                     return {"task_id": tid, "success": False, "message": "任务未激活"}
 
-                task.execution_status = "running"
-                task.updated_at = datetime.utcnow()
-                db.commit()
-
-                exec_result = BaseTaskService.execute_task(task, user)
-
-                task.execution_status = "completed" if exec_result.get("success") else "failed"
-                task.external_status = "success" if exec_result.get("success") else "failed"
-                task.result = str(exec_result)
-                task.executed_at = datetime.utcnow()
-                task.updated_at = datetime.utcnow()
-                db.commit()
-
-                LoggingService.log_task_execution(
+                with log_context(
+                    trace_id=trace_id,
                     task_id=tid,
+                    task_name=task.task_name,
                     user_id=task.user_id,
-                    task_type=task.task_type,
-                    status="success" if exec_result.get("success") else "failed",
-                    message=exec_result.get("message", str(exec_result)),
-                )
+                    event="task_run",
+                ):
+                    run_id = LoggingService.log_task_run_start(
+                        task_id=tid,
+                        user_id=task.user_id,
+                        task_type=task.task_type,
+                        task_name=task.task_name,
+                        trigger="batch",
+                        trace_id=trace_id,
+                        started_at=started_at,
+                    )
+                    logger.info("[批量执行] 开始 | task_id={} user_id={}", tid, task.user_id)
 
-                return {
-                    "task_id": tid,
-                    "success": exec_result.get("success", False),
-                    "message": exec_result.get("message", ""),
-                }
+                    task.execution_status = "running"
+                    task.updated_at = datetime.utcnow()
+                    db.commit()
+
+                    exec_result = BaseTaskService.execute_task(task, user)
+                    duration_ms = int((time.perf_counter() - start_monotonic) * 1000)
+
+                    task.execution_status = "completed" if exec_result.get("success") else "failed"
+                    task.external_status = "success" if exec_result.get("success") else "failed"
+                    task.result = str(exec_result)
+                    task.executed_at = datetime.utcnow()
+                    task.updated_at = datetime.utcnow()
+                    db.commit()
+
+                    status = "success" if exec_result.get("success") else "failed"
+                    message = exec_result.get("message", str(exec_result))
+                    LoggingService.log_task_execution(
+                        task_id=tid,
+                        user_id=task.user_id,
+                        task_type=task.task_type,
+                        status=status,
+                        message=message,
+                        detail={"duration_ms": duration_ms, "trace_id": trace_id},
+                    )
+                    LoggingService.log_task_run_finish(
+                        run_id,
+                        status,
+                        task_id=tid,
+                        user_id=task.user_id,
+                        task_type=task.task_type,
+                        task_name=task.task_name,
+                        trigger="batch",
+                        trace_id=trace_id,
+                        started_at=started_at,
+                        duration_ms=duration_ms,
+                        message=message,
+                        error_type=exec_result.get("error_type"),
+                        result=exec_result,
+                    )
+                    logger.info(
+                        "[批量执行] 结束 | task_id={} status={} duration_ms={}",
+                        tid,
+                        status,
+                        duration_ms,
+                    )
+
+                    return {
+                        "task_id": tid,
+                        "success": exec_result.get("success", False),
+                        "message": message,
+                    }
             except Exception as e:
                 logger.exception(f"批量执行任务 {tid} 异常")
                 try:
@@ -280,6 +330,21 @@ class TaskManagementService:
                         task_type=task.task_type if task else "unknown",
                         status="failed",
                         message=f"批量执行异常: {str(e)}",
+                        detail={"trace_id": trace_id},
+                    )
+                    LoggingService.log_task_run_finish(
+                        run_id,
+                        "failed",
+                        task_id=tid,
+                        user_id=task.user_id if task else None,
+                        task_type=task.task_type if task else "unknown",
+                        task_name=task.task_name if task else None,
+                        trigger="batch",
+                        trace_id=trace_id,
+                        started_at=started_at,
+                        duration_ms=int((time.perf_counter() - start_monotonic) * 1000),
+                        message=f"批量执行异常: {str(e)}",
+                        error_type=type(e).__name__,
                     )
                 except Exception:
                     pass

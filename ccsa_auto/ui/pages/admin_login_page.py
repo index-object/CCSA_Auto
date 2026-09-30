@@ -2,9 +2,12 @@
 
 import asyncio
 from nicegui import ui, app
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.modules.auth.service import AuthService
 from ccsa_auto.modules.auth.session_manager import get_session_manager
 from ccsa_auto.modules.auth.user_state import UserStateService
+
+logger = get_logger(__name__)
 
 
 def create_admin_login_page(navigate_to):
@@ -218,10 +221,14 @@ def create_admin_login_page(navigate_to):
                         },
                     )
 
-                    print(
-                        f"管理员 {result['user']['username']} 登录成功，会话ID: {session_id}"
+                    logger.info(
+                        "管理员 {} 登录成功，会话ID: {}",
+                        result["user"]["username"],
+                        session_id,
                     )
-                    print(f"[管理员登录] 重定向到 /admin_v2?session_id={session_id}")
+                    logger.info(
+                        "[管理员登录] 重定向到 /admin_v2?session_id={}", session_id
+                    )
                     ui.notify("管理员登录成功", type="positive")
 
                     ui.navigate.to(f"/admin_v2?session_id={session_id}")
@@ -230,7 +237,7 @@ def create_admin_login_page(navigate_to):
                     ui.notify(message, type="negative")
             except Exception as e:
                 login_btn.props("loading=False")
-                print(f"管理员登录过程中发生异常: {e}")
+                logger.exception("管理员登录过程中发生异常: {}", e)
                 import traceback
 
                 traceback.print_exc()

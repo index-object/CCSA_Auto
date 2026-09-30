@@ -1,15 +1,15 @@
 """分数控制策略模块"""
 
-import logging
 import random
 from datetime import datetime
 from typing import Dict, Tuple, Optional, Any
 
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.core.user_score_config import get_user_score_config
 from ccsa_auto.modules.task.score_tracker import ScoreTracker
 from ccsa_auto.utils.timezone import get_current_time, SHANGHAI_TZ
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ScoreStrategy:

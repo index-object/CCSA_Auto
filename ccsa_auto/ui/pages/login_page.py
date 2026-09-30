@@ -3,9 +3,12 @@
 import asyncio
 from fastapi.responses import RedirectResponse
 from nicegui import ui
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.modules.auth.service import AuthService
 from ccsa_auto.modules.auth.session_manager import get_session_manager
 from ccsa_auto.modules.auth.user_state import UserStateService
+
+logger = get_logger(__name__)
 
 
 def create_login_page(navigate_to):
@@ -203,10 +206,12 @@ def create_login_page(navigate_to):
                     },
                 )
 
-                print(
-                    f"用户 {result['user']['username']} 登录成功，会话ID: {session_id}"
+                logger.info(
+                    "用户 {} 登录成功，会话ID: {}",
+                    result["user"]["username"],
+                    session_id,
                 )
-                print(f"[登录] 重定向到 /?session_id={session_id}")
+                logger.info("[登录] 重定向到 /?session_id={}", session_id)
 
                 # 使用 NiceGUI 导航跳转，URL 中携带 session_id 参数
                 # 认证中间件会从 URL 参数获取 session_id

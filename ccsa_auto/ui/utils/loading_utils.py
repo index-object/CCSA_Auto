@@ -3,13 +3,13 @@
 """
 
 import asyncio
-import logging
 from typing import Callable, Any
 from functools import wraps
 from nicegui import ui
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.ui.utils.safe_notify import safe_notify_error
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def create_loading_button(text: str, on_click: Callable, **kwargs) -> ui.button:

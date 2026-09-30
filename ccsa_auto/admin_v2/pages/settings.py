@@ -1,6 +1,7 @@
 from nicegui import ui
 
 from ccsa_auto.core.config import Config
+from ccsa_auto.core.logger import logging_status
 
 
 def create_settings_page():
@@ -104,6 +105,79 @@ def create_settings_page():
                     ui.label("天").classes("text-[#6b7280]")
 
             ui.label("日志文件存储在 logs 目录下").classes("text-sm text-[#9ca3af]")
+
+        with ui.card().classes("p-6 mb-6 rounded-2xl shadow-sm bg-white"):
+            with ui.row().classes("items-center justify-between w-full mb-4"):
+                ui.label("日志运行状态").classes(
+                    "text-xl font-semibold text-[#1f2937]"
+                )
+                ui.button("刷新", icon="refresh", on_click=lambda: status_view.refresh()).props(
+                    "flat dense color=primary"
+                )
+
+            @ui.refreshable
+            def status_view():
+                status = logging_status()
+                live_files = status.get("live_files", [])
+                archive_days = status.get("archive_days", [])
+
+                with ui.row().classes("items-center gap-4 w-full mb-2"):
+                    ui.label("日志目录:").classes("w-40 text-[#6b7280]")
+                    ui.label(status.get("log_dir", "-")).classes(
+                        "text-[#1f2937] text-sm break-all"
+                    )
+
+                with ui.row().classes("items-center gap-4 w-full mb-2"):
+                    ui.label("当前进程:").classes("w-40 text-[#6b7280]")
+                    ui.label(
+                        f"{status.get('process_tag')} (pid={status.get('pid')})"
+                    ).classes("text-[#1f2937] text-sm")
+
+                with ui.row().classes("items-center gap-4 w-full mb-2"):
+                    ui.label("级别 / 轮转:").classes("w-40 text-[#6b7280]")
+                    ui.label(
+                        f"{status.get('level')} / {status.get('rotation')}"
+                    ).classes("text-[#1f2937] text-sm")
+
+                with ui.row().classes("items-center gap-4 w-full mb-2"):
+                    ui.label("归档:").classes("w-40 text-[#6b7280]")
+                    ui.label(
+                        f"每天 {Config.LOG_ARCHIVE_HOUR:02d}:"
+                        f"{Config.LOG_ARCHIVE_MINUTE:02d}，保留 "
+                        f"{status.get('retention_days')} 天，已归档 "
+                        f"{len(archive_days)} 天"
+                    ).classes("text-[#1f2937] text-sm")
+
+                with ui.row().classes("items-start gap-4 w-full mb-2"):
+                    ui.label("运行日志文件:").classes("w-40 text-[#6b7280]")
+                    with ui.column().classes("gap-1"):
+                        if not live_files:
+                            ui.label("暂无").classes("text-[#9ca3af] text-sm")
+                        for item in live_files:
+                            ui.label(
+                                f"{item['name']} · {item['size']} B · {item['modified']}"
+                            ).classes("text-[#1f2937] text-xs break-all")
+
+                with ui.row().classes("items-center gap-4 w-full"):
+                    ui.label("历史归档:").classes("w-40 text-[#6b7280]")
+                    if not archive_days:
+                        ui.label("暂无").classes("text-[#9ca3af] text-sm")
+                    else:
+                        names = [
+                            f"{d['day']}({','.join(d['channels'])})"
+                            for d in archive_days[-5:]
+                        ]
+                        ui.label("、".join(names)).classes(
+                            "text-[#1f2937] text-xs break-all"
+                        )
+
+            status_view()
+
+            ui.label(
+                "渠道说明: app(系统) / task(任务) / access(客户访问, JSON 行) / "
+                "error(所有错误汇总)；每进程独立文件，每天 00:05 归档到 "
+                "logs/archive/<日期>/"
+            ).classes("text-sm text-[#9ca3af] mt-3")
 
         with ui.card().classes("p-6 mb-6 rounded-2xl shadow-sm bg-white"):
             ui.label("会话配置").classes("text-xl font-semibold mb-4 text-[#1f2937]")

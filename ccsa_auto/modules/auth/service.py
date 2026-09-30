@@ -12,6 +12,7 @@ from refactored_code.config import Config as RefactoredConfig
 
 from ccsa_auto.core.config import Config
 from ccsa_auto.core.database import SessionLocal
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.core.models import User
 from ccsa_auto.modules.logging.service import LoggingService
 from ccsa_auto.utils.password import hash_password
@@ -19,6 +20,8 @@ from ccsa_auto.utils.jwt import create_access_token
 
 # 用于防止配置修改冲突的锁
 _config_lock = threading.Lock()
+
+logger = get_logger(__name__)
 
 
 class AuthService:
@@ -50,7 +53,7 @@ class AuthService:
             db.refresh(user)
             return True
         except Exception as e:
-            print(f"保存外部令牌失败: {e}")
+            logger.exception("保存外部令牌失败: {}", e)
             db.rollback()
             return False
         finally:
@@ -79,7 +82,7 @@ class AuthService:
 
             # 如果强制刷新，直接尝试重新登录
             if force_refresh:
-                print(f"强制刷新用户 {user_id} 的令牌...")
+                logger.info("强制刷新用户 {} 的令牌...", user_id)
                 if user.external_username and user.external_password:
                     auth_success, _, new_token = AuthService.authenticate_external(
                         user.external_username, user.external_password
@@ -95,13 +98,13 @@ class AuthService:
                 return user.external_token
 
             # 令牌已过期，尝试刷新
-            print(f"用户 {user_id} 的令牌已过期，尝试刷新...")
+            logger.info("用户 {} 的令牌已过期，尝试刷新...", user_id)
             refreshed_token = AuthService.refresh_external_token(user)
             if refreshed_token:
                 return refreshed_token
 
             # 刷新失败，尝试重新登录
-            print(f"令牌刷新失败，尝试重新登录用户 {user_id}...")
+            logger.warning("令牌刷新失败，尝试重新登录用户 {}...", user_id)
             if user.external_username and user.external_password:
                 auth_success, _, new_token = AuthService.authenticate_external(
                     user.external_username, user.external_password
@@ -137,7 +140,7 @@ class AuthService:
                     AuthService.save_external_token(user.id, new_token)
                     return new_token
         except Exception as e:
-            print(f"刷新令牌失败: {e}")
+            logger.exception("刷新令牌失败: {}", e)
 
         return None
 
@@ -198,7 +201,7 @@ class AuthService:
                     RefactoredConfig.LOGIN_DATA["password"] = original_password
 
         except Exception as e:
-            print(f"外部平台认证失败: {e}")
+            logger.exception("外部平台认证失败: {}", e)
             error_info = {
                 "code": 500,
                 "msg": f"外部平台认证失败: {str(e)}",
@@ -238,10 +241,12 @@ class AuthService:
                     "company_name": data.get("companyName", ""),
                 }
             else:
-                print(f"获取用户信息失败: {response_data.get('msg', '未知错误')}")
+                logger.warning(
+                    "获取用户信息失败: {}", response_data.get("msg", "未知错误")
+                )
                 return {"username": "", "company_name": ""}
         except Exception as e:
-            print(f"调用用户信息API时发生异常: {e}")
+            logger.exception("调用用户信息API时发生异常: {}", e)
             return {"username": "", "company_name": ""}
 
     @staticmethod
@@ -318,9 +323,11 @@ class AuthService:
                 from ccsa_auto.modules.task.service import TaskService
 
                 TaskService.create_default_tasks_for_user(new_user.id)
-                print(f"为用户 {new_user.id} 创建默认任务成功")
+                logger.info("为用户 {} 创建默认任务成功", new_user.id)
             except Exception as e:
-                print(f"为用户 {new_user.id} 创建默认任务失败: {e}")
+                logger.exception(
+                    "为用户 {} 创建默认任务失败: {}", new_user.id, e
+                )
                 # 任务创建失败不影响用户注册
 
             return new_user
@@ -502,7 +509,7 @@ class AuthService:
                 # 获取有效令牌
                 token = AuthService.get_valid_external_token(user_id)
                 if not token:
-                    print(f"获取用户 {user_id} 的令牌失败")
+                    logger.warning("获取用户 {} 的令牌失败", user_id)
                     return None
 
                 headers = AuthService._platform_headers(token)
@@ -513,10 +520,10 @@ class AuthService:
 
                 # 检查响应状态
                 if response.status_code != 200:
-                    print(f"获取积分信息失败: HTTP状态码 {response.status_code}")
+                    logger.warning("获取积分信息失败: HTTP状态码 {}", response.status_code)
                     # 如果是认证失败，尝试刷新令牌
                     if response.status_code == 401 or response.status_code == 403:
-                        print(f"认证失败，尝试刷新用户 {user_id} 的令牌...")
+                        logger.warning("认证失败，尝试刷新用户 {} 的令牌...", user_id)
                         AuthService.get_valid_external_token(
                             user_id, force_refresh=True
                         )
@@ -531,7 +538,7 @@ class AuthService:
                     }
                 else:
                     error_msg = data.get("msg", "未知错误") if data else "响应数据为空"
-                    print(f"获取积分信息失败: {error_msg}")
+                    logger.warning("获取积分信息失败: {}", error_msg)
 
                     # 检查是否是认证错误
                     if (
@@ -539,7 +546,7 @@ class AuthService:
                         or "token" in error_msg.lower()
                         or "auth" in error_msg.lower()
                     ):
-                        print(f"检测到认证错误，尝试刷新用户 {user_id} 的令牌...")
+                        logger.warning("检测到认证错误，尝试刷新用户 {} 的令牌...", user_id)
                         AuthService.get_valid_external_token(
                             user_id, force_refresh=True
                         )
@@ -547,9 +554,9 @@ class AuthService:
 
                     return None
             except Exception as e:
-                print(f"调用积分信息API时发生异常: {e}")
+                logger.exception("调用积分信息API时发生异常: {}", e)
                 if attempt < max_retries - 1:
-                    print(f"第 {attempt + 1} 次尝试失败，准备重试...")
+                    logger.warning("第 {} 次尝试失败，准备重试...", attempt + 1)
                 else:
                     return None
 
@@ -574,7 +581,7 @@ class AuthService:
 
             # 检查响应状态
             if response.status_code != 200:
-                print(f"获取积分信息失败: HTTP状态码 {response.status_code}")
+                logger.warning("获取积分信息失败: HTTP状态码 {}", response.status_code)
                 return None
 
             data = response.json()
@@ -585,10 +592,10 @@ class AuthService:
                 }
             else:
                 error_msg = data.get("msg", "未知错误") if data else "响应数据为空"
-                print(f"获取积分信息失败: {error_msg}")
+                logger.warning("获取积分信息失败: {}", error_msg)
                 return None
         except Exception as e:
-            print(f"调用积分信息API时发生异常: {e}")
+            logger.exception("调用积分信息API时发生异常: {}", e)
             return None
 
     @staticmethod
@@ -654,7 +661,7 @@ class AuthService:
                 # 获取有效令牌
                 token = AuthService.get_valid_external_token(user_id)
                 if not token:
-                    print(f"获取用户 {user_id} 的令牌失败")
+                    logger.warning("获取用户 {} 的令牌失败", user_id)
                     return None
 
                 task_status, error_msg, is_auth_error = (
@@ -663,16 +670,16 @@ class AuthService:
                 if task_status is not None:
                     return task_status
 
-                print(f"获取任务完成情况失败: {error_msg}")
+                logger.warning("获取任务完成情况失败: {}", error_msg)
                 if is_auth_error and attempt < max_retries - 1:
-                    print(f"认证失败，尝试刷新用户 {user_id} 的令牌...")
+                    logger.warning("认证失败，尝试刷新用户 {} 的令牌...", user_id)
                     AuthService.get_valid_external_token(user_id, force_refresh=True)
                     continue
                 return None
             except Exception as e:
-                print(f"调用任务完成情况API时发生异常: {e}")
+                logger.exception("调用任务完成情况API时发生异常: {}", e)
                 if attempt < max_retries - 1:
-                    print(f"第 {attempt + 1} 次尝试失败，准备重试...")
+                    logger.warning("第 {} 次尝试失败，准备重试...", attempt + 1)
                 else:
                     return None
 
@@ -691,8 +698,8 @@ class AuthService:
         try:
             task_status, error_msg, _ = AuthService._fetch_task_status(token)
             if task_status is None:
-                print(f"获取任务完成情况失败: {error_msg}")
+                logger.warning("获取任务完成情况失败: {}", error_msg)
             return task_status
         except Exception as e:
-            print(f"调用任务完成情况API时发生异常: {e}")
+            logger.exception("调用任务完成情况API时发生异常: {}", e)
             return None

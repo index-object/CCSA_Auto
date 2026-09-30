@@ -15,12 +15,19 @@ from ccsa_auto.modules.task.service import TaskService
 from ccsa_auto.modules.logging.service import LoggingService, LogType
 from ccsa_auto.modules.logging.models import AppLog
 from ccsa_auto.core.config import Config
-from ccsa_auto.core.logger import setup_logger
+from ccsa_auto.core.logger import (
+    get_logger,
+    get_task_logger,
+    log_context,
+    new_trace_id,
+    archive_logs,
+    trigger_rotation,
+    ensure_process_logging,
+)
 from ccsa_auto.utils.timezone import (
     get_current_time,
     get_current_utc_time,
     utc_to_shanghai,
-    shanghai_to_utc,
     format_datetime_for_display,
     format_datetime_short,
     SHANGHAI_TZ,
@@ -30,7 +37,8 @@ from ccsa_auto.utils.timezone import (
 
 from ccsa_auto.core.email_sender import send_email
 
-logger = setup_logger(__name__)
+logger = get_logger(__name__)
+task_logger = get_task_logger(__name__)
 
 # 全局初始化标记，防止热重载导致重复初始化
 _scheduler_initialized = False
@@ -57,7 +65,45 @@ def cleanup_expired_sessions_job():
         if count > 0:
             logger.info(f"定时任务：已清理 {count} 个过期会话")
     except Exception as e:
-        logger.error(f"清理过期会话任务失败：{e}")
+        logger.exception(f"清理过期会话任务失败：{e}")
+
+
+ARCHIVE_JOB_ID = "archive_app_logs"
+
+
+def archive_app_logs_job(force_startup: bool = False):
+    """把各进程 live 日志按天合并归档到 logs/archive/YYYY-MM-DD/。
+
+    先写一条心跳日志，促使 Loguru 完成跨天轮转，再做归档。
+    """
+    ensure_process_logging()
+    try:
+        trigger_rotation()
+        stats = archive_logs()
+        if stats.get("skipped"):
+            logger.debug("日志归档：另一个进程正在执行，本轮跳过")
+            return
+        logger.info(
+            "日志归档完成 | 处理文件数={} 记录数={} 归档天数={} 清理天数={}",
+            stats.get("archived_files", 0),
+            stats.get("archived_records", 0),
+            len(stats.get("days", [])),
+            len(stats.get("deleted_days", [])),
+        )
+    except Exception as e:
+        logger.exception(f"日志归档失败：{e}")
+
+
+def cleanup_db_logs_job():
+    """清理过期的数据库日志台账与任务运行记录。"""
+    try:
+        deleted = LoggingService.cleanup_old_logs(
+            days=Config.LOG_RETENTION_DAYS,
+            task_run_days=Config.LOG_TASK_RUN_RETENTION_DAYS,
+        )
+        logger.info(f"数据库日志清理完成，共删除 {deleted} 条")
+    except Exception as e:
+        logger.exception(f"数据库日志清理失败：{e}")
 
 
 FIXER_JOB_ID = "system_task_fixer"
@@ -142,125 +188,237 @@ def fix_stale_tasks_job():
 scheduler = _get_scheduler()
 
 
-def execute_user_task(task_id):
+def _finalize_task_run(
+    run_id,
+    status,
+    *,
+    task_id,
+    user_id,
+    task_type,
+    task_name,
+    user_name,
+    trace_id,
+    started_at_utc,
+    duration_ms,
+    result=None,
+    message=None,
+    error_type=None,
+    next_run_time=None,
+):
+    """同时写入“任务运行记录”（精确）与“任务执行台账”（失败日报依赖）。"""
+    result = result or {}
+    # next_run_time 由 calculate_next_run_time_utc 生成，语义是 UTC（可能为 naive）
+    next_run_utc = ensure_utc_timezone(next_run_time)
+    LoggingService.log_task_run_finish(
+        run_id,
+        status,
+        task_id=task_id,
+        user_id=user_id,
+        task_type=task_type,
+        task_name=task_name,
+        trace_id=trace_id,
+        started_at=started_at_utc,
+        duration_ms=duration_ms,
+        message=message,
+        error_type=error_type,
+        result=result,
+        next_run_time=next_run_utc,
+    )
+    LoggingService.log_task_execution(
+        task_id=task_id,
+        user_id=user_id or 0,
+        task_type=task_type or "unknown",
+        status="success" if status == "success" else "failed",
+        message=message or ("执行成功" if status == "success" else "执行失败"),
+        detail={"duration_ms": duration_ms, "trace_id": trace_id},
+    )
+
+
+def execute_user_task(task_id, trigger="schedule"):
     """
     执行用户任务
 
     Args:
         task_id: 任务ID
+        trigger: 触发方式（schedule/manual/batch/fixer），仅用于日志与运行记录
     """
+    ensure_process_logging()
     db = SessionLocal()
     thread_id = threading.current_thread().ident
     job_id = f"user_task_{task_id}"
+    trace_id = new_trace_id()
+    started_at_utc = datetime.utcnow()
+    started_monotonic = time.perf_counter()
+    run_id = None
+    task = None
     user_name = "未知"
     task_name = f"task_{task_id}"
-    task = None
+    task_type = "unknown"
+    user_id = None
 
     try:
         task = db.query(Task).filter_by(id=task_id).first()
         if not task:
             logger.error(
-                f"[任务调度] 任务不存在 | task_id={task_id} | thread_id={thread_id}"
+                f"[任务调度] 任务不存在 | task_id={task_id} | thread_id={thread_id} | trace_id={trace_id}"
             )
             return
 
         user = db.query(User).filter_by(id=task.user_id).first()
         user_name = user.name if user else "未知"
+        task_name = task.task_name or f"task_{task_id}"
+        task_type = task.task_type
+        user_id = task.user_id
 
-        logger.info(
-            f"[任务调度] 开始执行任务 | task_id={task_id} | job_id={job_id} | task_type={task.task_type} | user={user_name}({task.user_id}) | thread_id={thread_id} | execution_status={task.execution_status}"
-        )
-
-        if not task.is_active:
-            logger.info(
-                f"[任务调度] 任务未激活，跳过执行 | task_id={task_id} | task_name={task.task_name} | user={user_name}({task.user_id}) | thread_id={thread_id}"
+        with log_context(
+            trace_id=trace_id,
+            task_id=task_id,
+            task_name=task_name,
+            user_id=user_id,
+            user_name=user_name,
+            event="task_run",
+        ):
+            task_logger.info(
+                "[任务调度] 开始执行任务 | job_id={} | task_type={} | trigger={} | thread_id={} | execution_status={}",
+                job_id,
+                task_type,
+                trigger,
+                thread_id,
+                task.execution_status,
             )
-            return
 
-        task.execution_status = "running"
-        task.updated_at = datetime.utcnow()
-        db.commit()
-        logger.info(
-            f"[任务调度] 任务状态已更新 | task_id={task_id} | status=pending→running | thread_id={thread_id}"
-        )
+            run_id = LoggingService.log_task_run_start(
+                task_id=task_id,
+                user_id=user_id,
+                task_type=task_type,
+                task_name=task_name,
+                trigger=trigger,
+                trace_id=trace_id,
+                started_at=started_at_utc,
+            )
 
-        # 执行任务
-        exec_start_time = time.time()
-        logger.info(
-            f"[任务调度] 调用TaskService.execute_task | task_id={task_id} | task_type={task.task_type} | user={task.user_id} | thread_id={thread_id}"
-        )
-        result = TaskService.execute_task(task, user)
-        exec_end_time = time.time()
-        exec_duration = exec_end_time - exec_start_time
-        logger.info(
-            f"[任务调度] TaskService.execute_task返回 | task_id={task_id} | duration={exec_duration:.3f}s | result_success={result.get('success')} | thread_id={thread_id}"
-        )
-        logger.debug(
-            f"[任务调度] 执行结果详情 | task_id={task_id} | result={result} | thread_id={thread_id}"
-        )
+            if not task.is_active:
+                task_logger.info("[任务调度] 任务未激活，跳过执行")
+                _finalize_task_run(
+                    run_id,
+                    "skipped",
+                    task_id=task_id,
+                    user_id=user_id,
+                    task_type=task_type,
+                    task_name=task_name,
+                    user_name=user_name,
+                    trace_id=trace_id,
+                    started_at_utc=started_at_utc,
+                    duration_ms=int((time.perf_counter() - started_monotonic) * 1000),
+                    message="任务未激活，跳过执行",
+                )
+                return
 
-        # 获取当前执行时间（上海时间）
-        executed_at_shanghai = get_current_time()
+            task.execution_status = "running"
+            task.updated_at = datetime.utcnow()
+            db.commit()
+            task_logger.debug("[任务调度] 任务状态已更新 | pending→running")
 
-        # 更新任务状态
-        task.execution_status = "completed" if result.get("success") else "failed"
-        task.external_status = "success" if result.get("success") else "failed"
-        task.result = str(result)
-        task.executed_at = datetime.utcnow()
-        task.updated_at = datetime.utcnow()
-        logger.info(
-            f"[任务调度] 更新任务状态 | task_id={task_id} | execution_status={task.execution_status} | external_status={task.external_status} | thread_id={thread_id}"
-        )
+            # 执行任务
+            exec_start_time = time.time()
+            result = TaskService.execute_task(task, user)
+            exec_duration = time.time() - exec_start_time
+            duration_ms = int((time.perf_counter() - started_monotonic) * 1000)
+            task_logger.info(
+                "[任务调度] TaskService 返回 | duration={}s | success={} | message={}",
+                f"{exec_duration:.3f}",
+                result.get("success"),
+                result.get("message"),
+            )
+            task_logger.debug("[任务调度] 执行结果详情 | result={}", result)
 
-        # 基于执行时间计算下次运行时间（确保是明天）
-        if task.is_active:
+            # 获取当前执行时间（上海时间）
+            executed_at_shanghai = get_current_time()
+
+            # 更新任务状态
+            task.execution_status = "completed" if result.get("success") else "failed"
+            task.external_status = "success" if result.get("success") else "failed"
+            task.result = str(result)
+            task.executed_at = datetime.utcnow()
+            task.updated_at = datetime.utcnow()
+            task_logger.debug(
+                "[任务调度] 更新任务状态 | execution_status={} | external_status={}",
+                task.execution_status,
+                task.external_status,
+            )
+
+            # 基于执行时间计算下次运行时间（确保是明天）
+            if task.is_active:
+                try:
+                    task.next_run_time = calculate_next_run_time_utc(
+                        task, executed_at_shanghai
+                    )
+                except Exception as e:
+                    logger.error(f"计算下次运行时间失败: {e}")
+                    task.next_run_time = get_current_utc_time() + timedelta(days=1)
+
+            db.commit()
+
+            # 重新调度下一次执行
             try:
-                task.next_run_time = calculate_next_run_time_utc(
-                    task, executed_at_shanghai
+                add_task_to_scheduler(task.id)
+                task_logger.info(
+                    "任务已重新调度 | next_run_time={}",
+                    format_datetime_for_display(task.next_run_time),
                 )
             except Exception as e:
-                logger.error(f"计算下次运行时间失败: {e}")
-                task.next_run_time = get_current_utc_time() + timedelta(days=1)
+                logger.error(f"重新调度任务 {task_id} 失败: {e}")
 
-        db.commit()
+            if result.get("success"):
+                task_logger.info(
+                    "[任务调度] 任务执行成功 | duration_ms={}", duration_ms
+                )
+            else:
+                task_logger.error(
+                    "[任务调度] 任务执行失败 | duration_ms={} | error={}",
+                    duration_ms,
+                    result.get("message"),
+                )
 
-        # 重新调度下一次执行
-        try:
-            add_task_to_scheduler(task.id)
-            logger.info(
-                f"任务 {task_id} 已重新调度，下次运行时间: {format_datetime_for_display(task.next_run_time)}"
+            _finalize_task_run(
+                run_id,
+                "success" if result.get("success") else "failed",
+                task_id=task_id,
+                user_id=user_id,
+                task_type=task_type,
+                task_name=task_name,
+                user_name=user_name,
+                trace_id=trace_id,
+                started_at_utc=started_at_utc,
+                duration_ms=duration_ms,
+                result=result,
+                message=result.get("message") or str(result),
+                error_type=None if result.get("success") else _classify_error(result),
+                next_run_time=task.next_run_time,
             )
-        except Exception as e:
-            logger.error(f"重新调度任务 {task_id} 失败: {e}")
-
-        if result.get("success"):
-            logger.info(
-                f"[任务调度] 任务执行成功 | task_id={task_id} | task_name={task.task_name} | user={user_name}({task.user_id}) | thread_id={thread_id}"
-            )
-        else:
-            logger.error(
-                f"[任务调度] 任务执行失败 | task_id={task_id} | task_name={task.task_name} | user={user_name}({task.user_id}) | error={result.get('message')} | thread_id={thread_id}"
-            )
-
-        LoggingService.log_task_execution(
-            task_id=task_id,
-            user_id=task.user_id,
-            task_type=task.task_type,
-            status="success" if result.get("success") else "failed",
-            message=result.get("message", str(result)),
-        )
 
     except Exception as e:
+        duration_ms = int((time.perf_counter() - started_monotonic) * 1000)
         logger.exception(
-            f"[任务调度] 执行任务异常 | task_id={task_id} | error={str(e)} | thread_id={thread_id}"
+            f"[任务调度] 执行任务异常 | task_id={task_id} | error={str(e)} | thread_id={thread_id} | trace_id={trace_id}"
         )
-        LoggingService.log_task_execution(
-            task_id=task_id,
-            user_id=task.user_id if task else None,
-            task_type=task.task_type if task else "unknown",
-            status="failed",
-            message=f"异常: {str(e)}",
-        )
+        try:
+            _finalize_task_run(
+                run_id,
+                "failed",
+                task_id=task_id,
+                user_id=user_id,
+                task_type=task_type,
+                task_name=task_name,
+                user_name=user_name,
+                trace_id=trace_id,
+                started_at_utc=started_at_utc,
+                duration_ms=duration_ms,
+                message=f"异常: {str(e)}",
+                error_type=type(e).__name__,
+            )
+        except Exception:
+            pass
 
         # 更新任务状态为失败
         try:
@@ -280,6 +438,29 @@ def execute_user_task(task_id):
             logger.error(f"更新任务 {task_id} 状态失败: {update_error}")
     finally:
         db.close()
+
+
+def _classify_error(result) -> str:
+    """按失败信息粗分错误类型，便于后台按类型统计。"""
+    message = str(result.get("message", "")) if isinstance(result, dict) else ""
+    if not isinstance(result, dict):
+        return "Unknown"
+    if isinstance(result.get("error_type"), str) and result["error_type"]:
+        return result["error_type"]
+    for keyword, error_type in (
+        ("认证", "AuthError"),
+        ("token", "TokenError"),
+        ("Token", "TokenError"),
+        ("超时", "TimeoutError"),
+        ("timeout", "TimeoutError"),
+        ("连接", "NetworkError"),
+        ("无法获取", "FetchError"),
+        ("提交失败", "SubmitError"),
+        ("未返回", "EmptyDataError"),
+    ):
+        if keyword in message:
+            return error_type
+    return "TaskError"
 
 
 # 失败日报统计水位持久化 key（值为 app_logs.id）。
@@ -511,21 +692,45 @@ def init_scheduler():
                 scheduler.remove_job(FIXER_JOB_ID)
                 logger.info("任务修复器已禁用，已从调度器移除")
 
-        # 添加日志清理定时任务（每天凌晨3点执行，保留60天）
-        from ccsa_auto.modules.logging.service import LoggingService
-
+        # 日志归档：每天把各进程 live 日志合并到 logs/archive/YYYY-MM-DD/
         scheduler.add_job(
-            func=lambda: LoggingService.cleanup_old_logs(days=60),
+            func=archive_app_logs_job,
+            trigger=CronTrigger(
+                hour=Config.LOG_ARCHIVE_HOUR,
+                minute=Config.LOG_ARCHIVE_MINUTE,
+                timezone="Asia/Shanghai",
+            ),
+            id=ARCHIVE_JOB_ID,
+            name="日志每日归档",
+            replace_existing=True,
+        )
+        logger.info(
+            f"已添加日志每日归档定时任务（每天 {Config.LOG_ARCHIVE_HOUR:02d}:"
+            f"{Config.LOG_ARCHIVE_MINUTE:02d}）"
+        )
+
+        # 数据库日志台账清理（每天凌晨3点）
+        scheduler.add_job(
+            func=cleanup_db_logs_job,
             trigger=CronTrigger(hour=3, minute=0, timezone="Asia/Shanghai"),
             id="cleanup_logs",
             name="清理过期日志",
             replace_existing=True,
         )
-        logger.info("已添加日志清理定时任务（每天凌晨3点执行，保留60天）")
+        logger.info(
+            f"已添加日志清理定时任务（每天凌晨3点执行，台账保留 "
+            f"{Config.LOG_RETENTION_DAYS} 天，运行记录保留 "
+            f"{Config.LOG_TASK_RUN_RETENTION_DAYS} 天）"
+        )
 
         scheduler.start()
         _scheduler_initialized = True
         logger.info("任务调度器初始化完成并已启动")
+
+        # 启动时补一次归档，避免上次退出遗留的日志长期堆在 live 目录
+        threading.Thread(
+            target=archive_app_logs_job, name="startup-log-archive", daemon=True
+        ).start()
 
     except Exception as e:
         logger.error(f"初始化任务调度器失败: {e}")

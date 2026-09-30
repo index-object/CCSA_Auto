@@ -1,11 +1,10 @@
 """每用户控分策略配置读取/保存"""
 
-import logging
-
 from ccsa_auto.core.database import SessionLocal
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.core.models import User
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # 与 models.User 对应列的默认值保持一致
 DEFAULT_SCORE_CONFIG = {

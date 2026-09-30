@@ -3,8 +3,11 @@ from typing import Optional, Dict, Any
 from sqlalchemy.exc import SQLAlchemyError
 
 from ccsa_auto.core.database import SessionLocal
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.core.models import AuthSession
 from ccsa_auto.core.config import Config
+
+logger = get_logger(__name__)
 
 
 class UserStateService:
@@ -48,7 +51,7 @@ class UserStateService:
             return True
         except SQLAlchemyError as e:
             db.rollback()
-            print(f"保存用户状态失败: {e}")
+            logger.exception("保存用户状态失败: {}", e)
             return False
         finally:
             db.close()
@@ -91,7 +94,7 @@ class UserStateService:
 
             return state
         except SQLAlchemyError as e:
-            print(f"获取用户状态失败: {e}")
+            logger.exception("获取用户状态失败: {}", e)
             return None
         finally:
             db.close()
@@ -125,7 +128,7 @@ class UserStateService:
             return True
         except SQLAlchemyError as e:
             db.rollback()
-            print(f"清除用户状态失败: {e}")
+            logger.exception("清除用户状态失败: {}", e)
             return False
         finally:
             db.close()
@@ -155,7 +158,7 @@ class UserStateService:
             return True
         except SQLAlchemyError as e:
             db.rollback()
-            print(f"更新外部令牌失败: {e}")
+            logger.exception("更新外部令牌失败: {}", e)
             return False
         finally:
             db.close()
@@ -178,7 +181,7 @@ class UserStateService:
             session = db.query(AuthSession).filter_by(session_id=session_id).first()
             return session.referrer_path if session else None
         except SQLAlchemyError as e:
-            print(f"获取referrer路径失败: {e}")
+            logger.exception("获取referrer路径失败: {}", e)
             return None
         finally:
             db.close()
@@ -208,7 +211,7 @@ class UserStateService:
             return True
         except SQLAlchemyError as e:
             db.rollback()
-            print(f"设置referrer路径失败: {e}")
+            logger.exception("设置referrer路径失败: {}", e)
             return False
         finally:
             db.close()
@@ -238,7 +241,7 @@ class UserStateService:
             return True
         except SQLAlchemyError as e:
             db.rollback()
-            print(f"设置认证状态失败: {e}")
+            logger.exception("设置认证状态失败: {}", e)
             return False
         finally:
             db.close()

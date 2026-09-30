@@ -3,11 +3,12 @@
 提供在UI上下文可能失效时仍能安全执行的notify封装
 """
 
-import logging
 from typing import Optional
 from nicegui import ui
 
-logger = logging.getLogger(__name__)
+from ccsa_auto.core.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def safe_notify(

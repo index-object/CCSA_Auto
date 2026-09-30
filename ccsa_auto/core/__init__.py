@@ -2,6 +2,7 @@
 
 from ccsa_auto.core.config import Config
 from ccsa_auto.core.database import Base, engine, get_db
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.core.models import (
     User,
     Task,
@@ -12,9 +13,16 @@ from ccsa_auto.core.models import (
     QuestionBank,
 )
 
+# 注意：这里不能命名为 logger，否则会遮蔽子模块 ccsa_auto.core.logger
+_logger = get_logger(__name__)
+
 
 # 创建数据库表
 def create_tables():
+    # 日志相关表定义在 modules.logging.models，这里显式导入以注册到 Base.metadata，
+    # 保证 app_logs / task_run_logs 会被 create_all 创建。
+    from ccsa_auto.modules.logging import models as _logging_models  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
 
 
@@ -36,6 +44,6 @@ def init_admin():
             )
             db.add(admin_user)
             db.commit()
-            print("默认管理员已创建")
+            _logger.info("默认管理员已创建")
     finally:
         db.close()

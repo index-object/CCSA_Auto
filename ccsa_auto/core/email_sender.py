@@ -6,7 +6,9 @@ from email.header import Header
 from email.mime.text import MIMEText
 from email.utils import formataddr
 
-from loguru import logger
+from ccsa_auto.core.logger import get_logger
+
+logger = get_logger(__name__)
 
 _CONFIG_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),

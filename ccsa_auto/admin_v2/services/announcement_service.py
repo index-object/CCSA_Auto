@@ -1,14 +1,14 @@
-import logging
 from typing import Dict, Any, List, Optional
 
 from ccsa_auto.core.database import SessionLocal
+from ccsa_auto.core.logger import get_logger
 from ccsa_auto.core.models import Announcement, AnnouncementRead, User
 from ccsa_auto.modules.announcement.service import (
     AnnouncementService as BaseAnnouncementService,
 )
 from ccsa_auto.utils.timezone import format_datetime_for_display
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class AnnouncementManagementService:
