@@ -7,3 +7,9 @@ logs/
 .worktrees/
 email_config.json
 *.db
+
+# 抓包调试产物：含 mitmproxy CA 私钥与原始 API 流量（Cookie/Token），禁止入库
+.mitmproxy/
+接口信息收集/captured/
+scripts/capture_api.py
+scripts/capture_playwright.py
