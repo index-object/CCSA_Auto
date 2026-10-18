@@ -246,6 +246,63 @@ def test_task_status_parsing():
     check("无认证错误", is_auth_error is False)
 
 
+def test_weekly_submit_payload():
+    print("\n[8] 每周一课提交 payload")
+    from ccsa_auto.modules.task import service as task_service
+    from ccsa_auto.modules.task.score_tracker import ScoreTracker
+
+    captured = {}
+
+    def fake_get(url, headers=None, params=None, **kwargs):
+        if url.endswith("getRegularStudyWeek"):
+            return _FakeResponse({"code": 200, "data": {"id": "w1"}})
+        if url.endswith("/regularCourseWeek/w1"):
+            return _FakeResponse(
+                {
+                    "code": 200,
+                    "data": {
+                        "id": "w1",
+                        "resourceId": "r1",
+                        "resourceUrl": "v1",
+                        "resourceDuration": 606,
+                    },
+                }
+            )
+        if url.endswith("courseWeekPlayAuth/w1"):
+            return _FakeResponse({"code": 200, "data": {"playAuth": "x"}})
+        raise AssertionError(f"unexpected url {url}")
+
+    def fake_post(url, headers=None, json=None, **kwargs):
+        captured["url"] = url
+        captured["payload"] = json
+        return _FakeResponse({"code": 200, "msg": "操作成功", "data": None})
+
+    original_get = task_service.requests.get
+    original_post = task_service.requests.post
+    original_record = ScoreTracker.record_score
+    task_service.requests.get = fake_get
+    task_service.requests.post = fake_post
+    ScoreTracker.record_score = staticmethod(lambda **kwargs: None)
+    try:
+        result = TaskService.execute_weekly_lesson("token", 5, "测试用户")
+    finally:
+        task_service.requests.get = original_get
+        task_service.requests.post = original_post
+        ScoreTracker.record_score = original_record
+
+    check("执行成功", result.get("success") is True, result)
+    check(
+        "提交到 progressReporter",
+        captured.get("url", "").endswith("weeklyCourse/progressReporter"),
+        captured.get("url"),
+    )
+    payload = captured.get("payload") or {}
+    # weeklyCourseId 缺失时平台返回 200 但不登记完成（2026-10 平台前端新增字段）
+    check("含 weeklyCourseId", payload.get("weeklyCourseId") == "w1", payload)
+    check("含 studyAssociationId", payload.get("studyAssociationId") == "w1", payload)
+    check("studySchedule=100", payload.get("studySchedule") == 100, payload)
+
+
 def main():
     print("=" * 60)
     print("第三方平台 v2 接口适配验证")
@@ -257,6 +314,7 @@ def main():
     test_build_questions()
     test_endpoint_map()
     test_task_status_parsing()
+    test_weekly_submit_payload()
     print("\n" + "=" * 60)
     print(f"全部通过：{_passed} 项检查")
     print("=" * 60)

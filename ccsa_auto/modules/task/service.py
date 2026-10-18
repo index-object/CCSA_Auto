@@ -654,12 +654,14 @@ class TaskService:
             ]
             submit_headers = TaskService._build_headers(access_token)
 
+            # 字段与平台前端（learnCenter 页 Me 函数）一致：缺少 weeklyCourseId 时
+            # 接口仍返回 200 但平台不登记完成（2026-10 起）
             payload = {
                 "studyProgressTime": resource_duration,
                 "studyDuration": resource_duration,
                 "studyAssociationId": week_id,
                 "studyType": 4,
-                "courseResourceRelationId": resource_id,
+                "weeklyCourseId": week_id,
                 "studySchedule": 100,
             }
 
