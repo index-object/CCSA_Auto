@@ -274,7 +274,7 @@ def test_weekly_submit_payload():
 
     def fake_post(url, headers=None, json=None, **kwargs):
         captured["url"] = url
-        captured["payload"] = json
+        captured.setdefault("payloads", []).append(json)
         return _FakeResponse({"code": 200, "msg": "操作成功", "data": None})
 
     original_get = task_service.requests.get
@@ -296,11 +296,26 @@ def test_weekly_submit_payload():
         captured.get("url", "").endswith("weeklyCourse/progressReporter"),
         captured.get("url"),
     )
-    payload = captured.get("payload") or {}
+    payloads = captured.get("payloads") or []
+    # 平台按「本次观看增量」记账：单次 studyDuration 超过 120 秒的部分会被
+    # 静默丢弃，必须按 120 秒步长累加上报（2026-10 平台新增校验）
+    check("分步上报", len(payloads) == 6, [p.get("studyProgressTime") for p in payloads])
+    check(
+        "每步 studyDuration=120",
+        all(p.get("studyDuration") == 120 for p in payloads),
+        [p.get("studyDuration") for p in payloads],
+    )
+    check(
+        "进度递增至总时长",
+        [p.get("studyProgressTime") for p in payloads] == [120, 240, 360, 480, 600, 606],
+        [p.get("studyProgressTime") for p in payloads],
+    )
+    last = payloads[-1] if payloads else {}
     # weeklyCourseId 缺失时平台返回 200 但不登记完成（2026-10 平台前端新增字段）
-    check("含 weeklyCourseId", payload.get("weeklyCourseId") == "w1", payload)
-    check("含 studyAssociationId", payload.get("studyAssociationId") == "w1", payload)
-    check("studySchedule=100", payload.get("studySchedule") == 100, payload)
+    check("含 weeklyCourseId", last.get("weeklyCourseId") == "w1", last)
+    check("含 studyAssociationId", last.get("studyAssociationId") == "w1", last)
+    check("含 version", last.get("version") == "pc-V2.0.1", last)
+    check("studySchedule=100", last.get("studySchedule") == 100, last)
 
 
 def main():

@@ -618,7 +618,7 @@ class TaskService:
                 return details_result
 
             lesson_details = details_result.get("data", {})
-            resource_duration = lesson_details.get("resourceDuration", 300)
+            resource_duration = int(lesson_details.get("resourceDuration") or 300)
             resource_id = lesson_details.get("resourceId")
             resource_url = lesson_details.get("resourceUrl")
             logger.info(
@@ -654,29 +654,39 @@ class TaskService:
             ]
             submit_headers = TaskService._build_headers(access_token)
 
-            # 字段与平台前端（learnCenter 页 Me 函数）一致：缺少 weeklyCourseId 时
-            # 接口仍返回 200 但平台不登记完成（2026-10 起）
-            payload = {
-                "studyProgressTime": resource_duration,
-                "studyDuration": resource_duration,
-                "studyAssociationId": week_id,
-                "studyType": 4,
-                "weeklyCourseId": week_id,
-                "studySchedule": 100,
-            }
-
-            logger.info(
-                f"[每周一课] 提交学习记录 | user={user_id} | week_id={week_id} | resource_duration={resource_duration} | payload={payload} | thread_id={thread_id}"
-            )
+            # 平台按「本次观看增量」记账：单次 studyDuration 超过一个上报周期
+            # （vodReportingFrequency=120 秒）的部分会被静默丢弃，一次报满 100%
+            # 平台不登记完成（2026-10 起）。按 120 秒步长累加上报。
+            step = min(120, resource_duration)
+            progress = 0
+            submit_json = {}
             submit_start = time.time()
-            submit_response = requests.post(
-                submit_url, headers=submit_headers, json=payload
-            )
-            submit_end = time.time()
-            submit_duration = submit_end - submit_start
-            submit_json = submit_response.json()
+            while progress < resource_duration:
+                progress = min(progress + step, resource_duration)
+                payload = {
+                    "studyProgressTime": progress,
+                    "studyDuration": step,
+                    "studyAssociationId": week_id,
+                    "studyType": 4,
+                    "weeklyCourseId": week_id,
+                    "studySchedule": min(
+                        100,
+                        (progress * 100 + resource_duration - 1) // resource_duration,
+                    ),
+                    "version": "pc-V2.0.1",
+                }
+                submit_response = requests.post(
+                    submit_url, headers=submit_headers, json=payload
+                )
+                submit_json = submit_response.json()
+                logger.debug(
+                    f"[每周一课] 上报进度 | user={user_id} | progress={progress}/{resource_duration} | payload={payload} | response={submit_json} | thread_id={thread_id}"
+                )
+                if submit_json.get("code") != 200:
+                    break
+            submit_duration = time.time() - submit_start
             logger.info(
-                f"[每周一课] 提交响应 | user={user_id} | status={submit_response.status_code} | duration={submit_duration:.3f}s | response_code={submit_json.get('code')} | msg={submit_json.get('msg')} | thread_id={thread_id}"
+                f"[每周一课] 提交响应 | user={user_id} | duration={submit_duration:.3f}s | response_code={submit_json.get('code')} | msg={submit_json.get('msg')} | thread_id={thread_id}"
             )
             logger.debug(
                 f"[每周一课] 提交响应数据 | user={user_id} | data={submit_json.get('data')} | thread_id={thread_id}"
