@@ -59,6 +59,14 @@ uv run python -m scripts.platform_recon <账号> <密码> --play --out events.js
 - 单次 `studyDuration` 超过 120 秒的部分会被静默丢弃（接口仍返回 `200 操作成功`），一次报满 100% 平台不登记
 - 正确做法：按 120 秒步长累加上报，见 `TaskService.execute_weekly_lesson`
 
+每日一题 / 每月一考的交卷耗时（2026-09-28 起）：
+
+- 前端提交体仍带 `useTime`，但平台改为按服务端记录的「取题到交卷」真实耗时记账，客户端上报值不再生效
+- 取题后立即交卷会记 `useTime=0` 或 `-1`（2026-09-27 及以前为 181/245/279 等正常值）
+- 正确做法：取题后真实等待到目标时长再交卷；`examDuration` 取自
+  `regularStudyDayRuleSetting` / `regularExamMonthRuleSetting` 的 `answeringTime`，
+  `examDetailId` 取 `id ?? examDetailId`，见 `TaskService._execute_regular_exam`
+
 ## 注意
 
 - 脚本会在本机启动 Edge 窗口，加 `--headless` 可避免。

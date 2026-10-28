@@ -106,30 +106,55 @@ def test_answer_normalization():
 
 def test_build_questions():
     print("\n[5] 由平台题目构造提交项")
-    question_list = [
-        {
-            "id": "q1",
-            "questionType": 1,
-            "questionPoint": 5,
-            "questionAnswera": '"B"',
-            "bankId": "bank-1",
-        },
-        {
-            "id": "q2",
-            "questionType": 2,
-            "questionPoint": 5,
-            "questionAnswera": '"A,C"',
-            "bankId": "bank-1",
-        },
-        {
-            "id": "q3",
-            "questionType": 1,
-            "questionPoint": 5,
-            "questionAnswera": None,
-            "bankId": "bank-1",
-        },
-    ]
-    questions = TaskService._build_questions_from_api(question_list, 2)
+    from ccsa_auto.core.database import Base, SessionLocal, engine
+    from ccsa_auto.core.models import QuestionBank
+
+    # 本地题库回退需要 question_bank 中有同类型题目；测试自备一条，避免依赖已有数据
+    Base.metadata.create_all(engine)
+    db = SessionLocal()
+    seed_id = "test-fallback-q1"
+    try:
+        if not db.query(QuestionBank).filter_by(question_id=seed_id).first():
+            db.add(
+                QuestionBank(
+                    question_id=seed_id,
+                    question_type=1,
+                    question_point=5,
+                    question_answer="A",
+                    source_exam_type=2,
+                )
+            )
+            db.commit()
+
+        question_list = [
+            {
+                "id": "q1",
+                "questionType": 1,
+                "questionPoint": 5,
+                "questionAnswera": '"B"',
+                "bankId": "bank-1",
+            },
+            {
+                "id": "q2",
+                "questionType": 2,
+                "questionPoint": 5,
+                "questionAnswera": '"A,C"',
+                "bankId": "bank-1",
+            },
+            {
+                "id": "q3",
+                "questionType": 1,
+                "questionPoint": 5,
+                "questionAnswera": None,
+                "bankId": "bank-1",
+            },
+        ]
+        questions = TaskService._build_questions_from_api(question_list, 2)
+    finally:
+        db.query(QuestionBank).filter_by(question_id=seed_id).delete()
+        db.commit()
+        db.close()
+
     check("返回题目数量", len(questions) == 3, len(questions))
     check("包含 bankId", questions[0].get("bankId") == "bank-1")
     check("单选答案归一化", questions[0]["questionAnswer"] == "B")
@@ -163,6 +188,8 @@ def test_endpoint_map():
         "GET_WEEKLY_LESSON": "progress-v2/app/regularCourseWeek/{lesson_id}",
         "GET_VIDEO_URL": "progress-v2/app/regularCourseWeek/courseWeekPlayAuth/{lesson_id}",
         "GET_SCORES": "progress-v2/app/regularStudyRecord/getRegularFractionInfo",
+        "GET_DAILY_RULE_SETTING": "progress-v2/app/regularStudyDayRuleSetting/{practice_id}",
+        "GET_MONTHLY_RULE_SETTING": "progress-v2/app/regularExamMonthRuleSetting/{practice_id}",
     }
     for key, suffix in expected.items():
         check(f"{key} 路径正确", endpoints[key].endswith(suffix), endpoints[key])
@@ -318,6 +345,90 @@ def test_weekly_submit_payload():
     check("studySchedule=100", last.get("studySchedule") == 100, last)
 
 
+def test_daily_exam_submit_payload():
+    print("\n[9] 每日一题交卷 payload（真实耗时）")
+    from ccsa_auto.modules.task import service as task_service
+    from ccsa_auto.modules.task.score_strategy import ScoreStrategy
+    from ccsa_auto.modules.task.score_tracker import ScoreTracker
+
+    captured = {"sleeps": []}
+
+    def fake_get(url, headers=None, params=None, **kwargs):
+        if url.endswith("getRegularStudyDay"):
+            return _FakeResponse(
+                {"code": 200, "data": {"id": "d1", "studyStatus": 1}}
+            )
+        if "regularStudyDayRuleSetting" in url:
+            return _FakeResponse({"code": 200, "data": {"answeringTime": 30}})
+        if url.endswith("getRegularStudyQuestionInfo"):
+            return _FakeResponse(
+                {
+                    "code": 200,
+                    "data": {
+                        "id": "detail-1",
+                        "questionTotalPoint": 20,
+                        "examLimitTime": 30,
+                        "questionList": [
+                            {
+                                "id": "q1",
+                                "questionType": 1,
+                                "questionPoint": 20,
+                                "questionAnswera": '"B"',
+                                "bankId": "b1",
+                            }
+                        ],
+                    },
+                }
+            )
+        raise AssertionError(f"unexpected url {url}")
+
+    def fake_post(url, headers=None, data=None, **kwargs):
+        captured["url"] = url
+        captured["payload"] = json.loads(data)
+        return _FakeResponse({"code": 200, "msg": "操作成功", "data": None})
+
+    def fake_sleep(seconds):
+        captured["sleeps"].append(seconds)
+
+    original_get = task_service.requests.get
+    original_post = task_service.requests.post
+    original_sleep = task_service.time.sleep
+    original_record = ScoreTracker.record_score
+    original_enabled = ScoreStrategy.is_enabled_for
+    task_service.requests.get = fake_get
+    task_service.requests.post = fake_post
+    task_service.time.sleep = fake_sleep
+    ScoreTracker.record_score = staticmethod(lambda **kwargs: None)
+    ScoreStrategy.is_enabled_for = staticmethod(lambda user_id: False)
+    try:
+        result = TaskService.execute_daily_question("token", 1, "测试用户")
+    finally:
+        task_service.requests.get = original_get
+        task_service.requests.post = original_post
+        task_service.time.sleep = original_sleep
+        ScoreTracker.record_score = original_record
+        ScoreStrategy.is_enabled_for = original_enabled
+
+    check("执行成功", result.get("success") is True, result)
+    payload = captured.get("payload") or {}
+    # 2026-09-28 起平台按服务端真实耗时记账，必须等够时间再交卷
+    check(
+        "交卷前存在真实等待",
+        len(captured["sleeps"]) == 1 and captured["sleeps"][0] > 0,
+        captured["sleeps"],
+    )
+    # examDuration 与前端一致，取自规则接口 answeringTime
+    check("examDuration=30", payload.get("examDuration") == 30, payload)
+    # 前端为 examDetailId = id ?? examDetailId，这里验证回退
+    check("examDetailId 回退到 id", payload.get("examDetailId") == "detail-1", payload)
+    # useTime 反映真实耗时，不再出现 0 / -1
+    check(
+        "useTime 在 120-300 秒",
+        120 <= payload.get("useTime", 0) <= 300,
+        payload.get("useTime"),
+    )
+
+
 def main():
     print("=" * 60)
     print("第三方平台 v2 接口适配验证")
@@ -330,6 +441,7 @@ def main():
     test_endpoint_map()
     test_task_status_parsing()
     test_weekly_submit_payload()
+    test_daily_exam_submit_payload()
     print("\n" + "=" * 60)
     print(f"全部通过：{_passed} 项检查")
     print("=" * 60)

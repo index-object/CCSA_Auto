@@ -184,6 +184,44 @@ class TaskService:
         return {"success": True, "data": data}
 
     @staticmethod
+    def _fetch_regular_exam_rule(access_token, practice_id, is_daily, user_name, user_id):
+        """读取每日/每月答题规则。
+
+        Returns:
+            int | None: ``answeringTime``（限时分钟数，与前端 examDuration 同源），
+                        读取失败时返回 ``None``，由调用方回退到试题数据里的
+                        ``examLimitTime``。
+        """
+        label = "每日一题" if is_daily else "每月一考"
+        endpoint_key = "GET_DAILY_RULE_SETTING" if is_daily else "GET_MONTHLY_RULE_SETTING"
+        url = Config.EXTERNAL_PLATFORM["API_ENDPOINTS"][endpoint_key].format(
+            practice_id=practice_id
+        )
+        try:
+            response = requests.get(url, headers=TaskService._build_headers(access_token))
+            response_json = response.json()
+            if response_json.get("code") != 200:
+                logger.warning(
+                    f"获取{label}答题规则失败：{response_json.get('msg', '未知错误')}，"
+                    f"用户：{user_name}({user_id})"
+                )
+                return None
+
+            rule = response_json.get("data") or {}
+            answering_time = rule.get("answeringTime")
+            if answering_time is None:
+                logger.warning(
+                    f"{label}答题规则缺少 answeringTime，用户：{user_name}({user_id})"
+                )
+                return None
+            return int(answering_time)
+        except Exception as e:
+            logger.warning(
+                f"获取{label}答题规则异常：{str(e)}，用户：{user_name}({user_id})"
+            )
+            return None
+
+    @staticmethod
     def _record_completed_exam(user_id, task_type, label, user_name):
         """任务已完成时的得分记录与返回结果。"""
         from ccsa_auto.modules.task.score_strategy import ScoreStrategy
@@ -254,7 +292,13 @@ class TaskService:
                     user_id, task_type, label, user_name
                 )
 
-            # 2. 获取试题（含标准答案）
+            # 2. 获取答题规则与试题（试题含标准答案）
+            # 平台按真实答题耗时记账，计时点应尽量贴近取题请求。
+            rule_answering_time = TaskService._fetch_regular_exam_rule(
+                access_token, practice_id, is_daily, user_name, user_id
+            )
+            exam_started_at = time.monotonic()
+
             question_params = {
                 "examAssociationId": practice_id,
                 "isReExam": 0,
@@ -334,8 +378,40 @@ class TaskService:
                 f"{score_strategy['score']}/{score_strategy['max_score']}，用户：{user_name}({user_id})"
             )
 
-            # 4. 提交答卷
-            use_time = random.randint(120, 300) if is_daily else random.randint(300, 500)
+            # 4. 按真实耗时等待后交卷
+            # 2026-09-28 起平台改用服务端计算的答题耗时：取题后立即交卷会记 0
+            # 或 -1。这里保持原有随机时长，但改为真实等待到目标时长再提交。
+            exam_duration = rule_answering_time
+            if exam_duration is None:
+                exam_duration = question_data.get("examLimitTime") or 0
+            exam_duration = int(exam_duration or 0)
+
+            min_wait, max_wait = Config.EXAM_ANSWER_WAIT[
+                "daily" if is_daily else "monthly"
+            ]
+            target_wait = random.randint(min_wait, max_wait)
+            limit_seconds = exam_duration * 60 if exam_duration > 0 else 0
+            if limit_seconds > 0:
+                target_wait = min(target_wait, limit_seconds)
+
+            elapsed = time.monotonic() - exam_started_at
+            remaining = target_wait - elapsed
+            if remaining > 0:
+                logger.info(
+                    f"{label}模拟答题等待 {remaining:.0f} 秒，用户：{user_name}({user_id})"
+                )
+                time.sleep(remaining)
+
+            elapsed = time.monotonic() - exam_started_at
+            use_time = max(target_wait, int(round(elapsed)))
+            if limit_seconds > 0:
+                use_time = min(use_time, limit_seconds)
+
+            logger.info(
+                f"{label}答题耗时 {use_time} 秒（限时 {exam_duration or '未知'} 分钟），"
+                f"用户：{user_name}({user_id})"
+            )
+
             full_point = question_data.get("questionTotalPoint")
             if full_point is None:
                 full_point = sum(q.get("questionPoint", 0) for q in questions)
@@ -349,11 +425,13 @@ class TaskService:
                 "isRepair": None,
                 "courseExamAnswerInfoBos": questions,
                 "fullPoint": full_point,
-                "examDuration": question_data.get("examLimitTime", 0) or 0,
+                "examDuration": exam_duration,
                 "scoreSource": 1,
             }
-            if question_data.get("examDetailId"):
-                payload["examDetailId"] = question_data["examDetailId"]
+            # 与平台前端一致：examDetailId 取 id ?? examDetailId
+            exam_detail_id = question_data.get("id") or question_data.get("examDetailId")
+            if exam_detail_id:
+                payload["examDetailId"] = str(exam_detail_id)
 
             submit_response = requests.post(
                 Config.EXTERNAL_PLATFORM["API_ENDPOINTS"]["SUBMIT_EXAM"],

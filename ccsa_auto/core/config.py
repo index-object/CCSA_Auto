@@ -47,6 +47,9 @@ class Config:
             # 每日/每月试题（返回 questionAnswera 标准答案）
             "GET_DAILY_QUESTIONS": "https://edu.axdxa.cn/prod-api/progress-v2/app/regularStudyQuestionBank/getRegularStudyQuestionInfo",
             "GET_MONTHLY_QUESTIONS": "https://edu.axdxa.cn/prod-api/progress-v2/app/regularStudyQuestionBank/getRegularStudyQuestionInfo",
+            # 每日/每月答题规则（answeringTime = 限时分钟数，与前端 examDuration 一致）
+            "GET_DAILY_RULE_SETTING": "https://edu.axdxa.cn/prod-api/progress-v2/app/regularStudyDayRuleSetting/{practice_id}",
+            "GET_MONTHLY_RULE_SETTING": "https://edu.axdxa.cn/prod-api/progress-v2/app/regularExamMonthRuleSetting/{practice_id}",
             # 每周一课
             "GET_WEEKLY_LESSON": "https://edu.axdxa.cn/prod-api/progress-v2/app/regularCourseWeek/{lesson_id}",
             "GET_VIDEO_URL": "https://edu.axdxa.cn/prod-api/progress-v2/app/regularCourseWeek/courseWeekPlayAuth/{lesson_id}",
@@ -58,6 +61,13 @@ class Config:
             "GET_EXAM_RECORDS": "https://edu.axdxa.cn/prod-api/progress-v2/app/regularExamRecord/list",
             "GET_EXAM_DETAIL": "https://edu.axdxa.cn/prod-api/progress-v2/app/regularExamRecord/getRegularStudyExamInfo",
         },
+    }
+
+    # 每日/每月答题停留时长（秒）。2026-09-28 起平台不再采用客户端上报的
+    # useTime，改按「取题到交卷」的真实耗时记账，因此必须真实等待。
+    EXAM_ANSWER_WAIT = {
+        "daily": (120, 300),
+        "monthly": (300, 500),
     }
 
     # 任务配置
