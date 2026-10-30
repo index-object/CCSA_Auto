@@ -4,7 +4,7 @@ import smtplib
 import ssl
 from email.header import Header
 from email.mime.text import MIMEText
-from email.utils import formataddr
+from email.utils import formataddr, formatdate, make_msgid
 
 from ccsa_auto.core.logger import get_logger
 
@@ -46,8 +46,11 @@ def send_email(subject: str, body: str) -> bool:
 
     msg = MIMEText(body, "plain", "utf-8")
     msg["Subject"] = Header(subject, "utf-8")
-    msg["From"] = formataddr((cfg["smtp_user"], cfg["smtp_user"]))
+    msg["From"] = formataddr(("CCSA_Auto 任务监控", cfg["smtp_user"]))
     msg["To"] = ", ".join(cfg["to"])
+    # 缺少 Date/Message-ID 会被 Outlook 判为可疑批量邮件（进垃圾箱）
+    msg["Date"] = formatdate(localtime=True)
+    msg["Message-ID"] = make_msgid(domain="qq.com")
 
     try:
         context = ssl.create_default_context()
